@@ -1,0 +1,19 @@
+{
+  "name": "Unforget",
+  "short_name": "u",
+  "description": "Never forget a thing.",
+  "theme_color": "#2196f3",
+  "background_color": "#2196f3",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "splash_pages": null
+}

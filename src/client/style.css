@@ -1,0 +1,16 @@
+body {
+  background: #ddf7ff;
+  #app {
+    text-align: center;
+    margin-top: 8rem;
+    h1 {
+      font-size: 3rem;
+      letter-spacing: 4px;
+      font-family: monospace;
+      color: #4e94af;
+    }
+    img {
+      width: 300px;
+    }
+  }
+}

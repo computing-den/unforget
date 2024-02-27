@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "module": "nodenext", // Depends on moduleResolution.
+    "target": "esnext",
+    "lib": ["esnext", "dom", "dom.iterable", "WebWorker"],
+    "jsx": "preserve",
+    "isolatedModules": true, // Prevents you from using features which could cause mis-compilation in environments like esbuild where each file is compiled independently without tracing type references across files.
+    "declaration": true, //  Defaults to true when composite: true
+    "sourceMap": true,
+    "strict": true, // Enable all strict type-checking options
+    "moduleResolution": "nodenext", // nodenext to make imports and exports in package.json possible.
+    "noFallthroughCasesInSwitch": true, // Report errors for fallthrough cases in switch statement.
+    "esModuleInterop": true,
+    "incremental": true, // Default is true when composite: true
+    "composite": true, // The composite option enforces certain constraints which make it possible for build tools (including TypeScript itself, under --build mode) to quickly determine if a project has been built yet.
+    "useDefineForClassFields": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "noUnusedParameters": false,
+    "noUnusedLocals": false
+  },
+  "include": ["src"]
+}
