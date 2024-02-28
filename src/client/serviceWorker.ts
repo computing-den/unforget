@@ -3,9 +3,10 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
+import type { Note } from '../common/types.js';
 
 // The version of the cache.
-const VERSION = '10';
+const VERSION = '12';
 
 // The name of the cache
 const CACHE_NAME = `unforget-${VERSION}`;
@@ -35,7 +36,7 @@ self.addEventListener('activate', event => {
           }
         }),
       );
-      await storage.setupStorage();
+      await storage.getStorage();
       await self.clients.claim();
     })(),
   );
@@ -57,22 +58,23 @@ async function handleFetchEvent(event: FetchEvent): Promise<Response> {
   // As a single page app, direct app to always go to cached home page.
   if (mode === 'navigate') {
     response = await caches.match('/');
-  } else if (method === 'GET' && url.pathname === '/api/notes') {
-    const notes = await storage.getAll();
-    response = new Response(JSON.stringify(notes), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
-    });
-    // response = fetch(event.request);
-  } else if (method === 'POST' && url.pathname === '/api/notes') {
-    const clonedRequest = event.request.clone(); // Must clone because body is a stream that can be read only once.
-    const notes = await clonedRequest.json();
-    for (const note of notes) {
-      // TODO do it atomically
-      await storage.put(note);
-    }
-    response = new Response(JSON.stringify({ ok: true }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // } else if (method === 'GET' && url.pathname === '/api/notes') {
+    //   const notesReq = await storage.transaction(storage.NOTES_STORE, 'readonly', tx =>
+    //     tx.objectStore(storage.NOTES_STORE).getAll(),
+    //   );
+    //   response = new Response(JSON.stringify(notesReq.result), {
+    //     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+    //   });
+    //   // response = fetch(event.request);
+    // } else if (method === 'POST' && url.pathname === '/api/notes') {
+    //   const clonedRequest = event.request.clone(); // Must clone because body is a stream that can be read only once.
+    //   const notes = (await clonedRequest.json()) as Note[];
+    //   await storage.transaction(storage.NOTES_STORE, 'readwrite', tx =>
+    //     notes.map(note => tx.objectStore(storage.NOTES_STORE).put(note)),
+    //   );
+    //   response = new Response(JSON.stringify({ ok: true }), {
+    //     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+    //   });
   } else {
     const cache = await caches.open(CACHE_NAME);
     response = await cache.match(event.request);
