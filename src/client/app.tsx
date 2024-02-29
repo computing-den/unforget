@@ -14,16 +14,16 @@ export default function App() {
     window.addEventListener('online', () => setOnline(true));
   }, []);
 
-  const loggedIn = useCallback((token: string) => setToken(token), []);
+  // const loggedIn = useCallback((token: string) => setToken(token), []);
 
   if (token) {
-    return <NotesPage online={online} token={token} />;
+    return <NotesPage online={online} token={token} setToken={setToken} />;
   } else {
-    return <LoginPage online={online} onLoggedIn={loggedIn} />;
+    return <LoginPage online={online} setToken={setToken} />;
   }
 }
 
-type NotesPageProps = PageProps & { token: string };
+type NotesPageProps = PageProps & { token: string; setToken: (token?: string) => any };
 
 function NotesPage(props: NotesPageProps) {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -80,7 +80,14 @@ function NotesPage(props: NotesPageProps) {
   }, []);
 
   return (
-    <Template className="notes-page" errorMsg={errorMsg} online={props.online} dirty={dirty}>
+    <Template
+      className="notes-page"
+      errorMsg={errorMsg}
+      online={props.online}
+      dirty={dirty}
+      token={props.token}
+      setToken={props.setToken}
+    >
       <div className="new-note-container">
         <textarea
           id="new-note-textarea"
@@ -102,7 +109,7 @@ function NotesPage(props: NotesPageProps) {
   );
 }
 
-type LoginPageProps = PageProps & { onLoggedIn: (token: string) => any };
+type LoginPageProps = PageProps & { setToken: (token: string) => any };
 
 function LoginPage(props: LoginPageProps) {
   const [errorMsg, setErrorMsg] = useState('');
@@ -120,7 +127,7 @@ function LoginPage(props: LoginPageProps) {
         body: JSON.stringify({ username, password }),
       });
       if (!res.ok) throw await createFetchResponseError(res);
-      props.onLoggedIn((await res.json()).token);
+      props.setToken((await res.json()).token);
     },
     setErrorMsg,
     [username, password],
@@ -133,7 +140,7 @@ function LoginPage(props: LoginPageProps) {
         body: JSON.stringify({ username, password }),
       });
       if (!res.ok) throw await createFetchResponseError(res);
-      props.onLoggedIn((await res.json()).token);
+      props.setToken((await res.json()).token);
     },
     setErrorMsg,
     [username, password],
@@ -178,19 +185,60 @@ function LoginPage(props: LoginPageProps) {
 }
 
 type TemplateProps = {
+  token?: string;
   errorMsg?: string;
   online: boolean;
   dirty?: boolean;
   children: React.ReactNode;
   className?: string;
+  setToken?: (token?: string) => any;
 };
 
 function Template(props: TemplateProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const openMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMenuOpen(!menuOpen);
+    },
+    [menuOpen],
+  );
+  const logout = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    storage.clearAll();
+    document.cookie = 'unforget_token=';
+    props.setToken?.();
+  }, []);
+
   return (
     <div className={props.className}>
       <div className="header">
-        <img src="/barefront.svg" />
-        <h1>Unforget!</h1>
+        <div className="content">
+          <div className="logo">
+            <img src="/barefront.svg" />
+            <h1>Unforget!</h1>
+          </div>
+          <div className="menu-button-container">
+            <div className="menu-button">
+              <a href="#" onClick={openMenu}>
+                <img src="/icons/menu.svg" />
+              </a>
+              {menuOpen && (
+                <div className="menu">
+                  <ul>
+                    <li>
+                      <a href="#" onClick={logout}>
+                        Log out
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="body">{props.children}</div>
       <div className="app-status">

@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import type { Note, ServerConfig, DBUser } from '../common/types.js';
+import type { Note, ServerConfig, DBUser, DBToken, Credentials } from '../common/types.js';
 import * as db from './db.js';
 import cookieParser from 'cookie-parser';
 
@@ -25,7 +25,9 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   const token = req.cookies.unforget_token as string | undefined;
   if (token) {
-    const dbUser = db.get().prepare(`SELECT * from users where token = ?`).get(token) as DBUser | undefined;
+    const dbUser = db.get().prepare(`SELECT users.* from users, tokens where token = ?`).get(token) as
+      | DBUser
+      | undefined;
     res.locals = { dbUser };
   }
   next();
@@ -33,7 +35,7 @@ app.use((req, res, next) => {
 
 app.post('/api/login', async (req, res, next) => {
   try {
-    const { username, password } = req.body as { username: string; password: string };
+    const { username, password } = req.body as Credentials;
     const hash = await hashPassword(username, password);
     const user = db
       .get()
@@ -41,8 +43,7 @@ app.post('/api/login', async (req, res, next) => {
       .get({ hash, username }) as DBUser | undefined;
 
     if (user) {
-      res.cookie('unforget_token', user.token, { maxAge: 10 * 365 * 24 * 3600 * 1000 });
-      res.send({ token: user.token });
+      loginAndRespond(user, res);
     } else {
       res.status(401).send({ message: 'Wrong username or password.' });
     }
@@ -53,27 +54,28 @@ app.post('/api/login', async (req, res, next) => {
 
 app.post('/api/signup', async (req, res, next) => {
   try {
-    const { username, password } = req.body as { username: string; password: string };
+    const { username, password } = req.body as Credentials;
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(username) as DBUser | undefined;
 
     if (user) {
       res.status(401).send({ message: 'Username already exists.' });
     } else {
-      const newUser: DBUser = {
-        username,
-        password_hash: await hashPassword(username, password),
-        token: createToken(),
-      };
-      db.get()
-        .prepare(`INSERT INTO users (username, password_hash, token) VALUES (:username, :password_hash, :token)`)
-        .run(newUser);
-      res.cookie('unforget_token', newUser.token, { maxAge: 10 * 365 * 24 * 3600 * 1000 });
-      res.send({ token: newUser.token });
+      const newUser: DBUser = { username, password_hash: await hashPassword(username, password) };
+      db.get().prepare(`INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)`).run(newUser);
+      loginAndRespond(newUser, res);
     }
   } catch (error) {
     next(error);
   }
 });
+
+function loginAndRespond(user: DBUser, res: express.Response) {
+  const token = createToken();
+  const dbToken: DBToken = { username: user.username, token };
+  db.get().prepare(`INSERT INTO tokens (username, token) VALUES (:username, :token)`).run(dbToken);
+  res.cookie('unforget_token', token, { maxAge: 10 * 365 * 24 * 3600 * 1000 });
+  res.send({ token });
+}
 
 app.get('/api/notes', authenticate, (req, res) => {
   console.log('GET /api/notes');

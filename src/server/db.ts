@@ -29,8 +29,16 @@ export function initDB() {
     `
     CREATE TABLE IF NOT EXISTS users (
       username              TEXT PRIMARY KEY,
-      password_hash         TEXT NOT NULL,
-      token                 TEXT NOT NULL
+      password_hash         TEXT NOT NULL
+    )`,
+  ).run();
+
+  db.prepare(
+    `
+    CREATE TABLE IF NOT EXISTS tokens (
+      username              TEXT NOT NULL,
+      token                 TEXT NOT NULL,
+      PRIMARY KEY (username, token)
     )`,
   ).run();
 }

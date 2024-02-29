@@ -13,5 +13,14 @@ export type ServerConfig = {
 export type DBUser = {
   username: string;
   password_hash: string;
+};
+
+export type DBToken = {
+  username: string;
   token: string;
+};
+
+export type Credentials = {
+  username: string;
+  password: string;
 };

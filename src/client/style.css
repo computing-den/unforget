@@ -3,6 +3,10 @@
 /* #FEE9E1 */
 /* #E8FEE1 */
 
+:root {
+  --page-max-width: 600px;
+}
+
 html,
 body {
   margin: 0;
@@ -20,24 +24,98 @@ body {
   padding: 0.5rem;
   background: #448199;
 
-  img {
-    width: 50px;
-  }
-  h1 {
-    margin: 0;
-    margin-left: 1rem;
-    font-size: 1.5rem;
-    letter-spacing: 2px;
-    font-family: monospace;
-    /* color: #4e94af; */
-    color: white;
+  .content {
+    margin: 0 auto;
+    max-width: var(--page-max-width);
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 50px;
+      }
+      h1 {
+        margin: 0;
+        margin-left: 1rem;
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+        font-family: monospace;
+        /* color: #4e94af; */
+        color: white;
+      }
+    }
+
+    .menu-button-container {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0.5rem;
+      display: flex;
+      align-items: center;
+
+      .menu-button {
+        position: relative;
+
+        > a {
+        }
+
+        .menu {
+          position: absolute;
+          top: 30px;
+          right: 0;
+          background: #000000aa;
+          backdrop-filter: blur(5px);
+          z-index: 100;
+          color: white;
+          border-radius: 5px;
+          /* width: 100px; */
+          /* padding: 1rem; */
+
+          ul {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+
+            li {
+              a,
+              a:visited,
+              a:focus,
+              a:active {
+                color: inherit;
+                text-decoration: none;
+              }
+
+              a {
+                display: flex;
+                white-space: nowrap;
+                padding: 1rem 2rem;
+                transition: 0.2s background ease-in-out;
+                font-weight: bold;
+                font-size: 1.1em;
+                /* letter-spacing: 1px; */
+              }
+              a:hover {
+                background: #ffffff22;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 
 .notes-page {
   .body {
     margin: 2rem auto;
-    max-width: 600px;
+    max-width: var(--page-max-width);
 
     .new-note-container {
       display: flex;

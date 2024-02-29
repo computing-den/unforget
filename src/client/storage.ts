@@ -107,3 +107,11 @@ export async function sync(): Promise<Note[]> {
 
   return newNotesFromServer;
 }
+
+export async function clearAll() {
+  const db = await getStorage();
+  const storeNames = Array.from(db.objectStoreNames);
+  await transaction(storeNames, 'readwrite', tx => {
+    for (const name of storeNames) tx.objectStore(name).clear();
+  });
+}
