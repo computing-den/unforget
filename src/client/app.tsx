@@ -1,68 +1,52 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import type { Note } from '../common/types.js';
+import type * as t from '../common/types.js';
 import * as storage from './storage.js';
+import * as util from './util.jsx';
 import _ from 'lodash';
+import { v4 as uuid } from 'uuid';
 
-type PageProps = { online: boolean };
+type PageProps = {};
 
 export default function App() {
   const [token, setToken] = useState(getToken());
-  const [online, setOnline] = useState(navigator.onLine);
-
-  useEffect(() => {
-    window.addEventListener('offline', () => setOnline(false));
-    window.addEventListener('online', () => setOnline(true));
-  }, []);
-
-  // const loggedIn = useCallback((token: string) => setToken(token), []);
 
   if (token) {
-    return <NotesPage online={online} token={token} setToken={setToken} />;
+    return <NotesPage token={token} setToken={setToken} />;
   } else {
-    return <LoginPage online={online} setToken={setToken} />;
+    return <LoginPage setToken={setToken} />;
   }
 }
 
 type NotesPageProps = PageProps & { token: string; setToken: (token?: string) => any };
 
 function NotesPage(props: NotesPageProps) {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<t.Note[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
   const [newNoteText, setNewNoteText] = useState('');
-  const [dirty, setDirty] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [queueCount, setQueueCount] = useState(0);
+  const [online, setOnline] = useState(navigator.onLine);
 
-  const syncImmediately = useAsyncCallback(
-    async () => {
-      const newNotes = await storage.sync();
-      if (newNotes.length > 0) await updateNotes();
-    },
-    setErrorMsg,
-    [],
-  );
-
-  // const sync = useCallback(async () => {
-  //   setTimeout
-  // }, []);
-
-  const updateNotes = useAsyncCallback(async () => setNotes(await storage.getAllNotes()), setErrorMsg, []);
+  const updateNotes = useAsyncCallback(async () => setNotes(await storage.getActiveNotes()), setErrorMsg, []);
 
   const add = useAsyncCallback(
     async () => {
       document.getElementById('new-note-textarea')!.focus();
       if (!newNoteText) return;
 
-      const id = String(Math.random()).substring(2);
-      const newNote: Note = {
-        id,
+      const newNote: t.Note = {
+        id: uuid(),
         text: newNoteText,
         creation_date: new Date().toISOString(),
         modification_date: new Date().toISOString(),
         order: Date.now(),
+        deleted: 0,
+        archived: 0,
       };
       await storage.addNote(newNote);
+      updateNotes();
+      storage.sync();
       setNewNoteText('');
-      await syncImmediately(); // TODO do it in the background.
-      await updateNotes();
     },
     setErrorMsg,
     [newNoteText, notes],
@@ -72,19 +56,70 @@ function NotesPage(props: NotesPageProps) {
     setNewNoteText(e.target.value);
   }, []);
 
+  // Update notes on mount.
+  useEffect(() => {
+    updateNotes();
+  }, []);
+
+  // Sync storage on mount and every N seconds.
+  useEffect(() => {
+    storage.sync();
+    const interval = setInterval(() => storage.sync(), 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update queue count on mount.
   useEffect(() => {
     (async () => {
-      await updateNotes();
-      await syncImmediately();
+      setQueueCount(await storage.countQueuedNotes());
     })();
+  }, []);
+
+  // Update queue count every N seconds.
+  useEffect(() => {
+    const interval = setInterval(async () => setQueueCount(await storage.countQueuedNotes()), 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Listen to storage's sync events and update notes.
+  useEffect(() => {
+    function syncListener(args: storage.SyncListenerArgs) {
+      console.log('syncListener: ', args);
+      // Only update error message if syncing has ended because listener is also called
+      // when a new sync starts.
+      setSyncing(!args.done);
+      if (args.done) {
+        setErrorMsg(args.error?.message ?? '');
+        updateNotes();
+      }
+    }
+    storage.addSyncListener(syncListener);
+    return () => storage.removeSyncListener(syncListener);
+  }, []);
+
+  useEffect(() => {
+    function wentOffline() {
+      setOnline(false);
+    }
+    function wentOnline() {
+      setOnline(true);
+      storage.sync();
+    }
+    window.addEventListener('offline', wentOffline);
+    window.addEventListener('online', wentOnline);
+    return () => {
+      window.removeEventListener('offline', wentOffline);
+      window.removeEventListener('online', wentOnline);
+    };
   }, []);
 
   return (
     <Template
       className="notes-page"
       errorMsg={errorMsg}
-      online={props.online}
-      dirty={dirty}
+      online={online}
+      syncing={syncing}
+      queueCount={queueCount}
       token={props.token}
       setToken={props.setToken}
     >
@@ -102,7 +137,9 @@ function NotesPage(props: NotesPageProps) {
       </div>
       <div className="notes">
         {notes.map(note => (
-          <div className="note">{note.text}</div>
+          <div className="note" key={note.id}>
+            {note.text}
+          </div>
         ))}
       </div>
     </Template>
@@ -121,33 +158,25 @@ function LoginPage(props: LoginPageProps) {
 
   const login = useAsyncCallback(
     async () => {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (!res.ok) throw await createFetchResponseError(res);
-      props.setToken((await res.json()).token);
+      const credentials: t.Credentials = { username, password };
+      const user: t.LocalUser = await util.postApi('/api/login', credentials);
+      props.setToken(user.token);
     },
     setErrorMsg,
     [username, password],
   );
   const signup = useAsyncCallback(
     async () => {
-      const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      if (!res.ok) throw await createFetchResponseError(res);
-      props.setToken((await res.json()).token);
+      const credentials: t.Credentials = { username, password };
+      const user: t.LocalUser = await util.postApi('/api/signup', credentials);
+      props.setToken(user.token);
     },
     setErrorMsg,
     [username, password],
   );
 
   return (
-    <Template className="login-page" errorMsg={errorMsg} online={props.online}>
+    <Template className="login-page" errorMsg={errorMsg}>
       <div className="form-element">
         <label htmlFor="username">Username</label>
         <input
@@ -187,8 +216,9 @@ function LoginPage(props: LoginPageProps) {
 type TemplateProps = {
   token?: string;
   errorMsg?: string;
-  online: boolean;
-  dirty?: boolean;
+  online?: boolean;
+  syncing?: boolean;
+  queueCount?: number;
   children: React.ReactNode;
   className?: string;
   setToken?: (token?: string) => any;
@@ -212,13 +242,26 @@ function Template(props: TemplateProps) {
     props.setToken?.();
   }, []);
 
+  const sync = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    storage.sync();
+  }, []);
+
   return (
     <div className={props.className}>
       <div className="header">
         <div className="content">
-          <div className="logo">
-            <img src="/barefront.svg" />
-            <h1>Unforget!</h1>
+          <div className="title">
+            <div className="logo">
+              <img src="/barefront.svg" />
+            </div>
+            <h1>Unforget</h1>
+            <div className="status">
+              {props.online !== undefined && (props.online ? 'online' : 'offline')}
+              {/*props.syncing && ' syncing'*/}
+              {props.queueCount !== undefined && props.queueCount > 0 && ` (${props.queueCount})`}
+            </div>
           </div>
           <div className="menu-button-container">
             <div className="menu-button">
@@ -233,19 +276,24 @@ function Template(props: TemplateProps) {
                         Log out
                       </a>
                     </li>
+                    <li>
+                      <a href="#" onClick={sync}>
+                        Sync
+                      </a>
+                    </li>
                   </ul>
                 </div>
               )}
             </div>
           </div>
         </div>
+        {props.errorMsg && (
+          <div className="app-error">
+            <p>Error: {props.errorMsg}</p>
+          </div>
+        )}
       </div>
       <div className="body">{props.children}</div>
-      <div className="app-status">
-        status: {props.online ? 'online' : 'offline'}
-        {props.dirty === undefined ? '' : props.dirty ? ' - dirty' : ' - synced'}
-      </div>
-      <div className="app-error">{props.errorMsg && <p>Error: {props.errorMsg}</p>}</div>
     </div>
   );
 }
@@ -259,19 +307,6 @@ function getCookie(name: string): string | undefined {
 
 function getToken(): string | undefined {
   return getCookie('unforget_token');
-}
-
-async function createFetchResponseError(res: Response): Promise<Error> {
-  if (
-    res.headers
-      .get('Content-Type')
-      ?.split(/\s*;\s*/g)
-      .includes('application/json')
-  ) {
-    return new Error((await res.json()).message);
-  } else {
-    return new Error(await res.text());
-  }
 }
 
 function useAsyncCallback(

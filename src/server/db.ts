@@ -16,13 +16,19 @@ export function initDB() {
     `
     CREATE TABLE IF NOT EXISTS notes (
       id                    TEXT PRIMARY KEY,
-      text                  TEXT NOT NULL,
+      username              TEXT NOT NULL,
+      text                  TEXT,
       creation_date         TEXT NOT NULL,
       modification_date     TEXT NOt NULL,
-      "order"               INTEGER NOT NULL
+      "order"               INTEGER NOT NULL,
+      deleted               INTEGER NOT NULL,
+      archived              INTEGER NOT NULL
     )`,
   ).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_username on notes (username)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_creation_date on notes (creation_date)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_modification_date on notes (modification_date)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_deleted on notes (deleted)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_order on notes ("order")`).run();
 
   db.prepare(
@@ -35,10 +41,23 @@ export function initDB() {
 
   db.prepare(
     `
-    CREATE TABLE IF NOT EXISTS tokens (
+    CREATE TABLE IF NOT EXISTS clients (
+      token                 TEXT PRIMARY KEY,
       username              TEXT NOT NULL,
+      sync_number           INTEGER NOT NULL,
+      last_activity_date    TEXT NOT NULL
+    )`,
+  ).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_clients_username on clients (username)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_clients_last_activity_date on clients (last_activity_date)`).run();
+
+  db.prepare(
+    `
+    CREATE TABLE IF NOT EXISTS notes_queue (
       token                 TEXT NOT NULL,
-      PRIMARY KEY (username, token)
+      id                    TEXT NOT NULL,
+      modification_date     TEXT NOT NULL,
+      PRIMARY KEY (token, id)
     )`,
   ).run();
 }
@@ -46,14 +65,3 @@ export function initDB() {
 export function get(): Database.Database {
   return db;
 }
-
-//     const usernameExists = db.prepare(`SELECT 1 from users where username = ?`).pluck().get(username);
-//     const dbUser = db.prepare(`SELECT * from users where username = ?`).get(username) as t.DBUser | undefined;
-
-// db.prepare(
-//       `
-//         INSERT INTO users
-//         (username, hash, email, token, join_timestamp, token_timestamp)
-//         VALUES
-//         (?, ?, ?, ?, ?, ?)`,
-//     ).run(username, hash, email, token, now, now);
