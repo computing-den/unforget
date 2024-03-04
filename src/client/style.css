@@ -106,6 +106,7 @@ body {
           z-index: 100;
           color: white;
           border-radius: 5px;
+          width: 200px;
           /* width: 100px; */
           /* padding: 1rem; */
 
@@ -130,6 +131,7 @@ body {
                 transition: 0.2s background ease-in-out;
                 font-weight: bold;
                 font-size: 1.1em;
+                justify-content: center;
                 /* letter-spacing: 1px; */
               }
               a:hover {

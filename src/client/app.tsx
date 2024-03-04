@@ -272,13 +272,13 @@ function Template(props: TemplateProps) {
                 <div className="menu">
                   <ul>
                     <li>
-                      <a href="#" onClick={logout}>
-                        Log out
+                      <a href="#" onClick={sync}>
+                        Sync
                       </a>
                     </li>
                     <li>
-                      <a href="#" onClick={sync}>
-                        Sync
+                      <a href="#" onClick={logout}>
+                        Log out
                       </a>
                     </li>
                   </ul>

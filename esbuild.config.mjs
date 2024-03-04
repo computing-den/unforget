@@ -1,12 +1,17 @@
+import 'dotenv/config';
 import esbuild from 'esbuild';
 
 const context = await esbuild.context({
   entryPoints: ['src/client/index.tsx', 'src/client/style.css', 'src/client/serviceWorker.ts'],
   outdir: 'dist/public',
-  minify: true,
+  minify: process.env.NODE_ENV === 'production',
   bundle: true,
   sourcemap: true,
   format: 'esm',
+  treeShaking: true,
+  define: {
+    NODE_ENV: process.env.NODE_ENV,
+  },
 });
 
 if (process.argv.includes('--watch')) {
@@ -15,4 +20,5 @@ if (process.argv.includes('--watch')) {
 } else {
   console.log('Building ...');
   await context.rebuild();
+  await context.dispose();
 }

@@ -6,13 +6,21 @@ import * as storage from './storage.js';
 import type { Note } from '../common/types.js';
 
 // The version of the cache.
-const VERSION = '12';
+const VERSION = '15';
 
 // The name of the cache
 const CACHE_NAME = `unforget-${VERSION}`;
 
 // The static resources that the app needs to function.
-const APP_STATIC_RESOURCES = ['/', '/style.css', '/index.js', '/barefront.svg', '/manifest.json', '/icon-256x256.png'];
+const APP_STATIC_RESOURCES = [
+  '/',
+  '/style.css',
+  '/index.js',
+  '/barefront.svg',
+  '/manifest.json',
+  '/icon-256x256.png',
+  '/icons/menu.svg',
+];
 
 // On install, cache the static resources
 self.addEventListener('install', event => {

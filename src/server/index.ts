@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -10,9 +12,6 @@ import _ from 'lodash';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const DIST_PUBLIC = path.join(process.cwd(), 'dist/public');
-const CONFIG_FILE = path.join(process.cwd(), 'private/config.json');
-
-const serverConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')) as t.ServerConfig;
 
 // interface MyLocals {
 //   user?: LocalUser;
@@ -185,8 +184,8 @@ app.use(((error, req, res, next) => {
   res.status(500).send(error.message);
 }) as express.ErrorRequestHandler);
 
-app.listen(serverConfig.port, () => {
-  console.log(`Listening on port ${serverConfig.port}`);
+app.listen(Number(process.env.PORT), () => {
+  console.log(`Listening on port ${process.env.PORT}`);
 });
 
 async function hashPassword(username: string, password: string) {
