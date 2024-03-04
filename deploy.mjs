@@ -37,8 +37,10 @@ if [ -d '${DEPLOY_PATH}/private' ]; then
 fi
 
 # Install and build.
-npm install   && chown -R www-data:www-data .
-npm run build && chown -R www-data:www-data .
+npm install
+chown -R www-data:www-data .
+npm run build
+chown -R www-data:www-data .
 
 # Stop service if running
 systemctl stop ${DEPLOY_SERVICE} || true
@@ -51,38 +53,6 @@ mv '${DEPLOY_BUILD_PATH}' '${DEPLOY_PATH}'
 
 systemctl start ${DEPLOY_SERVICE}
 `);
-
-// run('ssh', DEPLOY_SSH_HOST, `cd '${DEPLOY_BUILD_PATH}' && unzip deploy.zip`);
-// run('ssh', DEPLOY_SSH_HOST, `cd '${DEPLOY_BUILD_PATH}' && npm install`);
-// run('ssh', DEPLOY_SSH_HOST, `cd '${DEPLOY_BUILD_PATH}' && chown -R www-data:www-data`);
-// run('ssh', DEPLOY_SSH_HOST, `cd '${DEPLOY_BUILD_PATH}' && npm run build`);
-// run('ssh', DEPLOY_SSH_HOST, `cd '${DEPLOY_BUILD_PATH}' && chown -R www-data:www-data`);
-
-// await run('ssh', [DEPLOY_SSH_HOST, `systemctl stop ${DEPLOY_SERVICE}`], true);
-// if (await run('ssh', [DEPLOY_SSH_HOST, `[ -d '${DEPLOY_PATH}' ]`]) === 0) {
-
-// }
-
-// const zipPath = './dist/deploy.zip';
-// const cmdOptions = { name: 'deploy', color: 'fgGreen', debug: true };
-// // const tagger = new u.Tagger(cmdOptions);
-// const hostAndBuildPath = `${DEPLOY_SSH_HOST}:${DEPLOY_BUILD_PATH}`;
-
-// const run = (cmd: string, args: string[], noThrow?: boolean) =>
-//   new u.Command(cmd, args, { ...cmdOptions, noThrow }).run();
-
-// TODO the deploy script must be part of the template and managed by the user.
-
-// # the / at the end of LOCAL_ROOT and REMOTE_ROOT means copy the content
-// rsync -arlvhP --delete \
-//       --exclude 'node_modules' \
-//       --exclude 'dist/bundle.*' \
-//       --exclude 'private-files' \
-//       --exclude 'design' \
-//       --exclude '.git' \
-//       --exclude 'npm-shrinkwrap.json' \
-//       "$LOCAL_ROOT/" "cdr:$REMOTE_ROOT/"
-// }
 
 function runRemote(cmd) {
   return run('ssh', DEPLOY_SSH_HOST, cmd);

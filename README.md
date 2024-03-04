@@ -12,3 +12,11 @@ npm run dev
 npm run clean
 npm run build
 npm run start
+
+# Deploy
+See deployment files in deploy/
+
+npm run clean
+npm run build
+npm run deploy example
+
