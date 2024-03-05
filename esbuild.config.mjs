@@ -12,6 +12,7 @@ const context = await esbuild.context({
   define: {
     NODE_ENV: process.env.NODE_ENV,
   },
+  plugins: [reporterPlugin()],
 });
 
 if (process.argv.includes('--watch')) {
@@ -21,4 +22,13 @@ if (process.argv.includes('--watch')) {
   console.log('Building ...');
   await context.rebuild();
   await context.dispose();
+}
+
+function reporterPlugin() {
+  return {
+    name: 'reporter',
+    setup(build) {
+      build.onEnd(result => console.log(`Done - ${result.errors.length} errors, ${result.warnings.length} warnings`));
+    },
+  };
 }

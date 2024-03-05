@@ -3,6 +3,8 @@
 /* #FEE9E1 */
 /* #E8FEE1 */
 
+@import './normalize.css';
+
 :root {
   --page-max-width: 600px;
 }
@@ -171,6 +173,12 @@ body {
       border-radius: 5px;
       border-top: 0;
 
+      @media (max-width: 600px) {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+
       .note {
         /* background: #ccf0fb; */
         /* border-radius: 5px; */
@@ -235,6 +243,10 @@ button {
   border-radius: 5px;
   transition: 0.2s background ease-in-out;
 
+  @media (max-width: 600px) {
+    border-radius: 0;
+  }
+
   &:hover {
     background: #fdddd2;
   }
@@ -251,4 +263,10 @@ button {
   border-radius: 5px;
   outline: none;
   padding: 0.5rem 0.75rem;
+
+  @media (max-width: 600px) {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
 }
