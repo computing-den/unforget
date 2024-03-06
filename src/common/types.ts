@@ -1,3 +1,5 @@
+import type { Draft } from 'immer';
+
 export type Note = {
   id: string;
   text?: string;
@@ -67,3 +69,16 @@ export type LocalUser = {
   username: string;
   token: string;
 };
+
+export type AppStore = {
+  menuOpen: boolean;
+  notes: Note[];
+  user?: LocalUser;
+  errorMsg?: string;
+  syncing: boolean;
+  queueCount: number;
+  online: boolean;
+};
+
+export type AppStoreRecipe = (draft: Draft<AppStore>) => AppStore | void;
+export type AppStoreListener = (newStore: AppStore, oldStore: AppStore) => void;

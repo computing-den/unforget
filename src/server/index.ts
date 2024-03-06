@@ -111,8 +111,11 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
       `,
     )
     .run(dbClient);
-  res.cookie('unforget_token', token, { maxAge: 10 * 365 * 24 * 3600 * 1000 });
-  res.send({ username: user.username, token });
+  const maxAge = 10 * 365 * 24 * 3600 * 1000;
+  res.cookie('unforget_token', token, { maxAge });
+  res.cookie('unforget_username', user.username, { maxAge });
+  const localUser: t.LocalUser = { username: user.username, token };
+  res.send(localUser);
 }
 
 app.get('/api/notes', authenticate, (req, res) => {
@@ -123,8 +126,8 @@ app.get('/api/notes', authenticate, (req, res) => {
 });
 
 app.post('/api/got-error', authenticate, (req, res) => {
-  const { msg } = req.body as { msg: string };
-  console.error(`Client got error: ${msg}`);
+  const { message } = req.body as { message: string };
+  console.error(`Client got error: ${message}`);
 });
 
 app.post('/api/partial-sync', authenticate, (req, res) => {

@@ -3,7 +3,7 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import type { Note } from '../common/types.js';
+import type * as t from '../common/types.js';
 
 // The version of the cache.
 const VERSION = '18';

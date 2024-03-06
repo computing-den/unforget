@@ -1,0 +1,38 @@
+.login-page {
+  .body {
+    margin: 2rem auto;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+
+    .form-element {
+      display: flex;
+      flex-direction: column;
+
+      & + .form-element {
+        margin-top: 0.5rem;
+      }
+      label {
+        /* width: 80px; */
+      }
+      input {
+        margin-top: 0.25rem;
+        /* flex: 1; */
+      }
+    }
+
+    .buttons {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-gap: 0.5rem;
+
+      button.login {
+        /* max-width: 150px; */
+        /* width: 100%; */
+        /* margin-left: auto; */
+        /* margin-right: auto; */
+      }
+    }
+  }
+}

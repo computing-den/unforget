@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import React from 'react';
-import App from './app.jsx';
+import App from './App.jsx';
+import * as appStore from './appStore.jsx';
+import * as actions from './appStoreActions.jsx';
 
 function setup() {
   if ('serviceWorker' in navigator) {
@@ -15,6 +17,8 @@ function setup() {
   } else {
     console.error('Service workers are not supported.');
   }
+
+  actions.initAppStore();
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);

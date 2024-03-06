@@ -1,0 +1,53 @@
+/* #E1F6FE */
+/* #F8E1FE */
+/* #FEE9E1 */
+/* #E8FEE1 */
+
+:root {
+  --page-max-width: 600px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #ddf7ff;
+}
+
+button {
+  background: #fee9e1;
+  border: 1px solid #dbc7bf;
+  padding: 0.5rem;
+  border-radius: 5px;
+  transition: 0.2s background ease-in-out;
+
+  @media (max-width: 600px) {
+    border-radius: 0;
+  }
+
+  &:hover {
+    background: #fdddd2;
+  }
+
+  &:focus-visible {
+    outline: 1px solid #f39e7d;
+  }
+}
+
+.text-input {
+  /* width: 500px; */
+  /* margin: 0 auto; */
+  border: 1px solid #aadfef;
+  border-radius: 5px;
+  outline: none;
+  padding: 0.5rem 0.75rem;
+
+  @media (max-width: 600px) {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
