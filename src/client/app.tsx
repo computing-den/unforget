@@ -21,11 +21,17 @@ type NotesPageProps = PageProps & { token: string; setToken: (token?: string) =>
 
 function NotesPage(props: NotesPageProps) {
   const [notes, setNotes] = useState<t.Note[]>([]);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg_] = useState('');
   const [newNoteText, setNewNoteText] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
   const [online, setOnline] = useState(navigator.onLine);
+  const [editingNote, setEditingNote] = useState<t.Note | undefined>(undefined);
+
+  const setErrorMsg = useCallback((msg: string) => {
+    setErrorMsg_(msg);
+    if (msg) util.postApi('/api/got-error', { msg });
+  }, []);
 
   const updateNotes = useAsyncCallback(async () => setNotes(await storage.getActiveNotes()), setErrorMsg, []);
 
@@ -54,6 +60,10 @@ function NotesPage(props: NotesPageProps) {
 
   const newNoteTextChanged = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewNoteText(e.target.value);
+  }, []);
+
+  const openNote = useCallback((note: t.Note) => {
+    setEditingNote(note);
   }, []);
 
   // Update notes on mount.
@@ -135,14 +145,63 @@ function NotesPage(props: NotesPageProps) {
         />
         <button onClick={add}>Add</button>
       </div>
-      <div className="notes">
-        {notes.map(note => (
-          <div className="note" key={note.id}>
-            {note.text}
-          </div>
-        ))}
-      </div>
+      <Notes notes={notes} openNote={openNote} />
+      {editingNote && <NoteEditor note={editingNote} />}
     </Template>
+  );
+}
+
+function Notes(props: { notes: t.Note[]; openNote: (note: t.Note) => any }) {
+  return (
+    <div className="notes">
+      {props.notes.map(note => (
+        <Note key={note.id} note={note} openNote={props.openNote} />
+      ))}
+    </div>
+  );
+}
+
+function Note(props: { note: t.Note; openNote: (note: t.Note) => any }) {
+  const ps = (props.note.text || '').split(/\n+/).map(x => <p>{x}</p>);
+
+  const clicked = useCallback((e: React.MouseEvent) => props.openNote(props.note), []);
+
+  return (
+    <div className="note" onClick={clicked}>
+      {ps}
+    </div>
+  );
+}
+
+function NoteEditor(props: { note: t.Note }) {
+  const [text, setText] = useState(props.note.text);
+
+  const textChanged = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  }, []);
+
+  useEffect(() => {
+    const dialog = document.getElementById('note-editor') as HTMLDialogElement;
+    dialog.showModal();
+
+    function resize() {
+      console.log('height', window.visualViewport!.height);
+      dialog.style.height = `${window.visualViewport!.height}px`;
+    }
+    window.visualViewport!.addEventListener('resize', resize);
+    return () => window.visualViewport!.removeEventListener('resize', resize);
+  }, []);
+
+  return (
+    <dialog id="note-editor">
+      <textarea
+        className="text-input"
+        placeholder="Write your note ..."
+        value={text}
+        onChange={textChanged}
+        autoFocus
+      />
+    </dialog>
   );
 }
 
@@ -256,7 +315,7 @@ function Template(props: TemplateProps) {
             <div className="logo">
               <img src="/barefront.svg" />
             </div>
-            <h1>Unforget</h1>
+            <h1 className="heading">Unforget</h1>
             <div className="status">
               {props.online !== undefined && (props.online ? 'online' : 'offline')}
               {/*props.syncing && ' syncing'*/}

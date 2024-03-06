@@ -1,10 +1,12 @@
 // import React, { useCallback, useState, useEffect } from 'react';
 
 export async function createFetchResponseError(res: Response): Promise<Error> {
-  if (getResponseContentType(res) === 'application/json') {
-    return new Error((await res.json()).message);
+  const contentType = getResponseContentType(res);
+  if (contentType === 'application/json') {
+    return new Error((await res.json()).message || 'unknown');
   } else {
-    return new Error(await res.text());
+    console.error(await res.text());
+    return new Error(`unknown response of type ${contentType}`);
   }
 }
 

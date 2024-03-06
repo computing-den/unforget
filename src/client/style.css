@@ -29,13 +29,17 @@ body {
   background: #448199;
 
   .app-error {
-    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    /* width: 100%; */
     text-align: center;
     border-top: 1px solid white;
     background: #b90000;
     color: white;
     font-size: 0.8em;
-    p {
+    & p {
       margin: 0.15rem 0;
     }
   }
@@ -60,13 +64,14 @@ body {
         display: flex;
         align-items: center;
         justify-content: center;
-        img {
+
+        & img {
           width: 40px;
           height: 40px;
         }
       }
 
-      h1 {
+      & h1 {
         margin: 0.5rem 0;
         font-size: 1rem;
         letter-spacing: 2px;
@@ -118,15 +123,15 @@ body {
             list-style-type: none;
 
             li {
-              a,
-              a:visited,
-              a:focus,
-              a:active {
+              & a,
+              & a:visited,
+              & a:focus,
+              & a:active {
                 color: inherit;
                 text-decoration: none;
               }
 
-              a {
+              & a {
                 display: flex;
                 white-space: nowrap;
                 padding: 1rem 2rem;
@@ -136,7 +141,7 @@ body {
                 justify-content: center;
                 /* letter-spacing: 1px; */
               }
-              a:hover {
+              & a:hover {
                 background: #ffffff22;
               }
             }
@@ -155,10 +160,10 @@ body {
     .new-note-container {
       display: flex;
       flex-direction: column;
-      textarea {
+      & textarea {
         padding: 1rem;
       }
-      button {
+      & button {
         margin-top: 0.5rem;
         max-width: 150px;
         width: 100%;
@@ -180,19 +185,52 @@ body {
       }
 
       .note {
-        /* background: #ccf0fb; */
-        /* border-radius: 5px; */
-        /* border: 1px solid #aadfef; */
-        padding: 1rem 1rem;
-        /* box-shadow: 2px 2px 6px 0px #00000021; */
-
+        padding: 0.5rem 1rem;
         border-top: 1px solid #94becd;
-        /* border-top: 1px solid #aadfef; */
+        transition: 0.2s background ease-in-out;
+        cursor: pointer;
+
+        &:hover {
+          background: #d0ebf5;
+        }
+
+        & p {
+          margin: 0.5rem 0;
+        }
 
         & + .note {
           /* margin-top: 0.5rem; */
         }
       }
+    }
+  }
+
+  #note-editor {
+    border: 0;
+    outline: 0;
+    /* margin: 0; */
+    padding: 0;
+    /* top: 0; */
+    /* right: 0; */
+    /* left: 0; */
+    /* top: 0; */
+    /* bottom: 0; */
+    /* max-width: unset; */
+    /* max-height: unset; */
+    width: 100%;
+    height: 100vh;
+    background: #aaa;
+    display: flex;
+    overflow: hidden;
+    transform: rotate(0);
+
+    &::backdrop {
+      background-image: linear-gradient(150deg, #3e3e3e, #000);
+      opacity: 0.9;
+    }
+
+    & textarea {
+      width: 100%;
     }
   }
 }

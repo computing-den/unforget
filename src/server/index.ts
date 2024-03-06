@@ -122,6 +122,11 @@ app.get('/api/notes', authenticate, (req, res) => {
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
+app.post('/api/got-error', authenticate, (req, res) => {
+  const { msg } = req.body as { msg: string };
+  console.error(`Client got error: ${msg}`);
+});
+
 app.post('/api/partial-sync', authenticate, (req, res) => {
   console.log('POST /api/partial-sync', req.body);
   const user = res.locals.user!;
@@ -162,7 +167,7 @@ app.get('/', (req, res) => {
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>unforget</title>
     <link rel="stylesheet" href="/style.css">
@@ -176,6 +181,7 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res, next) => {
+  console.error(`Page not found: ${req.url}`);
   res.status(404).send(`Page not found: ${req.url}`);
 });
 
