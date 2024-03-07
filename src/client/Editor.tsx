@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 type EditorProps = {
   value: string;
   onChange: (value: string) => any;
+  onClick?: () => any;
   id?: string;
   className?: string;
   placeholder?: string;
@@ -28,10 +29,11 @@ function Editor(props: EditorProps) {
   // }, []);
 
   const clickCb = useCallback(() => {
+    props.onClick?.();
     const message = `clickCb: ${editorRef.current!.selectionStart} ${editorRef.current!.selectionEnd}`;
     util.postApi('/api/log', { message });
     console.log(message);
-  }, []);
+  }, [props.onClick]);
 
   return (
     <textarea

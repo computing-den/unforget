@@ -14,11 +14,16 @@ type NotesPageProps = {};
 
 function NotesPage(props: NotesPageProps) {
   const [newNoteText, setNewNoteText] = useState('');
+  const [editing, setEditing] = useState(false);
 
   const addNoteCb = useCallback(() => addNote(newNoteText).then(() => setNewNoteText('')), [newNoteText]);
 
   const newNoteTextChanged = useCallback((text: string) => {
     setNewNoteText(text);
+  }, []);
+
+  const editorClickCb = useCallback(() => {
+    setEditing(true);
   }, []);
 
   return (
@@ -29,12 +34,13 @@ function NotesPage(props: NotesPageProps) {
           <div className="new-note-container">
             <Editor
               id="new-note-editor"
-              className="text-input"
+              className={`text-input ${editing ? 'tall' : ''}`}
               placeholder="What's on you mind?"
               value={newNoteText}
               onChange={newNoteTextChanged}
+              onClick={editorClickCb}
             />
-            <button onClick={addNoteCb}>Add</button>
+            {editing && <button onClick={addNoteCb}>Add</button>}
           </div>
           <Notes />
         </div>
