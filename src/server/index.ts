@@ -130,6 +130,11 @@ app.post('/api/got-error', authenticate, (req, res) => {
   console.error(`Client got error: ${message}`);
 });
 
+app.post('/api/log', authenticate, (req, res) => {
+  const { message } = req.body as { message: string };
+  console.error(`Client log: ${message}`);
+});
+
 app.post('/api/partial-sync', authenticate, (req, res) => {
   console.log('POST /api/partial-sync', req.body);
   const user = res.locals.user!;

@@ -1,5 +1,6 @@
 @import './common.css';
 @import './normalize.css';
 @import './PageTemplate.css';
+@import './Editor.css';
 @import './LoginPage.css';
 @import './NotesPage.css';

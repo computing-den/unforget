@@ -1,0 +1,11 @@
+.editor {
+  /* background: #eee; */
+  padding: 1rem;
+  /* margin: 5rem; */
+  /* width: 100px; */
+  font-family: inherit;
+  font-variant-ligatures: no-common-ligatures;
+  white-space: pre-wrap;
+  word-break: break-word;
+  word-wrap: break-word;
+}

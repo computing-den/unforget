@@ -5,6 +5,7 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import PageTemplate from './PageTemplate.jsx';
+import Editor from './Editor.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -20,8 +21,8 @@ function NotesPage(props: NotesPageProps) {
 
   const addNoteCb = useCallback(() => addNote(newNoteText).then(() => setNewNoteText('')), [newNoteText]);
 
-  const newNoteTextChanged = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewNoteText(e.target.value);
+  const newNoteTextChanged = useCallback((text: string) => {
+    setNewNoteText(text);
   }, []);
 
   // Sync storage on mount and every N seconds.
@@ -33,13 +34,12 @@ function NotesPage(props: NotesPageProps) {
   return (
     <PageTemplate className="notes-page">
       <div className="new-note-container">
-        <textarea
-          id="new-note-textarea"
+        <Editor
+          id="new-note-editor"
           className="text-input"
-          placeholder="Write your note ..."
+          placeholder="What's on you mind?"
           value={newNoteText}
           onChange={newNoteTextChanged}
-          rows={5}
           autoFocus
         />
         <button onClick={addNoteCb}>Add</button>
@@ -77,7 +77,7 @@ function Note(props: { note: t.Note }) {
 
 async function addNote(text: string): Promise<void> {
   try {
-    document.getElementById('new-note-textarea')!.focus();
+    document.getElementById('new-note-editor')!.focus();
     if (!text) return;
 
     const newNote: t.Note = {
