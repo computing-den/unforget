@@ -17,21 +17,6 @@
         height: 400px;
       }
     }
-
-    & button {
-      margin-top: 0.5rem;
-      max-width: 150px;
-      width: 100%;
-      margin-left: auto;
-      margin-right: auto;
-      @media (max-width: 600px) {
-        margin-top: 0;
-        max-width: unset;
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-      }
-    }
   }
 
   .notes {

@@ -6,7 +6,7 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import Editor from './Editor.jsx';
-import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
+import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -28,7 +28,7 @@ function NotesPage(props: NotesPageProps) {
 
   return (
     <PageLayout>
-      <PageHeader />
+      <PageHeader actions={[editing && <PageAction label="Save" onClick={addNoteCb} />]} />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">
@@ -40,7 +40,6 @@ function NotesPage(props: NotesPageProps) {
               onChange={newNoteTextChanged}
               onClick={editorClickCb}
             />
-            {editing && <button onClick={addNoteCb}>Add</button>}
           </div>
           <Notes />
         </div>
