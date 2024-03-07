@@ -1,82 +1,55 @@
 .notes-page {
-  .body {
-    margin: 2rem auto;
-    max-width: var(--page-max-width);
+  flex: 1;
+  margin: 2rem auto;
+  max-width: var(--page-max-width);
+  width: 100%;
 
-    .new-note-container {
-      display: flex;
-      flex-direction: column;
-      & textarea {
-        padding: 1rem;
-      }
-      & button {
-        margin-top: 0.5rem;
-        max-width: 150px;
-        width: 100%;
-        margin-left: auto;
-        margin-right: auto;
-      }
+  .new-note-container {
+    display: flex;
+    flex-direction: column;
+
+    .editor {
+      padding: 1rem;
     }
 
-    .notes {
-      margin-top: 2rem;
-      border: 1px solid #94becd;
-      border-radius: 5px;
-      border-top: 0;
-
-      @media (max-width: 600px) {
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-      }
-
-      .note {
-        padding: 0.5rem 1rem;
-        border-top: 1px solid #94becd;
-        transition: 0.2s background ease-in-out;
-        cursor: pointer;
-
-        &:hover {
-          background: #d0ebf5;
-        }
-
-        & p {
-          margin: 0.5rem 0;
-        }
-
-        & + .note {
-          /* margin-top: 0.5rem; */
-        }
-      }
+    & button {
+      margin-top: 0.5rem;
+      max-width: 150px;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
     }
   }
 
-  #note-editor {
-    border: 0;
-    outline: 0;
-    /* margin: 0; */
-    padding: 0;
-    /* top: 0; */
-    /* right: 0; */
-    /* left: 0; */
-    /* top: 0; */
-    /* bottom: 0; */
-    /* max-width: unset; */
-    /* max-height: unset; */
-    width: 100%;
-    height: 100vh;
-    background: #aaa;
-    display: flex;
-    overflow: hidden;
-    transform: rotate(0);
+  .notes {
+    margin-top: 2rem;
+    border: 1px solid #94becd;
+    border-radius: 5px;
+    border-top: 0;
 
-    &::backdrop {
-      background-image: linear-gradient(150deg, #3e3e3e, #000);
-      opacity: 0.9;
+    @media (max-width: 600px) {
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
     }
 
-    & textarea {
-      width: 100%;
+    .note {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid #94becd;
+      transition: 0.2s background ease-in-out;
+      cursor: pointer;
+
+      &:hover {
+        background: #d0ebf5;
+      }
+
+      & p {
+        margin: 0.5rem 0;
+      }
+
+      & + .note {
+        /* margin-top: 0.5rem; */
+      }
     }
   }
 }

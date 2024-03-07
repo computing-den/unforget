@@ -6,7 +6,7 @@ import * as storage from './storage.js';
 import type * as t from '../common/types.js';
 
 // The version of the cache.
-const VERSION = '18';
+const VERSION = '20';
 
 // The name of the cache
 const CACHE_NAME = `unforget-${VERSION}`;

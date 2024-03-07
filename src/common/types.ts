@@ -75,6 +75,7 @@ export type AppStore = {
   notes: Note[];
   user?: LocalUser;
   errorMsg?: string;
+  infoMsg?: string;
   syncing: boolean;
   queueCount: number;
   online: boolean;

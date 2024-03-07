@@ -11,6 +11,7 @@ type EditorProps = {
   className?: string;
   placeholder?: string;
   autoFocus?: boolean;
+  readOnly?: boolean;
 };
 
 function Editor(props: EditorProps) {
@@ -42,6 +43,7 @@ function Editor(props: EditorProps) {
       value={props.value}
       placeholder={props.placeholder}
       autoFocus={props.autoFocus}
+      readOnly={props.readOnly}
       // onSelect={selectCb}
     />
   );

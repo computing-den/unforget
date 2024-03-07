@@ -43,6 +43,7 @@ export async function login(credentials: t.Credentials) {
     appStore.update(app => {
       app.user = user;
     });
+    storage.sync();
   } catch (error) {
     gotError(error as Error);
   }
@@ -54,6 +55,7 @@ export async function signup(credentials: t.Credentials) {
     appStore.update(app => {
       app.user = user;
     });
+    storage.sync();
   } catch (error) {
     gotError(error as Error);
   }

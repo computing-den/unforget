@@ -1,5 +1,5 @@
 import type * as t from '../common/types.js';
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useSyncExternalStore } from 'react';
 
 export async function createFetchResponseError(res: Response): Promise<Error> {
   const contentType = getResponseContentType(res);
@@ -35,12 +35,13 @@ export function getCookie(name: string): string | undefined {
 export function getUserFromCookie(): t.LocalUser | undefined {
   const username = getCookie('unforget_username');
   const token = getCookie('unforget_token');
+  console.log('getUserFromCookie: ', username, token);
   if (username && token) return { username, token };
 }
 
 export function resetUserCookies() {
-  document.cookie = 'unforget_username=';
-  document.cookie = 'unforget_token=';
+  document.cookie = 'unforget_username=; path=/';
+  document.cookie = 'unforget_token=; path=/';
 }
 
 export function useInterval(cb: () => void, ms: number) {
@@ -50,10 +51,19 @@ export function useInterval(cb: () => void, ms: number) {
   }, []);
 }
 
-export function useCallbackCancelEvent(cb: () => void, deps: React.DependencyList): (e: React.UIEvent) => void {
+export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList): (e: React.UIEvent) => void {
   return useCallback((e: React.UIEvent) => {
     e.preventDefault();
     e.stopPropagation();
     cb();
   }, deps);
 }
+
+// export function useLocation(): Location {
+//   return useSyncExternalStore(subscribeToPopstate, () => window.location);
+// }
+
+// function subscribeToPopstate(cb: () => void): () => void {
+//   window.addEventListener('popstate', cb);
+//   return () => window.removeEventListener('popstate', cb);
+// }

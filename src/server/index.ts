@@ -112,8 +112,8 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
     )
     .run(dbClient);
   const maxAge = 10 * 365 * 24 * 3600 * 1000;
-  res.cookie('unforget_token', token, { maxAge });
-  res.cookie('unforget_username', user.username, { maxAge });
+  res.cookie('unforget_token', token, { maxAge, path: '/' });
+  res.cookie('unforget_username', user.username, { maxAge, path: '/' });
   const localUser: t.LocalUser = { username: user.username, token };
   res.send(localUser);
 }
@@ -170,7 +170,7 @@ app.post('/api/full-sync', authenticate, (req, res) => {
   mergeSyncData(user, fullSyncReq, fullSyncRes);
 });
 
-app.get('/', (req, res) => {
+app.get(['/', '/n/:noteId', '/login'], (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
   <head>

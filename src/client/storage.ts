@@ -1,6 +1,7 @@
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.jsx';
 import * as util from './util.jsx';
+import * as appStore from './appStore.jsx';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
 
@@ -78,7 +79,7 @@ export async function transaction<T>(
   });
 }
 
-export async function addNote(note: t.Note) {
+export async function saveNote(note: t.Note) {
   await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', tx => {
     tx.objectStore(NOTES_STORE).put(note);
     const noteHead: t.NoteHead = { id: note.id, modification_date: note.modification_date };
@@ -91,6 +92,15 @@ export async function getAllNotes(): Promise<t.Note[]> {
     NOTES_STORE,
     'readonly',
     tx => tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX).getAll() as IDBRequest<t.Note[]>,
+  );
+  return req.result;
+}
+
+export async function getNote(id: string): Promise<t.Note | undefined> {
+  const req = await transaction(
+    NOTES_STORE,
+    'readonly',
+    tx => tx.objectStore(NOTES_STORE).get(id) as IDBRequest<t.Note | undefined>,
   );
   return req.result;
 }
@@ -127,6 +137,9 @@ export async function getSyncNumber(): Promise<number> {
 }
 
 export async function sync() {
+  // Skip if user not logged in.
+  if (!appStore.get().user) return;
+
   let error: Error | undefined;
   let mergeCount = 0;
   try {
@@ -278,4 +291,19 @@ async function mergeSyncData(reqSyncData: t.SyncData, resSyncData: t.SyncData): 
 export async function countQueuedNotes(): Promise<number> {
   const res = await transaction([NOTES_QUEUE_STORE], 'readonly', tx => tx.objectStore(NOTES_QUEUE_STORE).count());
   return res.result;
+}
+
+export async function waitTillSyncEnd(ms?: number) {
+  await Promise.race([
+    new Promise<void>(resolve => {
+      function cb() {
+        if (!syncing) {
+          removeSyncListener(cb);
+          resolve();
+        }
+      }
+      addSyncListener(cb);
+    }),
+    ms && new Promise(resolve => setTimeout(resolve, ms)),
+  ]);
 }
