@@ -54,10 +54,12 @@ button {
   outline: none;
   padding: 0.5rem 0.75rem;
 
-  @media (max-width: 600px) {
-    border-radius: 0;
-    border-left: 0;
-    border-right: 0;
+  &:not(.small) {
+    @media (max-width: 600px) {
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+    }
   }
 }
 

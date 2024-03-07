@@ -37,7 +37,7 @@ function LoginPage(props: LoginPageProps) {
           <div className="form-element">
             <label htmlFor="username">Username</label>
             <input
-              className="text-input"
+              className="text-input small"
               type="text"
               name="username"
               required
@@ -49,7 +49,7 @@ function LoginPage(props: LoginPageProps) {
           <div className="form-element">
             <label htmlFor="password">Password</label>
             <input
-              className="text-input"
+              className="text-input small"
               type="password"
               name="password"
               required
