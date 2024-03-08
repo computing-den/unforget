@@ -51,10 +51,12 @@ export function useInterval(cb: () => void, ms: number) {
   }, []);
 }
 
-export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList): (e: React.UIEvent) => void {
-  return useCallback((e: React.UIEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList): (e?: React.UIEvent) => void {
+  return useCallback((e?: React.UIEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     cb();
   }, deps);
 }

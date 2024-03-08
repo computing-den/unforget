@@ -20,6 +20,9 @@ const APP_STATIC_RESOURCES = [
   '/manifest.json',
   '/icon-256x256.png',
   '/icons/menu.svg',
+  '/icons/refresh-ccw.svg',
+  '/icons/log-out.svg',
+  '/icons/user.svg',
 ];
 
 // On install, cache the static resources

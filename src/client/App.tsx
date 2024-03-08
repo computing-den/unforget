@@ -126,8 +126,6 @@ function useUpdateNotesAfterStorageSync() {
 
       appStore.update(app => {
         app.syncing = !args.done;
-        // Only update error message if syncing has ended because listener is also called when a new sync starts.
-        if (args.done) app.errorMsg = args.error?.message;
       });
     }
     storage.addSyncListener(syncListener);

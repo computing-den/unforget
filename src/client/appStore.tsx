@@ -32,3 +32,10 @@ export function removeListener(listener: t.AppStoreListener) {
 export function use(): t.AppStore {
   return useSyncExternalStore(addListener, get);
 }
+
+declare global {
+  var dev: any;
+}
+
+globalThis.dev ??= {};
+globalThis.dev.getStore = get;

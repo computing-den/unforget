@@ -2,7 +2,7 @@ import type { Draft } from 'immer';
 
 export type Note = {
   id: string;
-  text?: string;
+  text: string | null;
   creation_date: string;
   modification_date: string;
   deleted: number; // 0 or 1
@@ -74,8 +74,7 @@ export type AppStore = {
   menuOpen: boolean;
   notes: Note[];
   user?: LocalUser;
-  errorMsg?: string;
-  infoMsg?: string;
+  message?: { text: string; type: 'info' | 'error'; timestamp: number };
   syncing: boolean;
   queueCount: number;
   online: boolean;

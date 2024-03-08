@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
@@ -22,23 +22,28 @@ function NotesPage(props: NotesPageProps) {
     setNewNoteText(text);
   }, []);
 
-  const editorClickCb = useCallback(() => {
+  const editorFocusCb = useCallback(() => {
     setEditing(true);
+  }, []);
+
+  const editorBlurCb = useCallback(() => {
+    setEditing(false);
   }, []);
 
   return (
     <PageLayout>
-      <PageHeader actions={[editing && <PageAction label="Save" onClick={addNoteCb} />]} />
+      <PageHeader actions={[newNoteText && <PageAction label="Save" onClick={addNoteCb} bold />]} />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">
             <Editor
               id="new-note-editor"
-              className={`text-input ${editing ? 'tall' : ''}`}
+              className={`text-input ${editing && newNoteText ? 'tall' : ''}`}
               placeholder="What's on you mind?"
               value={newNoteText}
               onChange={newNoteTextChanged}
-              onClick={editorClickCb}
+              onFocus={editorFocusCb}
+              onBlur={editorBlurCb}
             />
           </div>
           <Notes />
@@ -48,7 +53,7 @@ function NotesPage(props: NotesPageProps) {
   );
 }
 
-function Notes() {
+const Notes = memo(function Notes() {
   const app = appStore.use();
   return (
     <div className="notes">
@@ -57,18 +62,20 @@ function Notes() {
       ))}
     </div>
   );
-}
+});
 
-function Note(props: { note: t.Note }) {
+const Note = memo(function Note(props: { note: t.Note }) {
   const navigate = useNavigate();
-  const ps = (props.note.text || '').split(/\n+/).map((x, i) => <p key={i}>{x}</p>);
+  // const ps = (props.note.text || '').split(/\n+/).map((x, i) => <p key={i}>{x}</p>);
+
+  const clickCb = () => navigate(`/n/${props.note.id}`, { state: { fromNotesPage: true } });
 
   return (
-    <div className="note" onClick={() => navigate(`/n/${props.note.id}`)}>
-      {ps}
-    </div>
+    <pre className="note" onClick={clickCb}>
+      {props.note.text}
+    </pre>
   );
-}
+});
 
 async function addNote(text: string): Promise<void> {
   try {

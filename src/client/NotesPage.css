@@ -36,6 +36,12 @@
       border-top: 1px solid #94becd;
       transition: 0.2s background ease-in-out;
       cursor: pointer;
+      font-family: inherit;
+      white-space: pre-wrap;
+      word-break: break-word;
+      word-wrap: break-word;
+      line-height: 1.5;
+      margin: 0;
 
       &:hover {
         background: #d0ebf5;

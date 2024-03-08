@@ -198,6 +198,11 @@ export async function sync() {
   }
 }
 
+export async function fullSync() {
+  fullSyncRequired = true;
+  return sync();
+}
+
 export async function clearAll() {
   const db = await getStorage();
   const storeNames = Array.from(db.objectStoreNames);

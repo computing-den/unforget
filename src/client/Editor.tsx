@@ -13,6 +13,8 @@ type EditorProps = {
   placeholder?: string;
   autoFocus?: boolean;
   readOnly?: boolean;
+  onFocus?: React.FocusEventHandler<HTMLTextAreaElement>;
+  onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
 };
 
 function Editor(props: EditorProps) {
@@ -41,6 +43,8 @@ function Editor(props: EditorProps) {
       ref={editorRef}
       className={`editor text-input ${props.className || ''}`}
       onClick={clickCb}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
       onChange={changeCb}
       value={props.value}
       placeholder={props.placeholder}

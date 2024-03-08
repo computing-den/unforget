@@ -69,8 +69,33 @@ export function logout() {
 
 export function gotError(error: Error) {
   console.error(error);
-  appStore.update(app => {
-    app.errorMsg = error.message;
-  });
+  showMessage(error.message, { type: 'error', hideAfterTimeout: true });
   if (error.message) util.postApi('/api/got-error', { message: error.message });
+}
+
+export function showMessage(text: string, opts?: { type?: 'info' | 'error'; hideAfterTimeout?: boolean }) {
+  const timestamp = Date.now();
+  appStore.update(app => {
+    app.message = { text, type: opts?.type || 'info', timestamp };
+  });
+  if (opts?.hideAfterTimeout) {
+    setTimeout(() => {
+      if (appStore.get().message?.timestamp === timestamp) {
+        appStore.update(app => {
+          app.message = undefined;
+        });
+      }
+    }, 2000);
+  }
+}
+
+export async function saveNote(note: t.Note, messageText?: string) {
+  try {
+    await storage.saveNote(note);
+    if (messageText) showMessage(messageText, { type: 'info', hideAfterTimeout: true });
+    updateNotes();
+    storage.sync();
+  } catch (error) {
+    gotError(error as Error);
+  }
 }

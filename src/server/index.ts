@@ -170,6 +170,26 @@ app.post('/api/full-sync', authenticate, (req, res) => {
   mergeSyncData(user, fullSyncReq, fullSyncRes);
 });
 
+app.post('/api/add-notes', authenticate, (req, res) => {
+  console.log('POST /api/full-sync', req.body);
+  const user = res.locals.user!;
+  const fullSyncReq: t.FullSyncReq = req.body;
+  const syncNumber = getSyncNumber(user);
+
+  const fullSyncRes: t.FullSyncRes = { notes: [], syncNumber };
+
+  res.send(fullSyncRes);
+
+  mergeSyncData(user, fullSyncReq, fullSyncRes);
+});
+
+app.post('/api/logout', authenticate, (req, res) => {
+  console.log('POST /api/full-sync', req.body);
+  const user = res.locals.user!;
+  logout(user);
+  res.send({ ok: true });
+});
+
 app.get(['/', '/n/:noteId', '/login'], (req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -254,6 +274,16 @@ function getNotes(user: t.LocalUser): t.Note[] {
 
 function dbNoteToNote(dbNote: t.DBNote): t.Note {
   return _.omit(dbNote, 'username');
+}
+
+function logout(user: t.LocalUser) {
+  const deleteFromQueue = db.get().prepare<[{ token: string }]>(`DELETE FROM notes_queue WHERE token = :token`);
+  const deleteFromClient = db.get().prepare<[{ token: string }]>(`DELETE FROM clients WHERE token = :token`);
+
+  db.get().transaction(() => {
+    deleteFromQueue.run(user);
+    deleteFromClient.run(user);
+  });
 }
 
 function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
