@@ -70,8 +70,9 @@ const requireUser = async (args: LoaderFunctionArgs) => {
   console.log('requireUser');
   const { user } = appStore.get();
   if (!user) {
-    const url = new URL(args.request.url);
-    throw redirect(`/login?from=${url.pathname}`);
+    const from = new URL(args.request.url);
+    const params = from.pathname === '/' ? '' : `?from=${from.pathname}`;
+    throw redirect(`/login${params}`);
   }
   return null;
 };
