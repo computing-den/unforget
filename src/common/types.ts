@@ -7,6 +7,7 @@ export type Note = {
   modification_date: string;
   deleted: number; // 0 or 1
   archived: number; // 0 or 1
+  pinned: number; // 0 or 1
   order: number;
 };
 

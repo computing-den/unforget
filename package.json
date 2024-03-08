@@ -8,7 +8,9 @@
     "build": "barefront build",
     "start": "node --enable-source-maps dist/server/index.js",
     "dev": "barefront dev",
-    "deploy": "node deploy.mjs"
+    "deploy": "node deploy.mjs",
+    "convert": "node --enable-source-maps dist/scripts/convertFromGoogleKeep.js",
+    "import": "node --enable-source-maps dist/scripts/import.js"
   },
   "author": "",
   "license": "ISC",

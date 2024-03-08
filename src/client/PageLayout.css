@@ -39,12 +39,14 @@
     align-items: center;
 
     .menu-button-container {
-      left: 0.5rem;
+      margin-left: 0.5rem;
       display: flex;
       align-items: center;
 
       .menu-button {
         position: relative;
+        width: 25px;
+        height: 25px;
 
         > a {
           display: flex;
@@ -54,8 +56,8 @@
           position: absolute;
           top: 28px;
           left: 0;
-          background: #ffffffaa;
-          backdrop-filter: blur(5px);
+          background: #ffffff;
+          /* backdrop-filter: blur(5px); */
           z-index: 100;
           color: #424242;
           border-radius: 5px;
@@ -68,7 +70,7 @@
             padding: 0;
             list-style-type: none;
 
-            img {
+            & img {
               width: 15px;
               height: 15px;
               margin-left: auto;
@@ -150,12 +152,20 @@
       & a {
         color: white;
 
+        @media (max-width: 600px) {
+          font-size: 0.9em;
+        }
+
         &.bold {
           font-weight: bold;
         }
 
         & + a {
           margin-left: 2rem;
+
+          @media (max-width: 600px) {
+            margin-left: 1rem;
+          }
         }
       }
     }

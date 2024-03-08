@@ -62,6 +62,11 @@ export async function signup(credentials: t.Credentials) {
 }
 
 export function logout() {
+  const { user } = appStore.get();
+  if (!user) return;
+
+  // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
+  util.postApi('/api/logout', user);
   storage.clearAll();
   util.resetUserCookies();
   initAppStore();

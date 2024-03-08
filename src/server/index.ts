@@ -2,10 +2,8 @@ import 'dotenv/config';
 
 import express from 'express';
 import path from 'node:path';
-import fs from 'node:fs';
 import crypto from 'node:crypto';
 import type * as t from '../common/types.js';
-import * as cutil from '../common/util.js';
 import * as db from './db.js';
 import cookieParser from 'cookie-parser';
 import _ from 'lodash';
@@ -121,7 +119,7 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
 app.get('/api/notes', authenticate, (req, res) => {
   console.log('GET /api/notes');
   const user = res.locals.user!;
-  const notes = getNotes(user);
+  const notes = db.getNotes(user);
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
@@ -139,7 +137,7 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
   console.log('POST /api/partial-sync', req.body);
   const user = res.locals.user!;
   const partialSyncReq: t.PartialSyncReq = req.body;
-  const syncNumber = getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(user);
 
   // Require full sync if syncNumber is 0 or syncNumber is out of sync
   if (syncNumber === 0 || syncNumber !== partialSyncReq.syncNumber) {
@@ -148,45 +146,45 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
     return;
   }
 
-  const notes = getQueuedNotes(user);
+  const notes = db.getQueuedNotes(user);
   const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes, syncNumber };
 
   res.send(partialSyncRes);
 
-  mergeSyncData(user, partialSyncReq, partialSyncRes);
+  db.mergeSyncData(user, partialSyncReq, partialSyncRes);
 });
 
 app.post('/api/full-sync', authenticate, (req, res) => {
   console.log('POST /api/full-sync', req.body);
   const user = res.locals.user!;
   const fullSyncReq: t.FullSyncReq = req.body;
-  const syncNumber = getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(user);
 
-  const notes = getNotes(user);
+  const notes = db.getNotes(user);
   const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
 
   res.send(fullSyncRes);
 
-  mergeSyncData(user, fullSyncReq, fullSyncRes);
+  db.mergeSyncData(user, fullSyncReq, fullSyncRes);
 });
 
 app.post('/api/add-notes', authenticate, (req, res) => {
   console.log('POST /api/full-sync', req.body);
   const user = res.locals.user!;
   const fullSyncReq: t.FullSyncReq = req.body;
-  const syncNumber = getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(user);
 
   const fullSyncRes: t.FullSyncRes = { notes: [], syncNumber };
 
   res.send(fullSyncRes);
 
-  mergeSyncData(user, fullSyncReq, fullSyncRes);
+  db.mergeSyncData(user, fullSyncReq, fullSyncRes);
 });
 
 app.post('/api/logout', authenticate, (req, res) => {
-  console.log('POST /api/full-sync', req.body);
-  const user = res.locals.user!;
-  logout(user);
+  console.log('POST /api/logout', req.body);
+  const user = res.locals.user ?? (req.body as t.LocalUser);
+  db.logout(user);
   res.send({ ok: true });
 });
 
@@ -246,110 +244,4 @@ function authenticate(req: express.Request, res: express.Response, next: express
   } else {
     next();
   }
-}
-
-function getSyncNumber(user: t.LocalUser) {
-  return db.get().prepare(`SELECT sync_number FROM clients where token = ?`).pluck().get(user.token) as number;
-}
-
-function getQueuedNotes(user: t.LocalUser): t.Note[] {
-  const dbNotes = db
-    .get()
-    .prepare(`SELECT * FROM notes WHERE id IN (SELECT id FROM notes_queue WHERE token = ?)`)
-    .all(user.token) as t.DBNote[];
-  return dbNotes.map(dbNoteToNote);
-}
-
-function getQueuedNoteHeads(user: t.LocalUser): t.NoteHead[] {
-  return db
-    .get()
-    .prepare(`SELECT id, modification_date FROM notes_queue WHERE token = ?`)
-    .all(user.token) as t.NoteHead[];
-}
-
-function getNotes(user: t.LocalUser): t.Note[] {
-  const dbNotes = db.get().prepare(`SELECT * FROM notes WHERE username = ?`).all(user.username) as t.DBNote[];
-  return dbNotes.map(dbNoteToNote);
-}
-
-function dbNoteToNote(dbNote: t.DBNote): t.Note {
-  return _.omit(dbNote, 'username');
-}
-
-function logout(user: t.LocalUser) {
-  const deleteFromQueue = db.get().prepare<[{ token: string }]>(`DELETE FROM notes_queue WHERE token = :token`);
-  const deleteFromClient = db.get().prepare<[{ token: string }]>(`DELETE FROM clients WHERE token = :token`);
-
-  db.get().transaction(() => {
-    deleteFromQueue.run(user);
-    deleteFromClient.run(user);
-  });
-}
-
-function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
-  const getDbNote = db
-    .get()
-    .prepare<[{ username: string; id: string }]>(`SELECT * FROM notes WHERE username = :username AND id = :id`);
-  const putDbNote = db.get().prepare<[t.DBNote]>(`
-    INSERT OR REPLACE INTO notes
-      (id, username, text, creation_date, modification_date, "order", deleted, archived)
-    VALUES
-      (:id, :username, :text, :creation_date, :modification_date, :order, :deleted, :archived)
-  `);
-  const deleteFromQueue = db
-    .get()
-    .prepare<[{ token: string; id: string }]>(`DELETE FROM notes_queue WHERE token = :token AND id = :id`);
-  const updateSyncNumber = db
-    .get()
-    .prepare<[{ token: string; sync_number: number }]>(
-      `UPDATE clients SET sync_number = :sync_number WHERE token = :token`,
-    );
-  const getClients = db
-    .get()
-    .prepare<[t.LocalUser]>(`SELECT username, token FROM clients WHERE username = :username AND token != :token`);
-  const insertIntoQueue = db.get().prepare<[t.DBNoteHead]>(`
-    INSERT INTO notes_queue (token, id, modification_date)
-    VALUES (:token, :id, :modification_date)
-    ON CONFLICT (token, id) DO UPDATE SET
-      modification_date = excluded.modification_date
-    WHERE excluded.modification_date > notes_queue.modification_date
-  `);
-
-  db.get().transaction(() => {
-    // Replace local notes with received notes if necessary.
-    for (const receivedNote of reqSyncData.notes) {
-      const localNote = getDbNote.get({ username: user.username, id: receivedNote.id }) as t.DBNote | undefined;
-      if (cutil.isNoteNewerThan(receivedNote, localNote)) {
-        const dbNote: t.DBNote = { ...receivedNote, username: user.username };
-        putDbNote.run(dbNote);
-      }
-    }
-
-    // Clear local note queue.
-    const queuedNoteHeads = getQueuedNoteHeads(user);
-    const sentNotesById = _.keyBy(resSyncData.notes, 'id');
-    for (const queued of queuedNoteHeads) {
-      const sent = sentNotesById[queued.id] as t.Note | undefined;
-      if (sent && queued.modification_date <= sent.modification_date) {
-        deleteFromQueue.run({ token: user.token, id: queued.id });
-      }
-    }
-
-    // Add received notes to notes_queue for other clients of the same user.
-    const otherClients = getClients.all(user) as t.LocalUser[];
-    for (const receivedNote of reqSyncData.notes) {
-      for (const client of otherClients) {
-        const dbNoteHead: t.DBNoteHead = {
-          id: receivedNote.id,
-          modification_date: receivedNote.modification_date,
-          token: client.token,
-        };
-        insertIntoQueue.run(dbNoteHead);
-      }
-    }
-
-    // Update sync number.
-    const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
-    updateSyncNumber.run({ token: user.token, sync_number: newSyncNumber });
-  })();
 }
