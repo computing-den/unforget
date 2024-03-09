@@ -35,14 +35,15 @@ export async function getStorage(): Promise<IDBDatabase> {
       if (e.oldVersion < 52) {
         // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
         const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
-        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['not_archived', 'not_deleted', 'pinned', 'order']);
+        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['order']);
         dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
         dbOpenReq.result.createObjectStore(SETTINGS_STORE);
       }
-      // if (e.oldVersion < 53) {
-      //   const notesStore = dbOpenReq.transaction!.objectStore(NOTES_STORE);
-      //   notesStore.createIndex(NOTES_STORE_PINNED_INDEX, 'pinned');
-      // }
+      if (e.oldVersion < 53) {
+        const notesStore = dbOpenReq.transaction!.objectStore(NOTES_STORE);
+        notesStore.deleteIndex(NOTES_STORE_ORDER_INDEX);
+        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['not_archived', 'not_deleted', 'pinned', 'order']);
+      }
     };
 
     dbOpenReq.onsuccess = () => {
