@@ -33,8 +33,15 @@ button {
   border-radius: 5px;
   transition: 0.2s background ease-in-out;
 
-  @media (max-width: 600px) {
-    border-radius: 0;
+  &.button-row {
+    margin-left: auto;
+    margin-right: auto;
+    width: 400px;
+
+    @media (max-width: 600px) {
+      border-radius: 0;
+      width: 100%;
+    }
   }
 
   &:hover {

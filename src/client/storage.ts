@@ -87,13 +87,43 @@ export async function saveNote(note: t.Note) {
   });
 }
 
-export async function getAllNotes(): Promise<t.Note[]> {
-  const req = await transaction(
-    NOTES_STORE,
-    'readonly',
-    tx => tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX).getAll() as IDBRequest<t.Note[]>,
-  );
-  return req.result;
+// export async function getAllNotes(): Promise<t.Note[]> {
+//   const req = await transaction(
+//     NOTES_STORE,
+//     'readonly',
+//     tx => tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX).getAll() as IDBRequest<t.Note[]>,
+//   );
+//   return req.result;
+// }
+
+export async function getNotes(opts?: {
+  limit?: number;
+  archived?: boolean;
+  deleted?: boolean;
+}): Promise<{ done: boolean; notes: t.Note[] }> {
+  return transaction([NOTES_STORE], 'readwrite', async tx => {
+    return new Promise((resolve, reject) => {
+      const notes: t.Note[] = [];
+      const limit = opts?.limit;
+      const orderIndex = tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX);
+      const cursorReq = orderIndex.openCursor(null, 'prev');
+      cursorReq.onsuccess = () => {
+        const cursor = cursorReq.result;
+        if (cursor && (limit === undefined || notes.length < limit)) {
+          const note: t.Note = cursor.value;
+          if ((!note.archived || opts?.archived) && (!note.deleted || opts?.deleted)) {
+            notes.push(note);
+          }
+          cursor.continue();
+        } else {
+          resolve({ done: !cursor, notes });
+        }
+      };
+      cursorReq.onerror = () => {
+        reject(cursorReq.error);
+      };
+    });
+  });
 }
 
 export async function getNote(id: string): Promise<t.Note | undefined> {
@@ -105,10 +135,10 @@ export async function getNote(id: string): Promise<t.Note | undefined> {
   return req.result;
 }
 
-export async function getActiveNotes(): Promise<t.Note[]> {
-  const notes = await getAllNotes();
-  return notes.filter(note => !note.deleted && !note.archived).reverse();
-}
+// export async function getActiveNotes(): Promise<t.Note[]> {
+//   const notes = await getAllNotes();
+//   return notes.filter(note => !note.deleted && !note.archived).reverse();
+// }
 
 export async function getPartialSyncData(): Promise<t.SyncData> {
   const res = await transaction([NOTES_STORE, NOTES_QUEUE_STORE, SETTINGS_STORE], 'readonly', async tx => {

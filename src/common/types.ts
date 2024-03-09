@@ -74,6 +74,9 @@ export type LocalUser = {
 export type AppStore = {
   menuOpen: boolean;
   notes: Note[];
+  notePages: number;
+  notePageSize: number;
+  allNotePagesLoaded: boolean;
   user?: LocalUser;
   message?: { text: string; type: 'info' | 'error'; timestamp: number };
   syncing: boolean;

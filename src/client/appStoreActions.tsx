@@ -8,6 +8,9 @@ export function initAppStore() {
   appStore.set({
     menuOpen: false,
     notes: [],
+    notePages: 1,
+    notePageSize: 200,
+    allNotePagesLoaded: false,
     online: navigator.onLine,
     queueCount: 0,
     syncing: false,
@@ -17,9 +20,11 @@ export function initAppStore() {
 
 export async function updateNotes() {
   try {
-    const notes = await storage.getActiveNotes();
+    const { notePages, notePageSize } = appStore.get();
+    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages });
     appStore.update(app => {
       app.notes = notes;
+      app.allNotePagesLoaded = done;
     });
   } catch (error) {
     gotError(error as Error);

@@ -86,7 +86,7 @@ async function handleFetchEvent(event: FetchEvent): Promise<Response> {
     //   response = new Response(JSON.stringify({ ok: true }), {
     //     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
     //   });
-  } else if (!process.env.DISABLE_CACHE) {
+  } else if (!Number(process.env.DISABLE_CACHE)) {
     const cache = await caches.open(CACHE_NAME);
     response = await cache.match(event.request);
   }

@@ -13,6 +13,7 @@ import { v4 as uuid } from 'uuid';
 type NotesPageProps = {};
 
 function NotesPage(props: NotesPageProps) {
+  const app = appStore.use();
   const [newNoteText, setNewNoteText] = useState('');
   const [editing, setEditing] = useState(false);
 
@@ -28,6 +29,13 @@ function NotesPage(props: NotesPageProps) {
 
   const editorBlurCb = useCallback(() => {
     setEditing(false);
+  }, []);
+
+  const loadMore = useCallback(() => {
+    appStore.update(app => {
+      app.notePages++;
+    });
+    actions.updateNotes();
   }, []);
 
   return (
@@ -47,6 +55,11 @@ function NotesPage(props: NotesPageProps) {
             />
           </div>
           <Notes />
+          {!app.allNotePagesLoaded && (
+            <button className="load-more button-row" onClick={loadMore}>
+              Load more
+            </button>
+          )}
         </div>
       </PageBody>
     </PageLayout>
