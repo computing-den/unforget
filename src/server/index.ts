@@ -134,7 +134,10 @@ app.post('/api/log', authenticate, (req, res) => {
 });
 
 app.post('/api/partial-sync', authenticate, (req, res) => {
-  console.log('POST /api/partial-sync', req.body);
+  console.log('POST /api/partial-sync');
+  if (process.env.NODE_ENV === 'development') {
+    console.log(req.body);
+  }
   const user = res.locals.user!;
   const partialSyncReq: t.PartialSyncReq = req.body;
   const syncNumber = db.getSyncNumber(user);
@@ -155,7 +158,10 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
 });
 
 app.post('/api/full-sync', authenticate, (req, res) => {
-  console.log('POST /api/full-sync', req.body);
+  console.log('POST /api/full-sync');
+  if (process.env.NODE_ENV === 'development') {
+    console.log(req.body);
+  }
   const user = res.locals.user!;
   const fullSyncReq: t.FullSyncReq = req.body;
   const syncNumber = db.getSyncNumber(user);
@@ -169,7 +175,10 @@ app.post('/api/full-sync', authenticate, (req, res) => {
 });
 
 app.post('/api/add-notes', authenticate, (req, res) => {
-  console.log('POST /api/full-sync', req.body);
+  console.log('POST /api/add-notes');
+  if (process.env.NODE_ENV === 'development') {
+    console.log(req.body);
+  }
   const user = res.locals.user!;
   const fullSyncReq: t.FullSyncReq = req.body;
   const syncNumber = db.getSyncNumber(user);
@@ -182,7 +191,10 @@ app.post('/api/add-notes', authenticate, (req, res) => {
 });
 
 app.post('/api/logout', authenticate, (req, res) => {
-  console.log('POST /api/logout', req.body);
+  console.log('POST /api/logout');
+  if (process.env.NODE_ENV === 'development') {
+    console.log(req.body);
+  }
   const user = res.locals.user ?? (req.body as t.LocalUser);
   db.logout(user);
   res.send({ ok: true });
