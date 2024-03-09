@@ -1,6 +1,8 @@
 .page-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -107,6 +109,8 @@
     .title {
       position: relative;
       margin-left: 1rem;
+      display: flex;
+      align-items: center;
 
       /* .logo { */
       /*   position: absolute; */
@@ -131,15 +135,23 @@
         color: white;
       }
 
-      .status {
-        position: absolute;
-        bottom: 0.5rem;
-        left: calc(100% + 0.25rem);
-        text-align: left;
+      /* position: absolute; */
+      /* bottom: 0.5rem; */
+      /* left: calc(100% + 0.25rem); */
+      /* text-align: left; */
+
+      .queue-count {
+        margin-left: 0.5rem;
         font-size: 0.7em;
-        white-space: nowrap;
         color: white;
       }
+      /* .online-indicator { */
+      /*   margin-left: 0.25rem; */
+      /*   width: 7px; */
+      /*   height: 7px; */
+      /*   border-radius: 50%; */
+      /*   background: #51bc51; */
+      /* } */
     }
 
     .actions {
@@ -151,6 +163,9 @@
 
       & a {
         color: white;
+        height: 100%;
+        display: flex;
+        align-items: center;
 
         @media (max-width: 600px) {
           font-size: 0.9em;
@@ -161,7 +176,7 @@
         }
 
         & + a {
-          margin-left: 2rem;
+          margin-left: 1.5rem;
 
           @media (max-width: 600px) {
             margin-left: 1rem;

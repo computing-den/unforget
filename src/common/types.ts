@@ -5,8 +5,8 @@ export type Note = {
   text: string | null;
   creation_date: string;
   modification_date: string;
-  deleted: number; // 0 or 1
-  archived: number; // 0 or 1
+  not_deleted: number; // 0 or 1
+  not_archived: number; // 0 or 1
   pinned: number; // 0 or 1
   order: number;
 };

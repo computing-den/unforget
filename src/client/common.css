@@ -4,6 +4,8 @@
 /* #E8FEE1 */
 
 :root {
+  --page-header-height: 2.5rem;
+  --page-content-margin-top: calc(var(--page-header-height) + 2rem);
   --page-max-width: 800px;
 }
 

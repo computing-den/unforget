@@ -1,6 +1,6 @@
 .notes-page {
   flex: 1;
-  margin: 2rem auto;
+  margin: var(--page-content-margin-top) auto;
   max-width: var(--page-max-width);
   width: 100%;
   display: flex;
@@ -44,6 +44,7 @@
       word-wrap: break-word;
       line-height: 1.5;
       margin: 0;
+      position: relative;
 
       &:hover {
         background: #d0ebf5;
@@ -55,6 +56,13 @@
 
       & + .note {
         /* margin-top: 0.5rem; */
+      }
+
+      & img.pin {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 20px;
       }
     }
   }

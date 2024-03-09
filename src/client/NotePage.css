@@ -1,6 +1,6 @@
 .note-page {
   flex: 1;
-  margin: 2rem auto;
+  margin: var(--page-content-margin-top) auto;
   max-width: var(--page-max-width);
   width: 100%;
   position: relative;

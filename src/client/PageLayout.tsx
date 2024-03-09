@@ -37,7 +37,7 @@ export function PageHeader(props: { actions?: React.ReactNode }) {
         <div className="menu-button-container">
           <div className="menu-button">
             <a href="#" onClick={toggleMenu} className="reset">
-              <img src="/icons/menu.svg" />
+              <img src="/icons/menu-white.svg" />
             </a>
             {app.menuOpen && (
               <div className="menu">
@@ -82,11 +82,8 @@ export function PageHeader(props: { actions?: React.ReactNode }) {
               Unforget
             </Link>
           </h1>
-          <div className="status">
-            {app.online ? 'online' : 'offline'}
-            {/*props.syncing && ' syncing'*/}
-            {app.queueCount > 0 && ` (${app.queueCount})`}
-          </div>
+          {app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
+          {/*app.online && <div className="online-indicator" />*/}
         </div>
         <div className="actions">{props.actions}</div>
       </div>
@@ -103,11 +100,12 @@ export function PageBody(props: { children: React.ReactNode }) {
   return props.children;
 }
 
-export function PageAction(props: { label: string; onClick: () => any; bold?: boolean }) {
+export function PageAction(props: { label?: string; icon?: string; onClick: () => any; bold?: boolean }) {
   const clicked = util.useCallbackCancelEvent(props.onClick, [props.onClick]);
   return (
     <a href="#" onClick={clicked} className={`reset ${props.bold ? 'bold' : ''}`}>
       {props.label}
+      {props.icon && <img src={props.icon} />}
     </a>
   );
 }

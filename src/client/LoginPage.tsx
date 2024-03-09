@@ -26,7 +26,7 @@ function LoginPage(props: LoginPageProps) {
 
   if (app.user) {
     const from = new URLSearchParams(location.search).get('from');
-    return <Navigate to={from || '/'} />;
+    return <Navigate to={from || '/'} replace />;
   }
 
   return (

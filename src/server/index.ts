@@ -32,7 +32,7 @@ declare global {
 db.initDB();
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50MB' }));
 
 app.use('/', express.static(PUBLIC));
 app.use('/', express.static(DIST_PUBLIC));

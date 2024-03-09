@@ -40,7 +40,7 @@ function NotesPage(props: NotesPageProps) {
 
   return (
     <PageLayout>
-      <PageHeader actions={[newNoteText && <PageAction label="Save" onClick={addNoteCb} bold />]} />
+      <PageHeader actions={[newNoteText && <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />]} />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">
@@ -100,6 +100,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
 
   return (
     <pre className="note" onMouseDown={mouseDownCb} onClick={clickCb}>
+      {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-empty.svg" />}
       {text}
     </pre>
   );
@@ -116,8 +117,8 @@ async function addNote(text: string): Promise<void> {
       creation_date: new Date().toISOString(),
       modification_date: new Date().toISOString(),
       order: Date.now(),
-      deleted: 0,
-      archived: 0,
+      not_deleted: 1,
+      not_archived: 1,
       pinned: 0,
     };
     await storage.saveNote(newNote);

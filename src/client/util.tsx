@@ -1,5 +1,5 @@
 import type * as t from '../common/types.js';
-import React, { useCallback, useState, useEffect, useSyncExternalStore } from 'react';
+import React, { useCallback, useState, useEffect, useLayoutEffect, useSyncExternalStore } from 'react';
 
 export async function createFetchResponseError(res: Response): Promise<Error> {
   const contentType = getResponseContentType(res);
@@ -69,3 +69,13 @@ export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList
 //   window.addEventListener('popstate', cb);
 //   return () => window.removeEventListener('popstate', cb);
 // }
+
+export function useScrollToTop() {
+  useLayoutEffect(() => {
+    document.documentElement.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant',
+    });
+  }, []);
+}

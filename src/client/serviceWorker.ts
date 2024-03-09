@@ -6,7 +6,7 @@ import * as storage from './storage.js';
 import type * as t from '../common/types.js';
 
 // The version of the cache.
-const VERSION = '20';
+const VERSION = '21';
 
 // The name of the cache
 const CACHE_NAME = `unforget-${VERSION}`;
@@ -19,9 +19,16 @@ const APP_STATIC_RESOURCES = [
   '/barefront.svg',
   '/manifest.json',
   '/icon-256x256.png',
-  '/icons/menu.svg',
-  '/icons/refresh-ccw.svg',
+  '/icons/archive-white.svg',
+  '/icons/check-white.svg',
   '/icons/log-out.svg',
+  '/icons/menu-white.svg',
+  '/icons/pin-empty.svg',
+  '/icons/pin-empty-white.svg',
+  '/icons/pin-filled.svg',
+  '/icons/pin-filled-white.svg',
+  '/icons/refresh-ccw.svg',
+  '/icons/trash-white.svg',
   '/icons/user.svg',
 ];
 

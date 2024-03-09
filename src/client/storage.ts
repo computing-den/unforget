@@ -25,18 +25,24 @@ let fullSyncRequired = false;
 export async function getStorage(): Promise<IDBDatabase> {
   console.log('setting up storage');
   _db ??= await new Promise<IDBDatabase>((resolve, reject) => {
-    const dbOpenReq = indexedDB.open(DB_NAME, 52);
+    const dbOpenReq = indexedDB.open(DB_NAME, 53);
 
     dbOpenReq.onerror = () => {
       reject(dbOpenReq.error);
     };
 
     dbOpenReq.onupgradeneeded = e => {
-      // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
-      const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
-      notesStore.createIndex(NOTES_STORE_ORDER_INDEX, 'order');
-      dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
-      dbOpenReq.result.createObjectStore(SETTINGS_STORE);
+      if (e.oldVersion < 52) {
+        // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
+        const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
+        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['not_archived', 'not_deleted', 'pinned', 'order']);
+        dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
+        dbOpenReq.result.createObjectStore(SETTINGS_STORE);
+      }
+      // if (e.oldVersion < 53) {
+      //   const notesStore = dbOpenReq.transaction!.objectStore(NOTES_STORE);
+      //   notesStore.createIndex(NOTES_STORE_PINNED_INDEX, 'pinned');
+      // }
     };
 
     dbOpenReq.onsuccess = () => {
@@ -99,31 +105,41 @@ export async function saveNote(note: t.Note) {
 export async function getNotes(opts?: {
   limit?: number;
   archived?: boolean;
-  deleted?: boolean;
 }): Promise<{ done: boolean; notes: t.Note[] }> {
-  return transaction([NOTES_STORE], 'readwrite', async tx => {
-    return new Promise((resolve, reject) => {
-      const notes: t.Note[] = [];
-      const limit = opts?.limit;
+  const notes: t.Note[] = [];
+  const limit = opts?.limit;
+  let done = false;
+
+  await transaction([NOTES_STORE], 'readonly', async tx => {
+    return new Promise<void>((resolve, reject) => {
       const orderIndex = tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX);
-      const cursorReq = orderIndex.openCursor(null, 'prev');
-      cursorReq.onsuccess = () => {
-        const cursor = cursorReq.result;
-        if (cursor && (limit === undefined || notes.length < limit)) {
-          const note: t.Note = cursor.value;
-          if ((!note.archived || opts?.archived) && (!note.deleted || opts?.deleted)) {
-            notes.push(note);
-          }
-          cursor.continue();
-        } else {
-          resolve({ done: !cursor, notes });
-        }
+      const orderCursorReq = orderIndex.openCursor(null, 'prev');
+      orderCursorReq.onerror = () => {
+        reject(orderCursorReq.error);
       };
-      cursorReq.onerror = () => {
-        reject(cursorReq.error);
+      orderCursorReq.onsuccess = () => {
+        const cursor = orderCursorReq.result;
+        if (!cursor) {
+          done = true;
+          resolve();
+        } else if (limit !== undefined && notes.length >= limit) {
+          resolve();
+        } else {
+          const note = cursor.value as t.Note;
+          if (!note.not_archived && !opts?.archived) {
+            // If archived notes were not requested and we hit an archived note, we're done.
+            done = true;
+            resolve();
+          } else {
+            notes.push(note);
+            cursor.continue();
+          }
+        }
       };
     });
   });
+
+  return { notes, done };
 }
 
 export async function getNote(id: string): Promise<t.Note | undefined> {
@@ -134,11 +150,6 @@ export async function getNote(id: string): Promise<t.Note | undefined> {
   );
   return req.result;
 }
-
-// export async function getActiveNotes(): Promise<t.Note[]> {
-//   const notes = await getAllNotes();
-//   return notes.filter(note => !note.deleted && !note.archived).reverse();
-// }
 
 export async function getPartialSyncData(): Promise<t.SyncData> {
   const res = await transaction([NOTES_STORE, NOTES_QUEUE_STORE, SETTINGS_STORE], 'readonly', async tx => {

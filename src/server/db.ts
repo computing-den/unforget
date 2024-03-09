@@ -24,8 +24,8 @@ export function initDB() {
       creation_date         TEXT NOT NULL,
       modification_date     TEXT NOt NULL,
       "order"               INTEGER NOT NULL,
-      deleted               INTEGER NOT NULL DEFAULT 0,
-      archived              INTEGER NOT NULL DEFAULT 0,
+      not_deleted           INTEGER NOT NULL DEFAULT 1,
+      not_archived          INTEGER NOT NULL DEFAULT 1,
       pinned                INTEGER NOT NULL DEFAULT 0
     )`,
   ).run();
@@ -33,8 +33,8 @@ export function initDB() {
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_creation_date on notes (creation_date)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_modification_date on notes (modification_date)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_order on notes ("order")`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_deleted on notes (deleted)`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_archived on notes (archived)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_not_deleted on notes (not_deleted)`).run();
+  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_not_archived on notes (not_archived)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_pinned on notes (pinned)`).run();
 
   db.prepare(
@@ -208,8 +208,8 @@ function prepareInsertIntoQueue(): Statement<[t.DBNoteHead]> {
 function preparePutNote(): Statement<[t.DBNote]> {
   return db.prepare(`
     INSERT OR REPLACE INTO notes
-      (id, username, text, creation_date, modification_date, "order", deleted, archived, pinned)
+      (id, username, text, creation_date, modification_date, "order", not_deleted, not_archived, pinned)
     VALUES
-      (:id, :username, :text, :creation_date, :modification_date, :order, :deleted, :archived, :pinned)
+      (:id, :username, :text, :creation_date, :modification_date, :order, :not_deleted, :not_archived, :pinned)
   `);
 }

@@ -13,11 +13,13 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'rea
 
 export function NotePage() {
   const app = appStore.use();
-  const origNote = useLoaderData() as t.Note | undefined;
-  const [text, setText] = useState(origNote?.text ?? '');
+  const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
+  const [text, setText] = useState(note?.text ?? '');
   const navigate = useNavigate();
   const location = useLocation();
   // const app = appStore.use();
+
+  util.useScrollToTop();
 
   const goHome = useCallback(() => {
     if (location.state?.fromNotesPage) {
@@ -27,25 +29,32 @@ export function NotePage() {
     }
   }, [location, navigate]);
 
-  const textChangeCb = useCallback((text: string) => setText(text), []);
+  const textChangeCb = useCallback((text: string) => setNote(note => ({ ...note!, text })), []);
   const saveCb = useCallback(() => {
-    actions.saveNote({ ...origNote!, modification_date: new Date().toISOString(), text }, 'saved');
-  }, [text, origNote]);
+    actions.saveNote({ ...note!, modification_date: new Date().toISOString(), text }, 'saved');
+  }, [text, note]);
   const archiveCb = useCallback(() => {
     actions
-      .saveNote({ ...origNote!, modification_date: new Date().toISOString(), archived: 1 }, 'archived')
+      .saveNote({ ...note!, modification_date: new Date().toISOString(), not_archived: 0 }, 'archived')
       .then(goHome);
-  }, [goHome, origNote]);
+  }, [goHome, note]);
+  const pinCb = useCallback(() => {
+    const newNote = { ...note!, modification_date: new Date().toISOString(), pinned: note!.pinned ? 0 : 1 };
+    actions.saveNote(newNote, note!.pinned ? 'unpinned' : 'pinned').then(() => setNote(newNote));
+  }, [note]);
   const deleteCb = useCallback(() => {
-    actions
-      .saveNote({ ...origNote!, modification_date: new Date().toISOString(), text: null, deleted: 1 }, 'deleted')
-      .then(goHome);
-  }, [goHome, origNote]);
+    if (confirm('Are you sure you want to delete this note?')) {
+      actions
+        .saveNote({ ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 }, 'deleted')
+        .then(goHome);
+    }
+  }, [goHome, note]);
 
-  const pageActions = origNote && [
-    <PageAction label="Delete" onClick={deleteCb} />,
-    <PageAction label="Archive" onClick={archiveCb} />,
-    <PageAction label="Save" onClick={saveCb} bold />,
+  const pageActions = note && [
+    <PageAction icon="/icons/trash-white.svg" onClick={deleteCb} />,
+    <PageAction icon="/icons/archive-white.svg" onClick={archiveCb} />,
+    <PageAction icon={note.pinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'} onClick={pinCb} />,
+    <PageAction icon="/icons/check-white.svg" onClick={saveCb} />,
   ];
 
   return (
@@ -53,9 +62,9 @@ export function NotePage() {
       <PageHeader actions={pageActions} />
       <PageBody>
         <div className="note-page">
-          {!origNote && app.syncing && <h2 className="page-message">Loading...</h2>}
-          {!origNote && !app.syncing && <h2 className="page-message">Not found</h2>}
-          {origNote && (
+          {!note && app.syncing && <h2 className="page-message">Loading...</h2>}
+          {!note && !app.syncing && <h2 className="page-message">Not found</h2>}
+          {note && (
             <div className="note-container">
               <Editor
                 id="note-editor"

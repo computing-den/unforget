@@ -17,14 +17,17 @@ function convertFromGoogleKeep(googleKeepPath: string | undefined, outputPath: s
   for (const filename of filenames) {
     console.log(`Reading "${filename}" ...`);
     const content = JSON.parse(fs.readFileSync(path.join(googleKeepPath, filename), 'utf8'));
+    if (content.isTrashed) continue;
 
     let text: string | null = null;
-    if (!content.isTrashed) {
-      text = content.textContent || '';
-      text += (content.listContent || [])
-        .map((item: any) => (item.isChecked ? `- [x] ${item.text || ''}\n` : `- [ ] ${item.text || ''}`))
-        .join('\n');
-    }
+    const segments = [
+      content.title,
+      content.textContent,
+      (content.listContent || [])
+        .map((item: any) => (item.isChecked ? `- [x] ${item.text || ''}` : `- [ ] ${item.text || ''}`))
+        .join('\n'),
+    ];
+    text = segments.filter(Boolean).join('\n\n');
 
     const note: t.Note = {
       id: uuid(),
@@ -32,8 +35,8 @@ function convertFromGoogleKeep(googleKeepPath: string | undefined, outputPath: s
       creation_date: new Date(Math.floor(content.createdTimestampUsec / 1000)).toISOString(),
       modification_date: new Date(Math.floor(content.userEditedTimestampUsec / 1000)).toISOString(),
       order: Math.floor(content.createdTimestampUsec / 1000),
-      deleted: 0,
-      archived: content.isArchived ? 1 : 0,
+      not_deleted: 1,
+      not_archived: content.isArchived ? 0 : 1,
       pinned: content.isPinned ? 1 : 0,
     };
     notes.push(note);
