@@ -3,6 +3,7 @@ import React, { useCallback, useState, useEffect } from 'react';
 import * as actions from './appStoreActions.jsx';
 import * as storage from './storage.js';
 import * as util from './util.js';
+import * as cutil from '../common/util.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
 
@@ -64,6 +65,7 @@ export function PageHeader(props: { actions?: React.ReactNode }) {
                       </a>
                     </li>
                   )}
+                  <li className="footer">Cache version {cutil.CACHE_VERSION}</li>
                 </ul>
               </div>
             )}

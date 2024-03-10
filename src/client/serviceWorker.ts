@@ -3,13 +3,10 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import type * as t from '../common/types.js';
-
-// The version of the cache.
-const VERSION = '22';
+import * as u from '../common/util.js';
 
 // The name of the cache
-const CACHE_NAME = `unforget-${VERSION}`;
+const CACHE_NAME = `unforget-${u.CACHE_VERSION}`;
 
 // The static resources that the app needs to function.
 const APP_STATIC_RESOURCES = [

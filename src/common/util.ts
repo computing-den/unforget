@@ -5,3 +5,5 @@ export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
     !b || a.modification_date > b.modification_date || (a.modification_date === b.modification_date && a.id > b.id)
   );
 }
+
+export const CACHE_VERSION = '23';

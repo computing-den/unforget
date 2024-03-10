@@ -87,6 +87,15 @@
               border-bottom: 1px solid #cacfd5;
             }
 
+            & li.footer {
+              display: flex;
+              align-items: center;
+              font-size: 0.8em;
+              background: #f0f7ff;
+              padding: 0.25rem 1rem;
+              border-top: 1px solid #cacfd5;
+            }
+
             & li {
               & a {
                 display: flex;
