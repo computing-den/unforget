@@ -10,7 +10,7 @@ export async function initAppStore() {
     menuOpen: false,
     notes: [],
     notePages: 1,
-    notePageSize: 200,
+    notePageSize: 100,
     allNotePagesLoaded: false,
     online: navigator.onLine,
     queueCount: 0,
