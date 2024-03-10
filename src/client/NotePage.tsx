@@ -14,7 +14,6 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'rea
 export function NotePage() {
   const app = appStore.use();
   const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
-  const [text, setText] = useState(note?.text ?? '');
   const navigate = useNavigate();
   const location = useLocation();
   // const app = appStore.use();
@@ -31,8 +30,8 @@ export function NotePage() {
 
   const textChangeCb = useCallback((text: string) => setNote(note => ({ ...note!, text })), []);
   const saveCb = useCallback(() => {
-    actions.saveNote({ ...note!, modification_date: new Date().toISOString(), text }, 'saved');
-  }, [text, note]);
+    actions.saveNote({ ...note!, modification_date: new Date().toISOString() }, 'saved');
+  }, [note]);
   const archiveCb = useCallback(() => {
     actions
       .saveNote({ ...note!, modification_date: new Date().toISOString(), not_archived: 0 }, 'archived')
@@ -70,7 +69,7 @@ export function NotePage() {
                 id="note-editor"
                 className="text-input"
                 placeholder="What's on you mind?"
-                value={text}
+                value={note.text ?? ''}
                 onChange={textChangeCb}
               />
             </div>
