@@ -4,7 +4,7 @@ import App from './App.jsx';
 import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
 
-function setup() {
+async function setup() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('serviceWorker.js').then(
       registration => {
@@ -18,7 +18,7 @@ function setup() {
     console.error('Service workers are not supported.');
   }
 
-  actions.initAppStore();
+  await actions.initAppStore();
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);

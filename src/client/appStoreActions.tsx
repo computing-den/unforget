@@ -4,8 +4,9 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import _ from 'lodash';
 
-export function initAppStore() {
+export async function initAppStore() {
   appStore.set({
+    hidePinnedNotes: await storage.getHidePinnedNotes(),
     menuOpen: false,
     notes: [],
     notePages: 1,
@@ -20,8 +21,8 @@ export function initAppStore() {
 
 export async function updateNotes() {
   try {
-    const { notePages, notePageSize } = appStore.get();
-    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages });
+    const { notePages, notePageSize, hidePinnedNotes } = appStore.get();
+    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages, hidePinnedNotes });
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;

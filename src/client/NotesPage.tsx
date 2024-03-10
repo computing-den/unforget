@@ -15,21 +15,38 @@ type NotesPageProps = {};
 function NotesPage(props: NotesPageProps) {
   const app = appStore.use();
   const [newNoteText, setNewNoteText] = useState('');
-  const [editing, setEditing] = useState(false);
+  const [newNotePinned, setNewNotePinned] = useState(false);
+  // const [editing, setEditing] = useState(false);
 
-  const addNoteCb = useCallback(() => addNote(newNoteText).then(() => setNewNoteText('')), [newNoteText]);
+  const addNoteCb = useCallback(
+    () => addNote(newNoteText, newNotePinned).then(() => setNewNoteText('')),
+    [newNoteText, newNotePinned],
+  );
 
   const newNoteTextChanged = useCallback((text: string) => {
     setNewNoteText(text);
   }, []);
 
-  const editorFocusCb = useCallback(() => {
-    setEditing(true);
-  }, []);
+  // const editorFocusCb = useCallback(() => {
+  //   setEditing(true);
+  // }, []);
 
-  const editorBlurCb = useCallback(() => {
-    setEditing(false);
-  }, []);
+  // const editorBlurCb = useCallback(() => {
+  //   setEditing(false);
+  // }, []);
+
+  const togglePinned = useCallback(() => {
+    setNewNotePinned(!newNotePinned);
+  }, [newNotePinned]);
+
+  const toggleHidePinnedNotes = useCallback(async () => {
+    const value = !app.hidePinnedNotes;
+    storage.setSetting(value, 'hidePinnedNotes');
+    appStore.update(app => {
+      app.hidePinnedNotes = value;
+    });
+    actions.updateNotes();
+  }, [app.hidePinnedNotes]);
 
   const loadMore = useCallback(() => {
     appStore.update(app => {
@@ -38,20 +55,33 @@ function NotesPage(props: NotesPageProps) {
     actions.updateNotes();
   }, []);
 
+  const pageActions = [
+    newNoteText && (
+      <PageAction
+        icon={newNotePinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'}
+        onClick={togglePinned}
+      />
+    ),
+    !newNoteText && (
+      <PageAction label={app.hidePinnedNotes ? 'show pinned' : 'hide pinned'} onClick={toggleHidePinnedNotes} />
+    ),
+    newNoteText && <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />,
+  ];
+
   return (
     <PageLayout>
-      <PageHeader actions={[newNoteText && <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />]} />
+      <PageHeader actions={pageActions} />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">
             <Editor
               id="new-note-editor"
-              className={`text-input ${editing || newNoteText ? 'tall' : ''}`}
+              className={`text-input ${newNoteText ? 'tall' : ''}`}
               placeholder="What's on you mind?"
               value={newNoteText}
               onChange={newNoteTextChanged}
-              onFocus={editorFocusCb}
-              onBlur={editorBlurCb}
+              // onFocus={editorFocusCb}
+              // onBlur={editorBlurCb}
             />
           </div>
           <Notes />
@@ -106,7 +136,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
   );
 });
 
-async function addNote(text: string): Promise<void> {
+async function addNote(text: string, pinned: boolean): Promise<void> {
   try {
     document.getElementById('new-note-editor')!.focus();
     if (!text) return;
@@ -119,9 +149,10 @@ async function addNote(text: string): Promise<void> {
       order: Date.now(),
       not_deleted: 1,
       not_archived: 1,
-      pinned: 0,
+      pinned: pinned ? 1 : 0,
     };
     await storage.saveNote(newNote);
+    actions.showMessage('note added');
     actions.updateNotes();
     storage.sync();
   } catch (error) {

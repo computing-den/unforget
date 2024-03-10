@@ -106,6 +106,7 @@ export async function saveNote(note: t.Note) {
 export async function getNotes(opts?: {
   limit?: number;
   archived?: boolean;
+  hidePinnedNotes?: boolean;
 }): Promise<{ done: boolean; notes: t.Note[] }> {
   const notes: t.Note[] = [];
   const limit = opts?.limit;
@@ -131,6 +132,8 @@ export async function getNotes(opts?: {
             // If archived notes were not requested and we hit an archived note, we're done.
             done = true;
             resolve();
+          } else if (note.pinned && opts?.hidePinnedNotes) {
+            cursor.continue();
           } else {
             notes.push(note);
             cursor.continue();
@@ -353,4 +356,17 @@ export async function waitTillSyncEnd(ms?: number) {
     }),
     ms && new Promise(resolve => setTimeout(resolve, ms)),
   ]);
+}
+
+export async function getHidePinnedNotes(): Promise<boolean> {
+  const res = await transaction([SETTINGS_STORE], 'readonly', async tx => {
+    return tx.objectStore(SETTINGS_STORE).get('hidePinnedNotes') as IDBRequest<boolean | undefined>;
+  });
+  return Boolean(res.result);
+}
+
+export async function setSetting(value: any, key: string) {
+  await transaction([SETTINGS_STORE], 'readwrite', async tx => {
+    tx.objectStore(SETTINGS_STORE).put(value, key);
+  });
 }
