@@ -6,4 +6,4 @@ export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   );
 }
 
-export const CACHE_VERSION = '23';
+export const CACHE_VERSION = '24';
