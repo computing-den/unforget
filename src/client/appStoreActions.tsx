@@ -25,8 +25,8 @@ export async function updateNotes() {
   try {
     const start = Date.now();
     console.log('updateNotes started');
-    const { notePages, notePageSize, hidePinnedNotes } = appStore.get();
-    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages, hidePinnedNotes });
+    const { notePages, notePageSize, hidePinnedNotes, search } = appStore.get();
+    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages, hidePinnedNotes, search });
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;
@@ -44,6 +44,8 @@ export async function updateNotesIfDirty() {
     await updateNotes();
   }
 }
+
+export const updateNotesDebounced = _.debounce(updateNotes, 300, { leading: false, trailing: true, maxWait: 1000 });
 
 export async function updateQueueCount() {
   try {

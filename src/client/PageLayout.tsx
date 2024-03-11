@@ -105,7 +105,7 @@ export function PageBody(props: { children: React.ReactNode }) {
 export function PageAction(props: { label?: string; icon?: string; onClick: () => any; bold?: boolean }) {
   const clicked = util.useCallbackCancelEvent(props.onClick, [props.onClick]);
   return (
-    <a href="#" onClick={clicked} className={`reset ${props.bold ? 'bold' : ''}`}>
+    <a href="#" onClick={clicked} className={`action reset ${props.bold ? 'bold' : ''}`}>
       {props.label}
       {props.icon && <img src={props.icon} />}
     </a>

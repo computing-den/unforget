@@ -170,7 +170,24 @@
       display: flex;
       align-items: center;
 
-      & a {
+      .action + .action {
+        margin-left: 1.5rem;
+
+        @media (max-width: 600px) {
+          margin-left: 1rem;
+        }
+      }
+
+      & input.search {
+        /* width: 500px; */
+        /* margin: 0 auto; */
+        border: 1px solid #aadfef;
+        border-radius: 5px;
+        outline: none;
+        padding: 0.25rem 0.5rem;
+      }
+
+      & a.action {
         color: white;
         height: 100%;
         display: flex;
@@ -182,14 +199,6 @@
 
         &.bold {
           font-weight: bold;
-        }
-
-        & + a {
-          margin-left: 1.5rem;
-
-          @media (max-width: 600px) {
-            margin-left: 1rem;
-          }
         }
       }
     }

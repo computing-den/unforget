@@ -1,6 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
-import React, { useCallback, useState, useEffect, memo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, memo } from 'react';
 import type * as t from '../common/types.js';
+import * as cutil from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
@@ -60,18 +61,46 @@ export function NotesPage(props: NotesPageProps) {
     actions.updateNotes();
   }, []);
 
-  const pageActions = [
-    newNoteText && (
+  const toggleSearchCb = useCallback(() => {
+    appStore.update(app => {
+      app.search = app.search === undefined ? '' : undefined;
+    });
+    actions.updateNotes();
+  }, []);
+
+  const searchChangeCb = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    appStore.update(app => {
+      app.search = e.target.value;
+    });
+    actions.updateNotesDebounced();
+  }, []);
+
+  const pageActions: React.ReactNode[] = [];
+  if (newNoteText) {
+    pageActions.push(
       <PageAction
         icon={newNotePinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'}
         onClick={togglePinned}
-      />
-    ),
-    !newNoteText && (
-      <PageAction label={app.hidePinnedNotes ? 'show pinned' : 'hide pinned'} onClick={toggleHidePinnedNotes} />
-    ),
-    newNoteText && <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />,
-  ];
+      />,
+      <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />,
+    );
+  } else if (app.search === undefined) {
+    pageActions.push(
+      <PageAction label={app.hidePinnedNotes ? 'show pinned' : 'hide pinned'} onClick={toggleHidePinnedNotes} />,
+      <PageAction icon="icons/search-white.svg" onClick={toggleSearchCb} />,
+    );
+  } else {
+    pageActions.push(
+      <input
+        placeholder="Search ..."
+        className="search action"
+        value={app.search}
+        onChange={searchChangeCb}
+        autoFocus
+      />,
+      <PageAction icon="icons/x-white.svg" onClick={toggleSearchCb} />,
+    );
+  }
 
   return (
     <PageLayout>

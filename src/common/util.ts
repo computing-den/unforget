@@ -6,4 +6,9 @@ export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   );
 }
 
+export function escapeRegExp(str: string): string {
+  // Taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_expressions
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 export const CACHE_VERSION = '24';

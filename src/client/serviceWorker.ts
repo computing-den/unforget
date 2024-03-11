@@ -27,6 +27,7 @@ const APP_STATIC_RESOURCES = [
   '/icons/refresh-ccw.svg',
   '/icons/trash-white.svg',
   '/icons/user.svg',
+  '/icons/search-white.svg',
 ];
 
 // On install, cache the static resources

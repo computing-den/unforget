@@ -75,6 +75,7 @@ export type AppStore = {
   hidePinnedNotes: boolean;
   menuOpen: boolean;
   notes: Note[];
+  search?: string;
   notesLastModificationTimestamp: number;
   notesLastUpdateTimestamp: number;
   notePages: number;

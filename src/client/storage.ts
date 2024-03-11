@@ -138,10 +138,17 @@ export async function getNotes(opts?: {
   limit?: number;
   archived?: boolean;
   hidePinnedNotes?: boolean;
+  search?: string;
 }): Promise<{ done: boolean; notes: t.Note[] }> {
   const notes: t.Note[] = [];
   const limit = opts?.limit;
   let done = false;
+
+  let regexps: RegExp[] | undefined;
+  if (opts?.search) {
+    const words = opts.search.split(/\s+/g).map(cutil.escapeRegExp);
+    regexps = words.map(word => new RegExp(word, 'i'));
+  }
 
   await transaction([NOTES_STORE], 'readonly', async tx => {
     return new Promise<void>((resolve, reject) => {
@@ -151,6 +158,7 @@ export async function getNotes(opts?: {
         reject(orderCursorReq.error);
       };
       orderCursorReq.onsuccess = () => {
+        const start = Date.now();
         const cursor = orderCursorReq.result;
         if (!cursor) {
           done = true;
@@ -164,6 +172,9 @@ export async function getNotes(opts?: {
             done = true;
             resolve();
           } else if (note.pinned && opts?.hidePinnedNotes) {
+            cursor.continue();
+          } else if (regexps && !regexps.every(regexp => regexp.test(note.text ?? ''))) {
+            console.log(`matched regexps in ${Date.now() - start}ms`);
             cursor.continue();
           } else {
             notes.push(note);
@@ -279,7 +290,7 @@ export async function fullSync() {
   return sync();
 }
 
-export const syncDebounced = _.debounce(sync, 500, { trailing: true, maxWait: 3000 });
+export const syncDebounced = _.debounce(sync, 500, { leading: false, trailing: true, maxWait: 3000 });
 
 export async function clearAll() {
   const db = await getStorage();
