@@ -12,7 +12,7 @@ import { v4 as uuid } from 'uuid';
 
 type NotesPageProps = {};
 
-function NotesPage(props: NotesPageProps) {
+export function NotesPage(props: NotesPageProps) {
   const app = appStore.use();
   const [newNoteText, setNewNoteText] = useState('');
   const [newNotePinned, setNewNotePinned] = useState(false);
@@ -25,6 +25,11 @@ function NotesPage(props: NotesPageProps) {
 
   const newNoteTextChanged = useCallback((text: string) => {
     setNewNoteText(text);
+  }, []);
+
+  // Update notes on mount.
+  useEffect(() => {
+    actions.updateNotesIfDirty();
   }, []);
 
   // const editorFocusCb = useCallback(() => {
@@ -76,10 +81,11 @@ function NotesPage(props: NotesPageProps) {
           <div className="new-note-container">
             <Editor
               id="new-note-editor"
-              className={`text-input ${newNoteText ? 'tall' : ''}`}
+              className="text-input"
               placeholder="What's on you mind?"
               value={newNoteText}
               onChange={newNoteTextChanged}
+              autoExpand
               // onFocus={editorFocusCb}
               // onBlur={editorBlurCb}
             />
@@ -127,37 +133,51 @@ const Note = memo(function Note(props: { note: t.Note }) {
   if (text && text.length > 1500) {
     text = text.substring(0, 1500) + '\n..........';
   }
+  if (text && countLines(text) > 20) {
+    text = text.split(/\r?\n/).slice(0, 20).join('\n') + '\n..........';
+  }
+  const titleBodyMatch = text?.match(/^([^\r\n]+)\r?\n\r?\n(.+)$/s);
+  let title = titleBodyMatch?.[1];
+  let body = titleBodyMatch?.[2] ?? text;
 
   return (
     <pre className="note" onMouseDown={mouseDownCb} onClick={clickCb}>
-      {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-empty.svg" />}
-      {text}
+      {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-filled.svg" />}
+      {title && <span className="title">{title}</span>}
+      {title && '\n\n'}
+      {body}
     </pre>
   );
 });
 
 async function addNote(text: string, pinned: boolean): Promise<void> {
-  try {
-    document.getElementById('new-note-editor')!.focus();
-    if (!text) return;
+  document.getElementById('new-note-editor')!.focus();
+  if (!text) return;
 
-    const newNote: t.Note = {
-      id: uuid(),
-      text,
-      creation_date: new Date().toISOString(),
-      modification_date: new Date().toISOString(),
-      order: Date.now(),
-      not_deleted: 1,
-      not_archived: 1,
-      pinned: pinned ? 1 : 0,
-    };
-    await storage.saveNote(newNote);
-    actions.showMessage('note added');
-    actions.updateNotes();
-    storage.sync();
-  } catch (error) {
-    actions.gotError(error as Error);
-  }
+  const newNote: t.Note = {
+    id: uuid(),
+    text,
+    creation_date: new Date().toISOString(),
+    modification_date: new Date().toISOString(),
+    order: Date.now(),
+    not_deleted: 1,
+    not_archived: 1,
+    pinned: pinned ? 1 : 0,
+  };
+  await actions.saveNote(newNote, { message: 'note added', immediateSync: true });
+  await actions.updateNotes();
 }
 
-export default NotesPage;
+export async function notesPageLoader(): Promise<null> {
+  // First load.
+  if (appStore.get().notes.length === 0) {
+    await actions.updateNotes();
+  }
+  return null;
+}
+
+function countLines(text: string): number {
+  let count = 0;
+  for (let i = 0; i < text.length; i++) if (text[i] === '\n') count++;
+  return count;
+}

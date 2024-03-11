@@ -11,13 +11,12 @@
     flex-direction: column;
 
     .editor {
-      padding: 1rem;
       height: 30px;
-      transition: height 0.2s ease-in-out;
+      /* transition: height 0.2s ease-in-out; */
 
-      &.tall {
-        height: 400px;
-      }
+      /* &.tall { */
+      /*   height: 100px; */
+      /* } */
     }
   }
 
@@ -48,6 +47,10 @@
 
       &:hover {
         background: #d0ebf5;
+      }
+
+      .title {
+        font-weight: bold;
       }
 
       & p {

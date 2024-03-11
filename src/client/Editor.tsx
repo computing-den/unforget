@@ -15,6 +15,7 @@ type EditorProps = {
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLTextAreaElement>;
   onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
+  autoExpand?: boolean;
 };
 
 function Editor(props: EditorProps) {
@@ -32,10 +33,20 @@ function Editor(props: EditorProps) {
 
   const clickCb = useCallback(() => {
     props.onClick?.();
-    const message = `clickCb: ${editorRef.current!.selectionStart} ${editorRef.current!.selectionEnd}`;
-    util.postApi('/api/log', { message });
-    console.log(message);
+    // const message = `clickCb: ${editorRef.current!.selectionStart} ${editorRef.current!.selectionEnd}`;
+    // util.postApi('/api/log', { message });
+    // console.log(message);
   }, [props.onClick]);
+
+  useEffect(() => {
+    if (props.autoExpand) {
+      const editor = editorRef.current!;
+      const style = window.getComputedStyle(editor);
+      const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      editor.style.height = '0'; // Shrink it first.
+      editor.style.height = `${editor.scrollHeight - padding}px`;
+    }
+  }, [props.value, props.autoExpand]);
 
   return (
     <textarea

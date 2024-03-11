@@ -28,32 +28,55 @@ export function NotePage() {
     }
   }, [location, navigate]);
 
-  const textChangeCb = useCallback((text: string) => setNote(note => ({ ...note!, text })), []);
-  const saveCb = useCallback(() => {
-    actions.saveNote({ ...note!, modification_date: new Date().toISOString() }, 'saved');
-  }, [note]);
+  const textChangeCb = useCallback(
+    (text: string) => {
+      const newNote = { ...note!, text };
+      setNote(newNote);
+      actions.saveNote(newNote);
+    },
+    [note],
+  );
+
   const archiveCb = useCallback(() => {
     actions
-      .saveNote({ ...note!, modification_date: new Date().toISOString(), not_archived: 0 }, 'archived')
+      .saveNote(
+        { ...note!, modification_date: new Date().toISOString(), not_archived: 0 },
+        { message: 'archived', immediateSync: true },
+      )
       .then(goHome);
   }, [goHome, note]);
-  const pinCb = useCallback(() => {
-    const newNote = { ...note!, modification_date: new Date().toISOString(), pinned: note!.pinned ? 0 : 1 };
-    actions.saveNote(newNote, note!.pinned ? 'unpinned' : 'pinned').then(() => setNote(newNote));
-  }, [note]);
+
   const deleteCb = useCallback(() => {
     if (confirm('Are you sure you want to delete this note?')) {
       actions
-        .saveNote({ ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 }, 'deleted')
+        .saveNote(
+          { ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 },
+          { message: 'deleted', immediateSync: true },
+        )
         .then(goHome);
     }
   }, [goHome, note]);
+
+  const pinCb = useCallback(() => {
+    const newNote = { ...note!, modification_date: new Date().toISOString(), pinned: note!.pinned ? 0 : 1 };
+    actions
+      .saveNote(newNote, { message: note!.pinned ? 'unpinned' : 'pinned', immediateSync: true })
+      .then(() => setNote(newNote));
+  }, [note]);
+
+  useEffect(() => {
+    function callback(e: BeforeUnloadEvent) {
+      if (storage.isSavingNote()) e.preventDefault();
+    }
+    window.addEventListener('beforeunload', callback);
+    return () => window.removeEventListener('beforeunload', callback);
+  }, []);
 
   const pageActions = note && [
     <PageAction icon="/icons/trash-white.svg" onClick={deleteCb} />,
     <PageAction icon="/icons/archive-white.svg" onClick={archiveCb} />,
     <PageAction icon={note.pinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'} onClick={pinCb} />,
-    <PageAction icon="/icons/check-white.svg" onClick={saveCb} />,
+    // <PageAction icon="/icons/check-white.svg" onClick={saveCb} />,
   ];
 
   return (

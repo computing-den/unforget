@@ -9,6 +9,8 @@ export async function initAppStore() {
     hidePinnedNotes: await storage.getHidePinnedNotes(),
     menuOpen: false,
     notes: [],
+    notesLastModificationTimestamp: 0,
+    notesLastUpdateTimestamp: -1,
     notePages: 1,
     notePageSize: 100,
     allNotePagesLoaded: false,
@@ -21,14 +23,25 @@ export async function initAppStore() {
 
 export async function updateNotes() {
   try {
+    const start = Date.now();
+    console.log('updateNotes started');
     const { notePages, notePageSize, hidePinnedNotes } = appStore.get();
     const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages, hidePinnedNotes });
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;
+      app.notesLastUpdateTimestamp = Date.now();
     });
+    console.log(`updateNotes done in ${Date.now() - start}ms`);
   } catch (error) {
     gotError(error as Error);
+  }
+}
+
+export async function updateNotesIfDirty() {
+  const { notesLastUpdateTimestamp, notesLastModificationTimestamp } = appStore.get();
+  if (notesLastUpdateTimestamp < notesLastModificationTimestamp) {
+    await updateNotes();
   }
 }
 
@@ -100,12 +113,20 @@ export function showMessage(text: string, opts?: { type?: 'info' | 'error'; hide
   }
 }
 
-export async function saveNote(note: t.Note, messageText?: string) {
+export async function saveNote(note: t.Note, opts?: { message?: string; immediateSync?: boolean }) {
   try {
     await storage.saveNote(note);
-    if (messageText) showMessage(messageText, { type: 'info', hideAfterTimeout: true });
-    updateNotes();
-    storage.sync();
+    if (opts?.message) {
+      showMessage(opts.message, { type: 'info', hideAfterTimeout: true });
+    }
+    appStore.update(app => {
+      app.notesLastModificationTimestamp = Date.now();
+    });
+    if (opts?.immediateSync) {
+      storage.sync();
+    } else {
+      storage.syncDebounced();
+    }
   } catch (error) {
     gotError(error as Error);
   }

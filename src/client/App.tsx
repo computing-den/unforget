@@ -6,19 +6,19 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import LoginPage from './LoginPage.jsx';
-import NotesPage from './NotesPage.jsx';
+import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
 export default function App() {
-  const app = appStore.use();
+  // const app = appStore.use();
   // const location = util.useLocation();
   // const url = new URL(location.href);
 
   useSyncOnlineStatus();
-  useUpdateNotesAfterStorageSync();
+  useListenToStorageSync();
 
   // Sync storage on mount and periodically.
   useEffect(() => {
@@ -29,11 +29,6 @@ export default function App() {
   // Update queue count periodically.
   util.useInterval(() => actions.updateQueueCount(), 3000);
 
-  // Update notes on mount.
-  useEffect(() => {
-    actions.updateNotes();
-  }, []);
-
   const router = createBrowserRouter([
     {
       path: '/',
@@ -42,7 +37,7 @@ export default function App() {
         {
           path: '',
           element: <NotesPage />,
-          loader: requireUser,
+          loader: notesPageLoaderWithAuth,
         },
         {
           path: 'login',
@@ -64,6 +59,12 @@ async function notePageLoaderWithAuth(args: LoaderFunctionArgs): Promise<any> {
   console.log('calling note page loader');
   await requireUser(args);
   return await notePageLoader(args);
+}
+
+async function notesPageLoaderWithAuth(args: LoaderFunctionArgs): Promise<any> {
+  console.log('calling notes page loader');
+  await requireUser(args);
+  return await notesPageLoader();
 }
 
 const requireUser = async (args: LoaderFunctionArgs) => {
@@ -116,17 +117,17 @@ function useSyncOnlineStatus() {
   }, []);
 }
 
-function useUpdateNotesAfterStorageSync() {
+function useListenToStorageSync() {
   // Listen to storage's sync events and update notes.
   useEffect(() => {
     function syncListener(args: storage.SyncListenerArgs) {
-      console.log('syncListener: ', args);
-
-      if (args.done) actions.updateNotes();
-
       appStore.update(app => {
         app.syncing = !args.done;
+        if (args.done && args.error) {
+          app.message = { text: 'Sync failed: ' + args.error.message, type: 'error', timestamp: Date.now() };
+        }
       });
+      if (args.done && args.mergeCount > 0) actions.updateNotes();
     }
     storage.addSyncListener(syncListener);
     return () => storage.removeSyncListener(syncListener);

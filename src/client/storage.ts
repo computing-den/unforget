@@ -17,14 +17,18 @@ export type SyncListenerArgs = { done: false } | { done: true; error?: Error; me
 
 export type SyncListener = (args: SyncListenerArgs) => any;
 
+type SaveNoteQueueItem = { note: t.Note; resolve: () => void; reject: (error: Error) => any };
+
 const syncListeners: SyncListener[] = [];
 export let syncing = false;
 let shouldSyncAgain = false;
 let fullSyncRequired = false;
+let saveNoteQueue: SaveNoteQueueItem[] = [];
+let saveNoteQueueActive: boolean = false;
 
 export async function getStorage(): Promise<IDBDatabase> {
-  console.log('setting up storage');
   _db ??= await new Promise<IDBDatabase>((resolve, reject) => {
+    console.log('setting up storage');
     const dbOpenReq = indexedDB.open(DB_NAME, 53);
 
     dbOpenReq.onerror = () => {
@@ -66,7 +70,7 @@ export async function transaction<T>(
       tx = db.transaction(storeNames, mode);
       let res: T;
       tx.oncomplete = () => {
-        console.log('transaction succeeded');
+        // console.log('transaction succeeded');
         resolve(res);
       };
       tx.onerror = () => {
@@ -87,11 +91,38 @@ export async function transaction<T>(
 }
 
 export async function saveNote(note: t.Note) {
+  return new Promise<void>((resolve, reject) => {
+    saveNoteQueue.unshift({ note, resolve, reject });
+    if (!saveNoteQueueActive) saveNextNoteInQueue();
+  });
+}
+
+async function saveNextNoteInQueue() {
+  const item = saveNoteQueue.pop();
+  saveNoteQueueActive = Boolean(item);
+  if (!item) return;
+
+  try {
+    await saveNoteQueueItem(item);
+    console.log('saved note ', item.note.text);
+    item.resolve();
+  } catch (error) {
+    item.reject(error as Error);
+  } finally {
+    saveNextNoteInQueue();
+  }
+}
+
+async function saveNoteQueueItem(item: SaveNoteQueueItem) {
   await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', tx => {
-    tx.objectStore(NOTES_STORE).put(note);
-    const noteHead: t.NoteHead = { id: note.id, modification_date: note.modification_date };
+    tx.objectStore(NOTES_STORE).put(item.note);
+    const noteHead: t.NoteHead = { id: item.note.id, modification_date: item.note.modification_date };
     tx.objectStore(NOTES_QUEUE_STORE).put(noteHead);
   });
+}
+
+export function isSavingNote(): boolean {
+  return saveNoteQueueActive;
 }
 
 // export async function getAllNotes(): Promise<t.Note[]> {
@@ -248,6 +279,8 @@ export async function fullSync() {
   return sync();
 }
 
+export const syncDebounced = _.debounce(sync, 500, { trailing: true, maxWait: 3000 });
+
 export async function clearAll() {
   const db = await getStorage();
   const storeNames = Array.from(db.objectStoreNames);
@@ -343,7 +376,7 @@ export async function countQueuedNotes(): Promise<number> {
   return res.result;
 }
 
-export async function waitTillSyncEnd(ms?: number) {
+export async function waitTillSyncEnd(ms: number) {
   await Promise.race([
     new Promise<void>(resolve => {
       function cb() {
@@ -354,7 +387,7 @@ export async function waitTillSyncEnd(ms?: number) {
       }
       addSyncListener(cb);
     }),
-    ms && new Promise(resolve => setTimeout(resolve, ms)),
+    new Promise(resolve => setTimeout(resolve, ms)),
   ]);
 }
 
