@@ -1,9 +1,9 @@
 {
   "name": "Unforget",
-  "short_name": "u",
+  "short_name": "unforget",
   "description": "Never forget a thing.",
-  "theme_color": "#2196f3",
-  "background_color": "#2196f3",
+  "theme_color": "#000712",
+  "background_color": "#000712",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",

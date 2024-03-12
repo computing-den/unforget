@@ -210,6 +210,7 @@ app.get(['/', '/n/:noteId', '/login'], (req, res) => {
     <title>unforget</title>
     <link rel="stylesheet" href="/style.css">
     <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/icon-256x256.png" type="image/png" />
 	  <script src="/index.js"></script>
   </head>
   <body>
