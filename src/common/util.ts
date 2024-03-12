@@ -11,4 +11,4 @@ export function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
-export const CACHE_VERSION = '28';
+export const CACHE_VERSION = '29';
