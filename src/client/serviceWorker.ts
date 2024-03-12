@@ -16,7 +16,10 @@ const APP_STATIC_RESOURCES = [
   '/barefront.svg',
   '/manifest.json',
   '/icon-256x256.png',
-  '/icons/archive-white.svg',
+  '/icons/archive-filled.svg',
+  '/icons/archive-empty.svg',
+  '/icons/archive-filled-white.svg',
+  '/icons/archive-empty-white.svg',
   '/icons/check-white.svg',
   '/icons/log-out.svg',
   '/icons/menu-white.svg',
@@ -28,6 +31,10 @@ const APP_STATIC_RESOURCES = [
   '/icons/trash-white.svg',
   '/icons/user.svg',
   '/icons/search-white.svg',
+  '/icons/show-pinned-white.svg',
+  '/icons/hide-pinned-white.svg',
+  '/icons/info.svg',
+  '/icons/notes.svg',
 ];
 
 // On install, cache the static resources

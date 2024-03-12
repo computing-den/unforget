@@ -37,13 +37,18 @@ export function NotePage() {
     [note],
   );
 
-  const archiveCb = useCallback(() => {
+  const toggleArchiveCb = useCallback(() => {
+    const newNote: t.Note = {
+      ...note!,
+      modification_date: new Date().toISOString(),
+      not_archived: note!.not_archived ? 0 : 1,
+    };
     actions
-      .saveNote(
-        { ...note!, modification_date: new Date().toISOString(), not_archived: 0 },
-        { message: 'archived', immediateSync: true },
-      )
-      .then(goHome);
+      .saveNote(newNote, { message: newNote.not_archived ? 'unarchived' : 'archived', immediateSync: true })
+      .then(() => {
+        setNote(newNote);
+        if (!newNote.not_archived) goHome();
+      });
   }, [goHome, note]);
 
   const deleteCb = useCallback(() => {
@@ -74,9 +79,12 @@ export function NotePage() {
 
   const pageActions = note && [
     <PageAction icon="/icons/trash-white.svg" onClick={deleteCb} />,
-    <PageAction icon="/icons/archive-white.svg" onClick={archiveCb} />,
+    <PageAction
+      icon={note.not_archived ? '/icons/archive-empty-white.svg' : '/icons/archive-filled-white.svg'}
+      onClick={toggleArchiveCb}
+    />,
     <PageAction icon={note.pinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'} onClick={pinCb} />,
-    // <PageAction icon="/icons/check-white.svg" onClick={saveCb} />,
+    <PageAction icon="/icons/check-white.svg" onClick={goHome} />,
   ];
 
   return (

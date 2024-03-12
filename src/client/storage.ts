@@ -136,7 +136,7 @@ export function isSavingNote(): boolean {
 
 export async function getNotes(opts?: {
   limit?: number;
-  archived?: boolean;
+  archive?: boolean;
   hidePinnedNotes?: boolean;
   search?: string;
 }): Promise<{ done: boolean; notes: t.Note[] }> {
@@ -167,10 +167,12 @@ export async function getNotes(opts?: {
           resolve();
         } else {
           const note = cursor.value as t.Note;
-          if (!note.not_archived && !opts?.archived) {
-            // If archived notes were not requested and we hit an archived note, we're done.
+          if (!note.not_archived && !opts?.archive) {
+            // If archived notes were not requested and we hit an archive note, we're done.
             done = true;
             resolve();
+          } else if (note.not_archived && opts?.archive) {
+            cursor.continue();
           } else if (note.pinned && opts?.hidePinnedNotes) {
             cursor.continue();
           } else if (regexps && !regexps.every(regexp => regexp.test(note.text ?? ''))) {
@@ -402,9 +404,9 @@ export async function waitTillSyncEnd(ms: number) {
   ]);
 }
 
-export async function getHidePinnedNotes(): Promise<boolean> {
+export async function getSetting(key: string): Promise<any> {
   const res = await transaction([SETTINGS_STORE], 'readonly', async tx => {
-    return tx.objectStore(SETTINGS_STORE).get('hidePinnedNotes') as IDBRequest<boolean | undefined>;
+    return tx.objectStore(SETTINGS_STORE).get(key) as IDBRequest<any | undefined>;
   });
   return Boolean(res.result);
 }

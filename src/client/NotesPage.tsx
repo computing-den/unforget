@@ -7,7 +7,7 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import Editor from './Editor.jsx';
-import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
+import { PageLayout, PageHeader, PageBody, PageAction, MenuItem } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -86,7 +86,10 @@ export function NotesPage(props: NotesPageProps) {
     );
   } else if (app.search === undefined) {
     pageActions.push(
-      <PageAction label={app.hidePinnedNotes ? 'show pinned' : 'hide pinned'} onClick={toggleHidePinnedNotes} />,
+      <PageAction
+        icon={app.hidePinnedNotes ? '/icons/hide-pinned-white.svg' : '/icons/show-pinned-white.svg'}
+        onClick={toggleHidePinnedNotes}
+      />,
       <PageAction icon="icons/search-white.svg" onClick={toggleSearchCb} />,
     );
   } else {
@@ -98,13 +101,29 @@ export function NotesPage(props: NotesPageProps) {
         onChange={searchChangeCb}
         autoFocus
       />,
-      <PageAction icon="icons/x-white.svg" onClick={toggleSearchCb} />,
+      <PageAction className="close-search" icon="/icons/x-white.svg" onClick={toggleSearchCb} />,
     );
   }
 
+  const toggleShowArchive = util.useCallbackCancelEvent(() => {
+    const value = !app.showArchive;
+    storage.setSetting(value, 'showArchive');
+    appStore.update(app => {
+      app.menuOpen = false;
+      app.showArchive = !app.showArchive;
+    });
+    actions.updateNotes();
+  }, [app.showArchive]);
+
+  const menu: MenuItem[] = [
+    app.showArchive
+      ? { label: 'Notes', icon: '/icons/notes.svg', onClick: toggleShowArchive }
+      : { label: 'Archive', icon: '/icons/archive-empty.svg', onClick: toggleShowArchive },
+  ];
+
   return (
     <PageLayout>
-      <PageHeader actions={pageActions} />
+      <PageHeader actions={pageActions} menu={menu} title={app.showArchive ? 'archive' : undefined} />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">

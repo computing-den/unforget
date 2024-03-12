@@ -73,6 +73,7 @@ export type LocalUser = {
 
 export type AppStore = {
   hidePinnedNotes: boolean;
+  showArchive: boolean;
   menuOpen: boolean;
   notes: Note[];
   search?: string;

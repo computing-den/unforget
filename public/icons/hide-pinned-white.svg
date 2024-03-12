@@ -1,0 +1,51 @@
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   fill="#fff"
+   stroke="#fff"
+   stroke-width="2"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   xmlns="http://www.w3.org/2000/svg">
+  <path
+     d="M 8.0108289,14.666667 H 21.899706"
+     id="path4"
+     style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     d="M 8.0108291,9.3333334 H 21.899706"
+     id="path4-6"
+     style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     d="M 8.0108288,3.9999995 H 21.899706"
+     id="path4-8"
+     style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <path
+     d="M 8.0108289,20 H 21.899706"
+     id="path6"
+     style="stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none" />
+  <circle
+     cy="14.666667"
+     cx="3.815644"
+     r="1.71535"
+     id="circle8"
+     style="stroke-width:0.508049" />
+  <circle
+     cy="9.333333"
+     cx="3.815644"
+     r="1.71535"
+     id="circle8-3"
+     style="stroke-width:0.508049" />
+  <circle
+     cy="3.9999995"
+     cx="3.815644"
+     r="1.71535"
+     id="circle8-3-9"
+     style="stroke-width:0.508049" />
+  <circle
+     cy="20"
+     cx="3.815644"
+     r="1.71535"
+     id="circle10"
+     style="stroke-width:0.508049" />
+</svg>

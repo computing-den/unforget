@@ -5,8 +5,13 @@ import * as util from './util.jsx';
 import _ from 'lodash';
 
 export async function initAppStore() {
+  const [showArchive, hidePinnedNotes] = await Promise.all([
+    storage.getSetting('showArchive'),
+    storage.getSetting('hidePinnedNotes'),
+  ]);
   appStore.set({
-    hidePinnedNotes: await storage.getHidePinnedNotes(),
+    showArchive,
+    hidePinnedNotes,
     menuOpen: false,
     notes: [],
     notesLastModificationTimestamp: 0,
@@ -25,8 +30,13 @@ export async function updateNotes() {
   try {
     const start = Date.now();
     console.log('updateNotes started');
-    const { notePages, notePageSize, hidePinnedNotes, search } = appStore.get();
-    const { done, notes } = await storage.getNotes({ limit: notePageSize * notePages, hidePinnedNotes, search });
+    const { notePages, notePageSize, hidePinnedNotes, search, showArchive } = appStore.get();
+    const { done, notes } = await storage.getNotes({
+      limit: notePageSize * notePages,
+      hidePinnedNotes,
+      search,
+      archive: showArchive,
+    });
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;
