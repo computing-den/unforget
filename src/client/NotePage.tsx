@@ -69,12 +69,22 @@ export function NotePage() {
       .then(() => setNote(newNote));
   }, [note]);
 
+  // Save note on beforeunload event.
   useEffect(() => {
     function callback(e: BeforeUnloadEvent) {
       if (storage.isSavingNote()) e.preventDefault();
     }
     window.addEventListener('beforeunload', callback);
     return () => window.removeEventListener('beforeunload', callback);
+  }, []);
+
+  // Go home on Escape key.
+  useEffect(() => {
+    function callback(e: KeyboardEvent) {
+      if (e.key === 'Escape') goHome();
+    }
+    window.addEventListener('keydown', callback);
+    return () => window.removeEventListener('keydown', callback);
   }, []);
 
   const pageActions = note && [

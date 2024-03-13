@@ -192,7 +192,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
     <pre className="note" onMouseDown={mouseDownCb} onClick={clickCb}>
       {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-filled.svg" />}
       {title && <span className="title">{title}</span>}
-      {title && '\n\n'}
+      {title && '\n'}
       {body}
     </pre>
   );
