@@ -35,6 +35,9 @@ const APP_STATIC_RESOURCES = [
   '/icons/hide-pinned-white.svg',
   '/icons/info.svg',
   '/icons/notes.svg',
+  '/icons/add-white.svg',
+  '/icons/checkbox-list.svg',
+  '/icons/bulletpoint-white.svg',
 ];
 
 // On install, cache the static resources

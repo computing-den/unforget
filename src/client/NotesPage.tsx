@@ -1,13 +1,14 @@
 import { useNavigate, Link } from 'react-router-dom';
-import React, { useCallback, useState, useEffect, useMemo, memo } from 'react';
+import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
-import Editor from './Editor.jsx';
-import { PageLayout, PageHeader, PageBody, PageAction, MenuItem } from './PageLayout.jsx';
+import { Editor, EditorContext } from './Editor.jsx';
+import { MenuItem } from './Menu.jsx';
+import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -17,12 +18,22 @@ export function NotesPage(props: NotesPageProps) {
   const app = appStore.use();
   const [newNoteText, setNewNoteText] = useState('');
   const [newNotePinned, setNewNotePinned] = useState(false);
-  // const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const editorRef = useRef<EditorContext | null>(null);
 
-  const addNoteCb = useCallback(
-    () => addNote(newNoteText, newNotePinned).then(() => setNewNoteText('')),
-    [newNoteText, newNotePinned],
-  );
+  const addNoteCb = useCallback(() => {
+    if (newNoteText) {
+      addNote(newNoteText, newNotePinned).then(() => setNewNoteText(''));
+    } else {
+      setNewNoteText('');
+    }
+    setEditing(false);
+  }, [newNoteText, newNotePinned]);
+
+  const cancelNewNoteCb = useCallback(() => {
+    setNewNoteText('');
+    setEditing(false);
+  }, []);
 
   const newNoteTextChanged = useCallback((text: string) => {
     setNewNoteText(text);
@@ -33,13 +44,13 @@ export function NotesPage(props: NotesPageProps) {
     actions.updateNotesIfDirty();
   }, []);
 
-  // const editorFocusCb = useCallback(() => {
-  //   setEditing(true);
-  // }, []);
+  const editorFocusCb = useCallback(() => {
+    setEditing(true);
+  }, []);
 
-  // const editorBlurCb = useCallback(() => {
-  //   setEditing(false);
-  // }, []);
+  const editorBlurCb = useCallback(() => {
+    // setEditing(false);
+  }, []);
 
   const togglePinned = useCallback(() => {
     setNewNotePinned(!newNotePinned);
@@ -75,13 +86,22 @@ export function NotesPage(props: NotesPageProps) {
     actions.updateNotesDebounced();
   }, []);
 
+  const cycleListStyleCb = useCallback(() => {
+    editorRef.current!.cycleListStyle();
+  }, []);
+
+  // const insertMenu = createInsertMenu(() => editorRef.current!);
+
   const pageActions: React.ReactNode[] = [];
-  if (newNoteText) {
+  if (editing) {
     pageActions.push(
+      <PageAction icon="/icons/bulletpoint-white.svg" onClick={cycleListStyleCb} />,
+
       <PageAction
         icon={newNotePinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'}
         onClick={togglePinned}
       />,
+      <PageAction icon="/icons/x-white.svg" onClick={cancelNewNoteCb} />,
       <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />,
     );
   } else if (app.search === undefined) {
@@ -95,7 +115,7 @@ export function NotesPage(props: NotesPageProps) {
   } else {
     pageActions.push(
       <input
-        placeholder="Search ..."
+        placeholder={app.showArchive ? 'Search archive ...' : 'Search ...'}
         className="search action"
         value={app.search}
         onChange={searchChangeCb}
@@ -105,11 +125,10 @@ export function NotesPage(props: NotesPageProps) {
     );
   }
 
-  const toggleShowArchive = util.useCallbackCancelEvent(() => {
+  const toggleShowArchive = useCallback(() => {
     const value = !app.showArchive;
     storage.setSetting(value, 'showArchive');
     appStore.update(app => {
-      app.menuOpen = false;
       app.showArchive = !app.showArchive;
     });
     actions.updateNotes();
@@ -123,19 +142,24 @@ export function NotesPage(props: NotesPageProps) {
 
   return (
     <PageLayout>
-      <PageHeader actions={pageActions} menu={menu} title={app.showArchive ? 'archive' : undefined} />
+      <PageHeader
+        actions={pageActions}
+        menu={menu}
+        title={app.showArchive && app.search === undefined ? 'archive' : undefined}
+      />
       <PageBody>
         <div className="notes-page">
           <div className="new-note-container">
             <Editor
+              ref={editorRef}
               id="new-note-editor"
               className="text-input"
               placeholder="What's on you mind?"
               value={newNoteText}
               onChange={newNoteTextChanged}
               autoExpand
-              // onFocus={editorFocusCb}
-              // onBlur={editorBlurCb}
+              onFocus={editorFocusCb}
+              onBlur={editorBlurCb}
             />
           </div>
           <Notes />
@@ -166,34 +190,87 @@ const Note = memo(function Note(props: { note: t.Note }) {
   const [mouseDownPos, setMouseDownPos] = useState<[number, number] | undefined>();
   // const ps = (props.note.text || '').split(/\n+/).map((x, i) => <p key={i}>{x}</p>);
 
-  const mouseDownCb = (e: React.MouseEvent) => {
+  let text = props.note.text;
+  // if (text && text.length > 1500) {
+  //   text = text.substring(0, 1500) + '\n..........';
+  // }
+  const lineLimit = 30;
+  if (text && countLines(text) > lineLimit) {
+    text = text.split(/\r?\n/).slice(0, lineLimit).join('\n') + '\n..........';
+  }
+  // const titleBodyMatch = text?.match(/^([^\r\n]+)\r?\n\r?\n(.+)$/s);
+  // let title = titleBodyMatch?.[1];
+  // let body = titleBodyMatch?.[2] ?? text ?? '';
+  const lines = cutil.parseLines(text ?? '');
+  const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
+
+  function mouseDownCb(e: React.MouseEvent) {
     setMouseDownPos([e.clientX, e.clientY]);
-  };
-  const clickCb = (e: React.MouseEvent) => {
+  }
+
+  function noteClickCb(e: React.MouseEvent) {
     if (!mouseDownPos) return;
     const diff = [Math.abs(e.clientX - mouseDownPos[0]), Math.abs(e.clientY - mouseDownPos[1])];
     const dist = Math.sqrt(diff[0] ** 2 + diff[1] ** 2);
     if (dist < 5) {
       navigate(`/n/${props.note.id}`, { state: { fromNotesPage: true } });
     }
-  };
-  let text = props.note.text;
-  if (text && text.length > 1500) {
-    text = text.substring(0, 1500) + '\n..........';
   }
-  if (text && countLines(text) > 20) {
-    text = text.split(/\r?\n/).slice(0, 20).join('\n') + '\n..........';
+
+  function inputClickCb(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.target as HTMLInputElement;
+    const lineIndex = Number(target.dataset.lineIndex);
+    const line = lines[lineIndex];
+    const newLineText = cutil.toggleLineCheckbox(line);
+    const newText = cutil.insertText(props.note.text!, newLineText, line.start, line.end);
+    const newNote: t.Note = { ...props.note, text: newText };
+    actions.saveNoteAndQuickUpdateNotes(newNote);
   }
-  const titleBodyMatch = text?.match(/^([^\r\n]+)\r?\n\r?\n(.+)$/s);
-  let title = titleBodyMatch?.[1];
-  let body = titleBodyMatch?.[2] ?? text;
+
+  function renderLine(line: t.ParsedLine, i: number): React.ReactNode {
+    let res = [];
+
+    if (hasTitle && i === 0) {
+      // Render title.
+      res.push(<span className="title">{lines[0].wholeLine}</span>);
+    } else if (!hasTitle || i >= 2) {
+      // Render body line.
+
+      if (i > 0) res.push('\n');
+
+      if (!line.bullet) {
+        res.push(line.wholeLine);
+      } else {
+        res.push(' '.repeat(line.padding * 2));
+        if (line.checkbox) {
+          res.push(
+            <input
+              type="checkbox"
+              key={`input-${props.note.id}-${i}`}
+              onClick={inputClickCb}
+              data-line-index={i}
+              checked={line.checked}
+            />,
+          );
+          res.push(' ');
+        } else {
+          res.push('• ');
+        }
+        res.push(line.body);
+      }
+    }
+
+    return res;
+  }
+
+  // const bodyLines = hasTitle ? lines.slice(2) : lines;
 
   return (
-    <pre className="note" onMouseDown={mouseDownCb} onClick={clickCb}>
+    <pre className="note" onMouseDown={mouseDownCb} onClick={noteClickCb}>
       {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-filled.svg" />}
-      {title && <span className="title">{title}</span>}
-      {title && '\n'}
-      {body}
+      {lines.map(renderLine)}
     </pre>
   );
 });

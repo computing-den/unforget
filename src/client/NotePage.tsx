@@ -5,7 +5,8 @@ import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
-import Editor from './Editor.jsx';
+import { Editor, EditorContext } from './Editor.jsx';
+import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -16,7 +17,7 @@ export function NotePage() {
   const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
   const navigate = useNavigate();
   const location = useLocation();
-  // const app = appStore.use();
+  const editorRef = useRef<EditorContext | null>(null);
 
   util.useScrollToTop();
 
@@ -87,7 +88,14 @@ export function NotePage() {
     return () => window.removeEventListener('keydown', callback);
   }, []);
 
+  // const insertMenu = createInsertMenu(() => editorRef.current!);
+
+  const cycleListStyleCb = useCallback(() => {
+    editorRef.current!.cycleListStyle();
+  }, []);
+
   const pageActions = note && [
+    <PageAction icon="/icons/bulletpoint-white.svg" onClick={cycleListStyleCb} />,
     <PageAction icon="/icons/trash-white.svg" onClick={deleteCb} />,
     <PageAction
       icon={note.not_archived ? '/icons/archive-empty-white.svg' : '/icons/archive-filled-white.svg'}
@@ -96,6 +104,8 @@ export function NotePage() {
     <PageAction icon={note.pinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'} onClick={pinCb} />,
     <PageAction icon="/icons/check-white.svg" onClick={goHome} />,
   ];
+
+  // const menu: MenuItem[] = [{ label: 'Delete note', icon: '/icons/trash-white.svg', onClick: deleteCb }];
 
   return (
     <PageLayout>
@@ -107,6 +117,7 @@ export function NotePage() {
           {note && (
             <div className="note-container">
               <Editor
+                ref={editorRef}
                 id="note-editor"
                 className="text-input"
                 placeholder="What's on you mind?"

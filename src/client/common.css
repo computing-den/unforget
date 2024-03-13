@@ -4,7 +4,7 @@
 /* #E8FEE1 */
 
 :root {
-  --page-header-height: 2.5rem;
+  --page-header-height: 2rem;
   --page-content-margin-top: calc(var(--page-header-height) + 2rem);
   --page-max-width: 800px;
 }
@@ -40,7 +40,7 @@ button {
     margin-right: auto;
     width: 400px;
 
-    @media (max-width: 600px) {
+    @media (max-width: 800px) {
       border-radius: 0;
       width: 100%;
     }
@@ -64,7 +64,7 @@ button {
   padding: 0.5rem 0.75rem;
 
   &:not(.small) {
-    @media (max-width: 600px) {
+    @media (max-width: 800px) {
       border-radius: 0;
       border-left: 0;
       border-right: 0;

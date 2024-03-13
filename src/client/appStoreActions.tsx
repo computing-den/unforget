@@ -12,7 +12,6 @@ export async function initAppStore() {
   appStore.set({
     showArchive,
     hidePinnedNotes,
-    menuOpen: false,
     notes: [],
     notesLastModificationTimestamp: 0,
     notesLastUpdateTimestamp: -1,
@@ -139,6 +138,19 @@ export async function saveNote(note: t.Note, opts?: { message?: string; immediat
     } else {
       storage.syncDebounced();
     }
+  } catch (error) {
+    gotError(error as Error);
+  }
+}
+
+export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
+  try {
+    await storage.saveNote(note);
+    appStore.update(app => {
+      const i = app.notes.findIndex(x => x.id === note.id);
+      if (i !== -1) app.notes[i] = note;
+    });
+    storage.sync();
   } catch (error) {
     gotError(error as Error);
   }

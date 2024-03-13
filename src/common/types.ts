@@ -74,7 +74,6 @@ export type LocalUser = {
 export type AppStore = {
   hidePinnedNotes: boolean;
   showArchive: boolean;
-  menuOpen: boolean;
   notes: Note[];
   search?: string;
   notesLastModificationTimestamp: number;
@@ -91,3 +90,17 @@ export type AppStore = {
 
 export type AppStoreRecipe = (draft: Draft<AppStore>) => AppStore | void;
 export type AppStoreListener = (newStore: AppStore, oldStore: AppStore) => void;
+
+export type ParsedLine = {
+  wholeLine: string;
+  padding: number;
+  bullet: string;
+  checkbox: boolean;
+  checked: boolean;
+  start: number;
+  end: number;
+  body: string;
+  bodyStart: number;
+  contentStart: number;
+  lastLine: boolean;
+};
