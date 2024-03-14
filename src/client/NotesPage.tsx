@@ -225,7 +225,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
     const line = lines[lineIndex];
     const newLineText = cutil.toggleLineCheckbox(line);
     const newText = cutil.insertText(props.note.text!, newLineText, line.start, line.end);
-    const newNote: t.Note = { ...props.note, text: newText };
+    const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
     actions.saveNoteAndQuickUpdateNotes(newNote);
   }
 

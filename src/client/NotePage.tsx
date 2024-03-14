@@ -31,7 +31,7 @@ export function NotePage() {
 
   const textChangeCb = useCallback(
     (text: string) => {
-      const newNote = { ...note!, text };
+      const newNote: t.Note = { ...note!, text, modification_date: new Date().toISOString() };
       setNote(newNote);
       actions.saveNote(newNote);
     },
@@ -54,12 +54,11 @@ export function NotePage() {
 
   const deleteCb = useCallback(() => {
     if (confirm('Are you sure you want to delete this note?')) {
-      actions
-        .saveNote(
-          { ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 },
-          { message: 'deleted', immediateSync: true },
-        )
-        .then(goHome);
+      const newNote: t.Note = { ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 };
+      actions.saveNote(newNote, { message: 'deleted', immediateSync: true }).then(() => {
+        setNote(newNote);
+        goHome();
+      });
     }
   }, [goHome, note]);
 
