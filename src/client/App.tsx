@@ -123,10 +123,13 @@ function useListenToStorageSync() {
     function syncListener(args: storage.SyncListenerArgs) {
       appStore.update(app => {
         app.syncing = !args.done;
-        if (args.done && args.error) {
-          app.message = { text: 'Sync failed: ' + args.error.message, type: 'error', timestamp: Date.now() };
-        }
       });
+      // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
+      // Should be ignored.
+      if (args.done && args.error && !(args.error instanceof TypeError)) {
+        actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error', hideAfterTimeout: true });
+      }
+
       if (args.done && args.mergeCount > 0) actions.updateNotes();
     }
     storage.addSyncListener(syncListener);

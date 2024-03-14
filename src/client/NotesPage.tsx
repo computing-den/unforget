@@ -145,7 +145,7 @@ export function NotesPage(props: NotesPageProps) {
       <PageHeader
         actions={pageActions}
         menu={menu}
-        title={app.showArchive && app.search === undefined ? 'archive' : undefined}
+        title={app.showArchive && app.search === undefined ? '/ archive' : undefined}
       />
       <PageBody>
         <div className="notes-page">

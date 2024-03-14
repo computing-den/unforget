@@ -274,7 +274,7 @@ export async function sync() {
       fullSyncRequired = false;
     }
   } catch (err) {
-    console.error(error);
+    console.error(err);
     error = err as Error;
   } finally {
     console.log('sync ended.');

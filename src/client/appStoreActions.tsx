@@ -16,7 +16,7 @@ export async function initAppStore() {
     notesLastModificationTimestamp: 0,
     notesLastUpdateTimestamp: -1,
     notePages: 1,
-    notePageSize: 100,
+    notePageSize: 50,
     allNotePagesLoaded: false,
     online: navigator.onLine,
     queueCount: 0,

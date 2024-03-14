@@ -109,6 +109,9 @@ export function logout(user: t.LocalUser) {
 }
 
 export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
+  const isDebugNote = (note: t.Note) => note.text?.includes('password protected notes');
+  console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
+
   const getDbNote = db.prepare<[{ username: string; id: string }]>(
     `SELECT * FROM notes WHERE username = :username AND id = :id`,
   );
@@ -128,7 +131,10 @@ export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyn
     // Replace local notes with received notes if necessary.
     for (const receivedNote of reqSyncData.notes) {
       const localNote = getDbNote.get({ username: user.username, id: receivedNote.id }) as t.DBNote | undefined;
+      if (localNote && isDebugNote(localNote)) console.log('XXX2 localNote: ', localNote);
+
       if (cutil.isNoteNewerThan(receivedNote, localNote)) {
+        if (localNote && isDebugNote(localNote)) console.log('XXX3 receivedNote is newer than localNote');
         const dbNote: t.DBNote = { ...receivedNote, username: user.username };
         putDbNote.run(dbNote);
       }
