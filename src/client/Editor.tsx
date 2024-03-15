@@ -149,11 +149,10 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     });
   }
 
-  function clickCb() {
-    console.log('clickCb');
+  function clickCb(e: React.MouseEvent) {
     const textarea = textareaRef.current!;
     let text = textarea.value;
-    let cur = textarea.selectionStart;
+    let cur = textarea.selectionDirection === 'forward' ? textarea.selectionEnd : textarea.selectionStart;
     const line = cutil.parseLine(text, cur);
 
     if (line.checkbox && cur >= line.contentStart + 2 && cur < line.bodyStart) {
@@ -166,6 +165,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     // util.postApi('/api/log', { message });
     // console.log(message);
   }
+
+  const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
 
   useEffect(() => {
     if (props.autoExpand) {
@@ -182,7 +183,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
       id={props.id}
       ref={textareaRef}
       className={`editor text-input ${props.className || ''}`}
-      onClick={clickCb}
+      onMouseDown={onMouseDown}
+      onClick={onClick}
       onFocus={props.onFocus}
       onBlur={props.onBlur}
       onChange={changeCb}

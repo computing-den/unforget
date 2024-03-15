@@ -79,3 +79,25 @@ export function useScrollToTop() {
     });
   }, []);
 }
+
+export function useClickWithoutDrag(cb: React.MouseEventHandler): {
+  onClick: React.MouseEventHandler;
+  onMouseDown: React.MouseEventHandler;
+} {
+  const [mouseDownPos, setMouseDownPos] = useState<[number, number] | undefined>();
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    setMouseDownPos([e.clientX, e.clientY]);
+  }, []);
+  const onClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (mouseDownPos) {
+        const diff = [Math.abs(e.clientX - mouseDownPos[0]), Math.abs(e.clientY - mouseDownPos[1])];
+        const dist = Math.sqrt(diff[0] ** 2 + diff[1] ** 2);
+        if (dist < 5) return cb(e);
+      }
+    },
+    [cb],
+  );
+
+  return { onClick, onMouseDown };
+}

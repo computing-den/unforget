@@ -187,8 +187,6 @@ const Notes = memo(function Notes() {
 
 const Note = memo(function Note(props: { note: t.Note }) {
   const navigate = useNavigate();
-  const [mouseDownPos, setMouseDownPos] = useState<[number, number] | undefined>();
-  // const ps = (props.note.text || '').split(/\n+/).map((x, i) => <p key={i}>{x}</p>);
 
   let text = props.note.text;
   // if (text && text.length > 1500) {
@@ -204,18 +202,11 @@ const Note = memo(function Note(props: { note: t.Note }) {
   const lines = cutil.parseLines(text ?? '');
   const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
 
-  function mouseDownCb(e: React.MouseEvent) {
-    setMouseDownPos([e.clientX, e.clientY]);
+  function clickCb(e: React.MouseEvent) {
+    navigate(`/n/${props.note.id}`, { state: { fromNotesPage: true } });
   }
 
-  function noteClickCb(e: React.MouseEvent) {
-    if (!mouseDownPos) return;
-    const diff = [Math.abs(e.clientX - mouseDownPos[0]), Math.abs(e.clientY - mouseDownPos[1])];
-    const dist = Math.sqrt(diff[0] ** 2 + diff[1] ** 2);
-    if (dist < 5) {
-      navigate(`/n/${props.note.id}`, { state: { fromNotesPage: true } });
-    }
-  }
+  const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
 
   function inputClickCb(e: React.MouseEvent) {
     e.preventDefault();
@@ -268,7 +259,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
   // const bodyLines = hasTitle ? lines.slice(2) : lines;
 
   return (
-    <pre className="note" onMouseDown={mouseDownCb} onClick={noteClickCb}>
+    <pre className="note" onMouseDown={onMouseDown} onClick={onClick}>
       {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-filled.svg" />}
       {lines.map(renderLine)}
     </pre>
