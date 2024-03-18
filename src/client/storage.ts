@@ -404,11 +404,11 @@ export async function waitTillSyncEnd(ms: number) {
   ]);
 }
 
-export async function getSetting(key: string): Promise<any> {
+export async function getSetting<T = unknown>(key: string): Promise<T | undefined> {
   const res = await transaction([SETTINGS_STORE], 'readonly', async tx => {
     return tx.objectStore(SETTINGS_STORE).get(key) as IDBRequest<any | undefined>;
   });
-  return Boolean(res.result);
+  return res.result;
 }
 
 export async function setSetting(value: any, key: string) {

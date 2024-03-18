@@ -2,13 +2,25 @@ import type * as t from '../common/types.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
+import * as cutil from '../common/util.jsx';
 import _ from 'lodash';
 
 export async function initAppStore() {
-  const [showArchive, hidePinnedNotes] = await Promise.all([
-    storage.getSetting('showArchive'),
-    storage.getSetting('hidePinnedNotes'),
+  let [showArchive, hidePinnedNotes, user] = await Promise.all([
+    storage.getSetting('showArchive').then(Boolean),
+    storage.getSetting('hidePinnedNotes').then(Boolean),
+    storage.getSetting<t.LocalUser>('user'),
   ]);
+
+  // Just in case make sure that the token and user from storage are in sync.
+  // Mostly, useful during development if we manually delete one but not the other.
+  const tokenFromCookie = util.getUserTokenFromCookie();
+  if (!tokenFromCookie || !user || user.token !== tokenFromCookie) {
+    user = undefined;
+    storage.clearAll();
+    util.resetUserCookies();
+  }
+
   appStore.set({
     showArchive,
     hidePinnedNotes,
@@ -21,7 +33,7 @@ export async function initAppStore() {
     online: navigator.onLine,
     queueCount: 0,
     syncing: false,
-    user: util.getUserFromCookie(),
+    user,
   });
 }
 
@@ -67,9 +79,14 @@ export async function updateQueueCount() {
   }
 }
 
-export async function login(credentials: t.Credentials) {
+export async function login(credentials: t.UsernamePassword) {
   try {
-    const user: t.LocalUser = await util.postApi('/api/login', credentials);
+    const loginData: t.LoginData = {
+      username: credentials.username,
+      passwordClientHash: await util.calcClientPasswordHash(credentials),
+    };
+    const user: t.LocalUser = await util.postApi('/api/login', loginData);
+    await storage.setSetting(user, 'user');
     appStore.update(app => {
       app.user = user;
     });
@@ -79,9 +96,23 @@ export async function login(credentials: t.Credentials) {
   }
 }
 
-export async function signup(credentials: t.Credentials) {
+export async function signup(credentials: t.UsernamePassword) {
   try {
-    const user: t.LocalUser = await util.postApi('/api/signup', credentials);
+    const signupData: t.SignupData = {
+      username: credentials.username,
+      passwordClientHash: await util.calcClientPasswordHash(credentials),
+      encryptionSalt: cutil.binToHexString(util.generateEncryptionSalt()),
+    };
+    const user: t.LocalUser = await util.postApi('/api/signup', signupData);
+
+    // We want the client to pick the encryption salt to make sure it really is random and secure.
+    if (user.encryptionSalt !== signupData.encryptionSalt) {
+      util.resetUserCookies();
+      throw new Error('Server might be compromised. The encryption parameters were tampered with.');
+    }
+
+    await storage.setSetting(user, 'user');
+
     appStore.update(app => {
       app.user = user;
     });
@@ -120,7 +151,7 @@ export function showMessage(text: string, opts?: { type?: 'info' | 'error'; hide
           app.message = undefined;
         });
       }
-    }, 2000);
+    }, 5000);
   }
 }
 

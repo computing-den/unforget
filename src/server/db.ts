@@ -43,7 +43,9 @@ export function initDB() {
     `
     CREATE TABLE IF NOT EXISTS users (
       username              TEXT PRIMARY KEY,
-      password_hash         TEXT NOT NULL
+      password_double_hash  TEXT NOT NULL,
+      password_salt         TEXT NOT NULL,
+      encryption_salt       TEXT NOT NULL
     )`,
   ).run();
 

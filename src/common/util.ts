@@ -101,3 +101,9 @@ export function calcNewSelection(
   const added = insertLength - deleteLength;
   return origSelection + added;
 }
+
+export function binToHexString(bin: Uint8Array): string {
+  return Array.from(bin)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
+}

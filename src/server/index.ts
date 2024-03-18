@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import type * as t from '../common/types.js';
 import * as db from './db.js';
+import * as cutil from '../common/util.js';
 import cookieParser from 'cookie-parser';
 import _ from 'lodash';
 
@@ -59,18 +60,20 @@ app.use((req, res, next) => {
 
 app.post('/api/login', async (req, res, next) => {
   try {
-    const { username, password } = req.body as t.Credentials;
-    const hash = await hashPassword(username, password);
-    const user = db
-      .get()
-      .prepare(`SELECT * FROM users WHERE password_hash = :hash AND username = :username`)
-      .get({ hash, username }) as t.DBUser | undefined;
+    const loginData = req.body as t.LoginData;
+    const user = db.get().prepare(`SELECT * FROM users username = :username`).get({ username: loginData.username }) as
+      | t.DBUser
+      | undefined;
 
     if (user) {
-      loginAndRespond(user, res);
-    } else {
-      res.status(401).send({ message: 'Wrong username or password.' });
+      const passwordDoubleHash = await calcDoublePasswordHash(loginData.passwordClientHash, user.password_salt);
+      if (passwordDoubleHash === user.password_double_hash) {
+        loginAndRespond(user, res);
+        return;
+      }
     }
+
+    res.status(401).send({ message: 'Wrong username or password.' });
   } catch (error) {
     next(error);
   }
@@ -78,14 +81,29 @@ app.post('/api/login', async (req, res, next) => {
 
 app.post('/api/signup', async (req, res, next) => {
   try {
-    const { username, password } = req.body as t.Credentials;
-    const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(username) as t.DBUser | undefined;
+    const signupData = req.body as t.SignupData;
+    const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(signupData.username) as
+      | t.DBUser
+      | undefined;
 
     if (user) {
       res.status(401).send({ message: 'Username already exists.' });
     } else {
-      const newUser: t.DBUser = { username, password_hash: await hashPassword(username, password) };
-      db.get().prepare(`INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)`).run(newUser);
+      const password_salt = generateRandomCryptoString();
+      const password_double_hash = await calcDoublePasswordHash(signupData.passwordClientHash, password_salt);
+      const newUser: t.DBUser = {
+        username: signupData.username,
+        password_double_hash,
+        password_salt,
+        encryption_salt: signupData.encryptionSalt,
+      };
+      db.get()
+        .prepare(
+          `
+        INSERT INTO users (username, password_double_hash, password_salt, encryption_salt)
+        VALUES (:username, :password_double_hash, :password_salt, :encryption_salt)`,
+        )
+        .run(newUser);
       loginAndRespond(newUser, res);
     }
   } catch (error) {
@@ -94,7 +112,7 @@ app.post('/api/signup', async (req, res, next) => {
 });
 
 function loginAndRespond(user: t.DBUser, res: express.Response) {
-  const token = createToken();
+  const token = generateRandomCryptoString();
   const dbClient: t.DBClient = {
     username: user.username,
     token,
@@ -111,8 +129,8 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
     .run(dbClient);
   const maxAge = 10 * 365 * 24 * 3600 * 1000;
   res.cookie('unforget_token', token, { maxAge, path: '/' });
-  res.cookie('unforget_username', user.username, { maxAge, path: '/' });
-  const localUser: t.LocalUser = { username: user.username, token };
+  // res.cookie('unforget_username', user.username, { maxAge, path: '/' });
+  const localUser: t.LocalUser = { username: user.username, token, encryptionSalt: user.encryption_salt };
   res.send(localUser);
 }
 
@@ -233,22 +251,14 @@ app.listen(Number(process.env.PORT), () => {
   console.log(`Listening on port ${process.env.PORT}`);
 });
 
-async function hashPassword(username: string, password: string) {
-  // Add salt based on the username.
-  const salted = username + password + String(username.length * 131 + 530982758);
-  return computeSHA1(new TextEncoder().encode(salted));
+async function calcDoublePasswordHash(passwordClientHash: string, passwordSalt: string) {
+  const salted = passwordSalt + passwordClientHash;
+  return computeSHA256(new TextEncoder().encode(salted));
 }
 
-export async function computeSHA1(data: Uint8Array): Promise<string> {
-  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-}
-
-function createToken(): string {
-  return Array.from(crypto.randomBytes(64))
-    .map(x => x.toString(16).padStart(2, '0'))
-    .join('');
+export async function computeSHA256(data: Uint8Array): Promise<string> {
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return cutil.binToHexString(new Uint8Array(hashBuffer));
 }
 
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -257,4 +267,10 @@ function authenticate(req: express.Request, res: express.Response, next: express
   } else {
     next();
   }
+}
+
+function generateRandomCryptoString(): string {
+  return Array.from(crypto.randomBytes(64))
+    .map(x => x.toString(16).padStart(2, '0'))
+    .join('');
 }

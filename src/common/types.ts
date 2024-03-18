@@ -21,7 +21,9 @@ export type ServerConfig = {
 
 export type DBUser = {
   username: string;
-  password_hash: string;
+  password_double_hash: string;
+  password_salt: string;
+  encryption_salt: string;
 };
 
 export type DBClient = {
@@ -31,7 +33,18 @@ export type DBClient = {
   last_activity_date: string;
 };
 
-export type Credentials = {
+export type SignupData = {
+  username: string;
+  passwordClientHash: string;
+  encryptionSalt: string;
+};
+
+export type LoginData = {
+  username: string;
+  passwordClientHash: string;
+};
+
+export type UsernamePassword = {
   username: string;
   password: string;
 };
@@ -69,6 +82,7 @@ export type FullSyncRes = SyncData;
 export type LocalUser = {
   username: string;
   token: string;
+  encryptionSalt: string;
 };
 
 export type AppStore = {
