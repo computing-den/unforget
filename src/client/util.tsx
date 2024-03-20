@@ -178,20 +178,47 @@ export async function makeEncryptionKey(password: string, salt: string): Promise
   );
 }
 
-// export async function encrypt(plaintext, salt, iv) {
-//   const keyMaterial = await getKeyMaterial();
-//   const key = await window.crypto.subtle.deriveKey(
-//     {
-//       name: 'PBKDF2',
-//       salt,
-//       iterations: 100000,
-//       hash: 'SHA-256',
-//     },
-//     keyMaterial,
-//     { name: 'AES-GCM', length: 256 },
-//     true,
-//     ['encrypt', 'decrypt'],
-//   );
+export async function encrypt(data: BufferSource, key: CryptoKey): Promise<t.EncryptedData> {
+  const iv = generateIV();
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
+  const encrypted_base64 = await bytesToBase64(encrypted);
+  return { encrypted_base64, iv: cutil.bytesToHexString(iv) };
+}
 
-//   return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
-// }
+export async function decrypt(data: t.EncryptedData, key: CryptoKey): Promise<ArrayBuffer> {
+  const encryptedBytes = await base64ToBytes(data.encrypted_base64);
+  const iv = cutil.hexStringToBytes(data.iv);
+  return window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encryptedBytes);
+}
+
+export async function encryptNotes(notes: t.Note[], key: CryptoKey): Promise<t.EncryptedNote[]> {
+  const start = Date.now();
+  const res: t.EncryptedNote[] = [];
+  for (const note of notes) {
+    res.push(await encryptNote(note, key));
+  }
+  if (res.length) console.log(`encrypted ${res.length} notes in ${Date.now() - start}ms`);
+  return res;
+}
+
+export async function encryptNote(note: t.Note, key: CryptoKey): Promise<t.EncryptedNote> {
+  const data = new TextEncoder().encode(JSON.stringify(note));
+  const encrypted = await encrypt(data, key);
+  return { id: note.id, modification_date: note.modification_date, ...encrypted };
+}
+
+export async function decryptNotes(notes: t.EncryptedNote[], key: CryptoKey): Promise<t.Note[]> {
+  const start = Date.now();
+  const res: t.Note[] = [];
+  for (const note of notes) {
+    res.push(await decryptNote(note, key));
+  }
+  if (res.length) console.log(`decrypted ${res.length} notes in ${Date.now() - start}ms`);
+  return res;
+}
+
+export async function decryptNote(note: t.EncryptedNote, key: CryptoKey): Promise<t.Note> {
+  const decryptedData = await decrypt(note, key);
+  const noteString = new TextDecoder().decode(decryptedData);
+  return JSON.parse(noteString) as t.Note;
+}

@@ -22,22 +22,13 @@ export function initDB() {
     CREATE TABLE IF NOT EXISTS notes (
       id                    TEXT PRIMARY KEY,
       username              TEXT NOT NULL,
-      text                  TEXT,
-      creation_date         TEXT NOT NULL,
-      modification_date     TEXT NOt NULL,
-      "order"               INTEGER NOT NULL,
-      not_deleted           INTEGER NOT NULL DEFAULT 1,
-      not_archived          INTEGER NOT NULL DEFAULT 1,
-      pinned                INTEGER NOT NULL DEFAULT 0
+      modification_date     TEXT NOT NULL,
+      iv                    TEXT NOT NULL,
+      encrypted_base64      TEXT
     )`,
   ).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_username on notes (username)`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_creation_date on notes (creation_date)`).run();
   db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_modification_date on notes (modification_date)`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_order on notes ("order")`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_not_deleted on notes (not_deleted)`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_not_archived on notes (not_archived)`).run();
-  db.prepare(`CREATE INDEX IF NOT EXISTS index_notes_pinned on notes (pinned)`).run();
 
   db.prepare(
     `
@@ -80,10 +71,10 @@ export function getSyncNumber(client: t.ServerUserClient) {
   return db.prepare(`SELECT sync_number FROM clients where token = ?`).pluck().get(client.token) as number;
 }
 
-export function getQueuedNotes(client: t.ServerUserClient): t.Note[] {
+export function getQueuedNotes(client: t.ServerUserClient): t.EncryptedNote[] {
   const dbNotes = db
     .prepare(`SELECT * FROM notes WHERE id IN (SELECT id FROM notes_queue WHERE token = ?)`)
-    .all(client.token) as t.DBNote[];
+    .all(client.token) as t.DBEncryptedNote[];
   return dbNotes.map(dbNoteToNote);
 }
 
@@ -91,12 +82,12 @@ export function getQueuedNoteHeads(client: t.ServerUserClient): t.NoteHead[] {
   return db.prepare(`SELECT id, modification_date FROM notes_queue WHERE token = ?`).all(client.token) as t.NoteHead[];
 }
 
-export function getNotes(client: t.ServerUserClient): t.Note[] {
-  const dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(client.username) as t.DBNote[];
+export function getNotes(client: t.ServerUserClient): t.EncryptedNote[] {
+  const dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(client.username) as t.DBEncryptedNote[];
   return dbNotes.map(dbNoteToNote);
 }
 
-export function dbNoteToNote(dbNote: t.DBNote): t.Note {
+export function dbNoteToNote(dbNote: t.DBEncryptedNote): t.EncryptedNote {
   return _.omit(dbNote, 'username');
 }
 
@@ -111,7 +102,7 @@ export function logout(token: string) {
 }
 
 export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
-  // const isDebugNote = (note: t.Note) => note.text?.includes('password protected notes');
+  // const isDebugNote = (note: t.EncryptedNote) => note.text?.includes('password protected notes');
   // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
 
   const getDbNote = db.prepare<[{ username: string; id: string }]>(
@@ -132,12 +123,14 @@ export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncDat
   db.transaction(() => {
     // Replace local notes with received notes if necessary.
     for (const receivedNote of reqSyncData.notes) {
-      const localNote = getDbNote.get({ username: client.username, id: receivedNote.id }) as t.DBNote | undefined;
+      const localNote = getDbNote.get({ username: client.username, id: receivedNote.id }) as
+        | t.DBEncryptedNote
+        | undefined;
       // if (localNote && isDebugNote(localNote)) console.log('XXX2 localNote: ', localNote);
 
       if (cutil.isNoteNewerThan(receivedNote, localNote)) {
         // if (localNote && isDebugNote(localNote)) console.log('XXX3 receivedNote is newer than localNote');
-        const dbNote: t.DBNote = { ...receivedNote, username: client.username };
+        const dbNote: t.DBEncryptedNote = { ...receivedNote, username: client.username };
         putDbNote.run(dbNote);
       }
     }
@@ -146,7 +139,7 @@ export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncDat
     const queuedNoteHeads = getQueuedNoteHeads(client);
     const sentNotesById = _.keyBy(resSyncData.notes, 'id');
     for (const queued of queuedNoteHeads) {
-      const sent = sentNotesById[queued.id] as t.Note | undefined;
+      const sent = sentNotesById[queued.id] as t.EncryptedNote | undefined;
       if (sent && queued.modification_date <= sent.modification_date) {
         deleteFromQueue.run({ token: client.token, id: queued.id });
       }
@@ -171,7 +164,7 @@ export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncDat
   })();
 }
 
-export function importNotes(username: string, notes: t.Note[]) {
+export function importNotes(username: string, notes: t.EncryptedNote[]) {
   const getDbNote = db.prepare<[{ username: string; id: string }]>(
     `SELECT * FROM notes WHERE username = :username AND id = :id`,
   );
@@ -182,9 +175,9 @@ export function importNotes(username: string, notes: t.Note[]) {
   db.transaction(() => {
     // Replace local notes with notes if necessary.
     for (const note of notes) {
-      const localNote = getDbNote.get({ username, id: note.id }) as t.DBNote | undefined;
+      const localNote = getDbNote.get({ username, id: note.id }) as t.DBEncryptedNote | undefined;
       if (cutil.isNoteNewerThan(note, localNote)) {
-        const dbNote: t.DBNote = { ...note, username };
+        const dbNote: t.DBEncryptedNote = { ...note, username };
         console.log(dbNote);
         putDbNote.run(dbNote);
       }
@@ -215,11 +208,11 @@ function prepareInsertIntoQueue(): Statement<[t.DBNoteHead]> {
   `);
 }
 
-function preparePutNote(): Statement<[t.DBNote]> {
+function preparePutNote(): Statement<[t.DBEncryptedNote]> {
   return db.prepare(`
     INSERT OR REPLACE INTO notes
-      (id, username, text, creation_date, modification_date, "order", not_deleted, not_archived, pinned)
+      (id, username, modification_date, encrypted_base64, iv)
     VALUES
-      (:id, :username, :text, :creation_date, :modification_date, :order, :not_deleted, :not_archived, :pinned)
+      (:id, :username, :modification_date, :encrypted_base64, :iv)
   `);
 }

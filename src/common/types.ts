@@ -11,12 +11,18 @@ export type Note = {
   order: number;
 };
 
-export type DBNote = Note & {
-  username: string;
+export type EncryptedNote = EncryptedData & {
+  id: string;
+  modification_date: string;
 };
 
-export type ServerConfig = {
-  port: number;
+export type EncryptedData = {
+  encrypted_base64: string;
+  iv: string;
+};
+
+export type DBEncryptedNote = EncryptedNote & {
+  username: string;
 };
 
 export type DBUser = {
@@ -56,7 +62,7 @@ export type UsernamePassword = {
 };
 
 export type SyncData = {
-  notes: Note[];
+  notes: EncryptedNote[];
   syncNumber: number;
 };
 
@@ -84,6 +90,10 @@ export type PartialSyncRes = PartialSyncResNormal | PartialSyncResRequireFullSyn
 export type FullSyncReq = SyncData;
 
 export type FullSyncRes = SyncData;
+
+export type ServerConfig = {
+  port: number;
+};
 
 export type ServerUserClient = {
   username: string;

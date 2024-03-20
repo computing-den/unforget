@@ -200,22 +200,33 @@ export async function getNote(id: string): Promise<t.Note | undefined> {
 }
 
 export async function getPartialSyncData(): Promise<t.SyncData> {
+  const user = appStore.get().user;
+  if (!user) throw new Error('Sign in to sync.');
+
   const res = await transaction([NOTES_STORE, NOTES_QUEUE_STORE, SETTINGS_STORE], 'readonly', async tx => {
     const items = await waitForDBRequest(tx.objectStore(NOTES_QUEUE_STORE).getAll() as IDBRequest<t.NoteHead[]>);
     const notesReqs = items.map(item => tx.objectStore(NOTES_STORE).get(item.id) as IDBRequest<t.Note>);
     const syncNumberReq = tx.objectStore(SETTINGS_STORE).get('syncNumber') as IDBRequest<number | undefined>;
     return { notesReqs, syncNumberReq };
   });
-  return { notes: res.notesReqs.map(req => req.result), syncNumber: res.syncNumberReq.result ?? 0 };
+  const notes = await util.encryptNotes(
+    res.notesReqs.map(req => req.result),
+    user.encryptionKey,
+  );
+  return { notes, syncNumber: res.syncNumberReq.result ?? 0 };
 }
 
 export async function getFullSyncData(): Promise<t.SyncData> {
+  const user = appStore.get().user;
+  if (!user) throw new Error('Sign in to sync.');
+
   const res = await transaction([NOTES_STORE, SETTINGS_STORE], 'readonly', async tx => {
     const notesReqs = tx.objectStore(NOTES_STORE).getAll() as IDBRequest<t.Note[]>;
     const syncNumberReq = tx.objectStore(SETTINGS_STORE).get('syncNumber') as IDBRequest<number | undefined>;
     return { notesReqs, syncNumberReq };
   });
-  return { notes: res.notesReqs.result, syncNumber: res.syncNumberReq.result ?? 0 };
+  const notes = await util.encryptNotes(res.notesReqs.result, user.encryptionKey);
+  return { notes, syncNumber: res.syncNumberReq.result ?? 0 };
 }
 
 export async function getSyncNumber(): Promise<number> {
@@ -333,12 +344,18 @@ function callSyncListeners(args: SyncListenerArgs) {
 }
 
 async function mergeSyncData(reqSyncData: t.SyncData, resSyncData: t.SyncData): Promise<number> {
+  const user = appStore.get().user;
+  if (!user) throw new Error('Sign in to sync.');
+
+  // Doing this one-by-one inside the transaction can cause the transaction to finish prematurely. I don't know why.
+  const receivedNotes = await util.decryptNotes(resSyncData.notes, user.encryptionKey);
+
   return transaction([NOTES_STORE, NOTES_QUEUE_STORE, SETTINGS_STORE], 'readwrite', async tx => {
     let mergeCount = 0;
     const notesStore = tx.objectStore(NOTES_STORE);
 
     // Replace local notes with received notes if necessary.
-    for (const receivedNote of resSyncData.notes) {
+    for (const receivedNote of receivedNotes) {
       const localNote = await waitForDBRequest(notesStore.get(receivedNote.id) as IDBRequest<t.Note | undefined>);
       if (cutil.isNoteNewerThan(receivedNote, localNote)) {
         notesStore.put(receivedNote);
@@ -351,7 +368,7 @@ async function mergeSyncData(reqSyncData: t.SyncData, resSyncData: t.SyncData): 
     const queuedNoteHeads = await waitForDBRequest(queueStore.getAll() as IDBRequest<t.NoteHead[]>);
     const sentNotesById = _.keyBy(reqSyncData.notes, 'id');
     for (const queued of queuedNoteHeads) {
-      const sent = sentNotesById[queued.id] as t.Note | undefined;
+      const sent = sentNotesById[queued.id] as t.EncryptedNote | undefined;
       // Scenario 1.
       // We send Note A.
       // User modifies A -> A'.
