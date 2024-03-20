@@ -12,14 +12,10 @@ import _ from 'lodash';
 const PUBLIC = path.join(process.cwd(), 'public');
 const DIST_PUBLIC = path.join(process.cwd(), 'dist/public');
 
-// interface MyLocals {
-//   user?: LocalUser;
-// }
-
 declare global {
   namespace Express {
     interface Locals {
-      user?: t.LocalUser;
+      client?: t.ServerUserClient;
     }
   }
 }
@@ -43,16 +39,16 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   const token = req.cookies.unforget_token as string | undefined;
   if (token) {
-    const user = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
-      | t.LocalUser
+    const client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
+      | t.ServerUserClient
       | undefined;
-    res.locals = { user };
-    if (user) {
+    res.locals = { client };
+    if (client) {
       db.get()
         .prepare(
           `UPDATE clients SET last_activity_date = :last_activity_date WHERE username = :username AND token = :token`,
         )
-        .run({ ...user, last_activity_date: new Date().toISOString() });
+        .run({ ...client, last_activity_date: new Date().toISOString() });
     }
   }
   next();
@@ -68,8 +64,8 @@ app.post('/api/login', async (req, res, next) => {
       | undefined;
 
     if (user) {
-      const passwordDoubleHash = await calcDoublePasswordHash(loginData.passwordClientHash, user.password_salt);
-      if (passwordDoubleHash === user.password_double_hash) {
+      const password_double_hash = await calcDoublePasswordHash(loginData.password_client_hash, user.password_salt);
+      if (password_double_hash === user.password_double_hash) {
         loginAndRespond(user, res);
         return;
       }
@@ -86,7 +82,7 @@ app.post('/api/signup', async (req, res, next) => {
     let signupData = req.body as t.SignupData;
     signupData = { ...signupData, username: signupData.username.toLowerCase() };
     if (typeof signupData.username !== 'string' || signupData.username.length < 3) {
-      throw new ServerError('username must be at least 3 characters including only a-z, 0-9, _, or -', 400);
+      throw new ServerError('username must be at least 3 characters', 400);
     }
     if (/[\/\\<>&'"]/.test(signupData.username)) {
       throw new ServerError('invalid characters in username', 400);
@@ -98,12 +94,12 @@ app.post('/api/signup', async (req, res, next) => {
     if (user) throw new ServerError('Username already exists.', 400);
 
     const password_salt = generateRandomCryptoString();
-    const password_double_hash = await calcDoublePasswordHash(signupData.passwordClientHash, password_salt);
+    const password_double_hash = await calcDoublePasswordHash(signupData.password_client_hash, password_salt);
     const newUser: t.DBUser = {
       username: signupData.username,
       password_double_hash,
       password_salt,
-      encryption_salt: signupData.encryptionSalt,
+      encryption_salt: signupData.encryption_salt,
     };
     db.get()
       .prepare(
@@ -137,14 +133,14 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
   const maxAge = 10 * 365 * 24 * 3600 * 1000;
   res.cookie('unforget_token', token, { maxAge, path: '/' });
   // res.cookie('unforget_username', user.username, { maxAge, path: '/' });
-  const localUser: t.LocalUser = { username: user.username, token, encryptionSalt: user.encryption_salt };
-  res.send(localUser);
+  const loginResponse: t.LoginResponse = { username: user.username, token, encryption_salt: user.encryption_salt };
+  res.send(loginResponse);
 }
 
 app.get('/api/notes', authenticate, (req, res) => {
   console.log('GET /api/notes');
-  const user = res.locals.user!;
-  const notes = db.getNotes(user);
+  const client = res.locals.client!;
+  const notes = db.getNotes(client);
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
@@ -163,9 +159,9 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(req.body);
   }
-  const user = res.locals.user!;
+  const client = res.locals.client!;
   const partialSyncReq: t.PartialSyncReq = req.body;
-  const syncNumber = db.getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(client);
 
   // Require full sync if syncNumber is 0 or syncNumber is out of sync
   if (syncNumber === 0 || syncNumber !== partialSyncReq.syncNumber) {
@@ -174,12 +170,12 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
     return;
   }
 
-  const notes = db.getQueuedNotes(user);
+  const notes = db.getQueuedNotes(client);
   const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes, syncNumber };
 
   res.send(partialSyncRes);
 
-  db.mergeSyncData(user, partialSyncReq, partialSyncRes);
+  db.mergeSyncData(client, partialSyncReq, partialSyncRes);
 });
 
 app.post('/api/full-sync', authenticate, (req, res) => {
@@ -187,16 +183,16 @@ app.post('/api/full-sync', authenticate, (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(req.body);
   }
-  const user = res.locals.user!;
+  const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
-  const syncNumber = db.getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(client);
 
-  const notes = db.getNotes(user);
+  const notes = db.getNotes(client);
   const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
 
   res.send(fullSyncRes);
 
-  db.mergeSyncData(user, fullSyncReq, fullSyncRes);
+  db.mergeSyncData(client, fullSyncReq, fullSyncRes);
 });
 
 app.post('/api/add-notes', authenticate, (req, res) => {
@@ -204,24 +200,25 @@ app.post('/api/add-notes', authenticate, (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     console.log(req.body);
   }
-  const user = res.locals.user!;
+  const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
-  const syncNumber = db.getSyncNumber(user);
+  const syncNumber = db.getSyncNumber(client);
 
   const fullSyncRes: t.FullSyncRes = { notes: [], syncNumber };
 
   res.send(fullSyncRes);
 
-  db.mergeSyncData(user, fullSyncReq, fullSyncRes);
+  db.mergeSyncData(client, fullSyncReq, fullSyncRes);
 });
 
-app.post('/api/logout', authenticate, (req, res) => {
+app.post('/api/logout', (req, res, next) => {
   console.log('POST /api/logout');
   if (process.env.NODE_ENV === 'development') {
     console.log(req.body);
   }
-  const user = res.locals.user ?? (req.body as t.LocalUser);
-  db.logout(user);
+  const token = res.locals.client?.token ?? (req.body?.token as string | undefined);
+  if (!token) return next(new Error('Missing token'));
+  db.logout(token);
   res.send({ ok: true });
 });
 
@@ -259,18 +256,18 @@ app.listen(Number(process.env.PORT), () => {
   console.log(`Listening on port ${process.env.PORT}`);
 });
 
-async function calcDoublePasswordHash(passwordClientHash: string, passwordSalt: string) {
-  const salted = passwordSalt + passwordClientHash;
+async function calcDoublePasswordHash(password_client_hash: string, password_salt: string) {
+  const salted = password_salt + password_client_hash;
   return computeSHA256(new TextEncoder().encode(salted));
 }
 
-export async function computeSHA256(data: Uint8Array): Promise<string> {
+async function computeSHA256(data: Uint8Array): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return cutil.binToHexString(new Uint8Array(hashBuffer));
+  return cutil.bytesToHexString(new Uint8Array(hashBuffer));
 }
 
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!res.locals.user) {
+  if (!res.locals.client) {
     next(new ServerError('Forbidden', 403));
   } else {
     next();

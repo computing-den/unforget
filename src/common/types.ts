@@ -35,13 +35,19 @@ export type DBClient = {
 
 export type SignupData = {
   username: string;
-  passwordClientHash: string;
-  encryptionSalt: string;
+  password_client_hash: string;
+  encryption_salt: string;
 };
 
 export type LoginData = {
   username: string;
-  passwordClientHash: string;
+  password_client_hash: string;
+};
+
+export type LoginResponse = {
+  username: string;
+  token: string;
+  encryption_salt: string;
 };
 
 export type UsernamePassword = {
@@ -79,10 +85,15 @@ export type FullSyncReq = SyncData;
 
 export type FullSyncRes = SyncData;
 
-export type LocalUser = {
+export type ServerUserClient = {
   username: string;
   token: string;
-  encryptionSalt: string;
+};
+
+export type ClientLocalUser = {
+  username: string;
+  token: string;
+  encryptionKey: CryptoKey;
 };
 
 export type AppStore = {
@@ -95,7 +106,7 @@ export type AppStore = {
   notePages: number;
   notePageSize: number;
   allNotePagesLoaded: boolean;
-  user?: LocalUser;
+  user?: ClientLocalUser;
   message?: { text: string; type: 'info' | 'error'; timestamp: number };
   syncing: boolean;
   queueCount: number;

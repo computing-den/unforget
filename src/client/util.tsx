@@ -116,7 +116,7 @@ export async function calcClientPasswordHash({ username, password }: t.UsernameP
   const encoder = new TextEncoder();
   const textBuf = encoder.encode(text);
   const hashBuf = await crypto.subtle.digest('SHA-256', textBuf);
-  return bytesToBase64(hashBuf);
+  return cutil.bytesToHexString(new Uint8Array(hashBuf));
 }
 
 export function generateEncryptionSalt(): Uint8Array {
@@ -155,3 +155,43 @@ export async function extractBase64FromDataUrl(dataUrl: string): Promise<string>
 export async function base64ToBytes(base64: string): Promise<ArrayBuffer> {
   return dataUrlToBytes(`data:application/octet-stream;base64,${base64}`);
 }
+
+export async function makeEncryptionKey(password: string, salt: string): Promise<CryptoKey> {
+  const keyData = new TextEncoder().encode(password);
+  const keyMaterial = await window.crypto.subtle.importKey('raw', keyData, 'PBKDF2', false, [
+    'deriveBits',
+    'deriveKey',
+  ]);
+
+  const saltBuf = cutil.hexStringToBytes(salt);
+  return window.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: saltBuf,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+// export async function encrypt(plaintext, salt, iv) {
+//   const keyMaterial = await getKeyMaterial();
+//   const key = await window.crypto.subtle.deriveKey(
+//     {
+//       name: 'PBKDF2',
+//       salt,
+//       iterations: 100000,
+//       hash: 'SHA-256',
+//     },
+//     keyMaterial,
+//     { name: 'AES-GCM', length: 256 },
+//     true,
+//     ['encrypt', 'decrypt'],
+//   );
+
+//   return window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
+// }

@@ -76,23 +76,23 @@ export function get(): Database.Database {
   return db;
 }
 
-export function getSyncNumber(user: t.LocalUser) {
-  return db.prepare(`SELECT sync_number FROM clients where token = ?`).pluck().get(user.token) as number;
+export function getSyncNumber(client: t.ServerUserClient) {
+  return db.prepare(`SELECT sync_number FROM clients where token = ?`).pluck().get(client.token) as number;
 }
 
-export function getQueuedNotes(user: t.LocalUser): t.Note[] {
+export function getQueuedNotes(client: t.ServerUserClient): t.Note[] {
   const dbNotes = db
     .prepare(`SELECT * FROM notes WHERE id IN (SELECT id FROM notes_queue WHERE token = ?)`)
-    .all(user.token) as t.DBNote[];
+    .all(client.token) as t.DBNote[];
   return dbNotes.map(dbNoteToNote);
 }
 
-export function getQueuedNoteHeads(user: t.LocalUser): t.NoteHead[] {
-  return db.prepare(`SELECT id, modification_date FROM notes_queue WHERE token = ?`).all(user.token) as t.NoteHead[];
+export function getQueuedNoteHeads(client: t.ServerUserClient): t.NoteHead[] {
+  return db.prepare(`SELECT id, modification_date FROM notes_queue WHERE token = ?`).all(client.token) as t.NoteHead[];
 }
 
-export function getNotes(user: t.LocalUser): t.Note[] {
-  const dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(user.username) as t.DBNote[];
+export function getNotes(client: t.ServerUserClient): t.Note[] {
+  const dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(client.username) as t.DBNote[];
   return dbNotes.map(dbNoteToNote);
 }
 
@@ -100,17 +100,17 @@ export function dbNoteToNote(dbNote: t.DBNote): t.Note {
   return _.omit(dbNote, 'username');
 }
 
-export function logout(user: t.LocalUser) {
-  const deleteFromQueue = db.prepare<[{ token: string }]>(`DELETE FROM notes_queue WHERE token = :token`);
-  const deleteFromClient = db.prepare<[{ token: string }]>(`DELETE FROM clients WHERE token = :token`);
+export function logout(token: string) {
+  const deleteFromQueue = db.prepare<[string]>(`DELETE FROM notes_queue WHERE token = ?`);
+  const deleteFromClient = db.prepare<[string]>(`DELETE FROM clients WHERE token = ?`);
 
   db.transaction(() => {
-    deleteFromQueue.run(user);
-    deleteFromClient.run(user);
+    deleteFromQueue.run(token);
+    deleteFromClient.run(token);
   })();
 }
 
-export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
+export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
   // const isDebugNote = (note: t.Note) => note.text?.includes('password protected notes');
   // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
 
@@ -124,7 +124,7 @@ export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyn
   const updateSyncNumber = db.prepare<[{ token: string; sync_number: number }]>(
     `UPDATE clients SET sync_number = :sync_number WHERE token = :token`,
   );
-  const getClients = db.prepare<[t.LocalUser]>(
+  const getClients = db.prepare<[t.ServerUserClient]>(
     `SELECT username, token FROM clients WHERE username = :username AND token != :token`,
   );
   const insertIntoQueue = prepareInsertIntoQueue();
@@ -132,34 +132,34 @@ export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyn
   db.transaction(() => {
     // Replace local notes with received notes if necessary.
     for (const receivedNote of reqSyncData.notes) {
-      const localNote = getDbNote.get({ username: user.username, id: receivedNote.id }) as t.DBNote | undefined;
+      const localNote = getDbNote.get({ username: client.username, id: receivedNote.id }) as t.DBNote | undefined;
       // if (localNote && isDebugNote(localNote)) console.log('XXX2 localNote: ', localNote);
 
       if (cutil.isNoteNewerThan(receivedNote, localNote)) {
         // if (localNote && isDebugNote(localNote)) console.log('XXX3 receivedNote is newer than localNote');
-        const dbNote: t.DBNote = { ...receivedNote, username: user.username };
+        const dbNote: t.DBNote = { ...receivedNote, username: client.username };
         putDbNote.run(dbNote);
       }
     }
 
     // Clear local note queue.
-    const queuedNoteHeads = getQueuedNoteHeads(user);
+    const queuedNoteHeads = getQueuedNoteHeads(client);
     const sentNotesById = _.keyBy(resSyncData.notes, 'id');
     for (const queued of queuedNoteHeads) {
       const sent = sentNotesById[queued.id] as t.Note | undefined;
       if (sent && queued.modification_date <= sent.modification_date) {
-        deleteFromQueue.run({ token: user.token, id: queued.id });
+        deleteFromQueue.run({ token: client.token, id: queued.id });
       }
     }
 
     // Add received notes to notes_queue for other clients of the same user.
-    const otherClients = getClients.all(user) as t.LocalUser[];
+    const otherClients = getClients.all(client) as t.ServerUserClient[];
     for (const receivedNote of reqSyncData.notes) {
-      for (const client of otherClients) {
+      for (const otherClient of otherClients) {
         const dbNoteHead: t.DBNoteHead = {
           id: receivedNote.id,
           modification_date: receivedNote.modification_date,
-          token: client.token,
+          token: otherClient.token,
         };
         insertIntoQueue.run(dbNoteHead);
       }
@@ -167,7 +167,7 @@ export function mergeSyncData(user: t.LocalUser, reqSyncData: t.SyncData, resSyn
 
     // Update sync number.
     const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
-    updateSyncNumber.run({ token: user.token, sync_number: newSyncNumber });
+    updateSyncNumber.run({ token: client.token, sync_number: newSyncNumber });
   })();
 }
 
@@ -191,7 +191,7 @@ export function importNotes(username: string, notes: t.Note[]) {
     }
 
     // Add notes to notes_queue for all clients of the user.
-    const clients = getClients.all(username) as t.LocalUser[];
+    const clients = getClients.all(username) as t.ServerUserClient[];
     for (const note of notes) {
       for (const client of clients) {
         const dbNoteHead: t.DBNoteHead = {

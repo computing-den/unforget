@@ -102,8 +102,17 @@ export function calcNewSelection(
   return origSelection + added;
 }
 
-export function binToHexString(bin: Uint8Array): string {
-  return Array.from(bin)
+export function bytesToHexString(bytes: Uint8Array): string {
+  return Array.from(bytes)
     .map(byte => byte.toString(16).padStart(2, '0'))
     .join('');
+}
+
+export function hexStringToBytes(str: string): Uint8Array {
+  if (str.length % 2) throw new Error('hexStringToBytes invalid string');
+  const bytes = new Uint8Array(str.length / 2);
+  for (let i = 0; i < str.length; i += 2) {
+    bytes[i / 2] = parseInt(str.substring(i, i + 2), 16);
+  }
+  return bytes;
 }

@@ -9,7 +9,7 @@ export async function initAppStore() {
   let [showArchive, hidePinnedNotes, user] = await Promise.all([
     storage.getSetting('showArchive').then(Boolean),
     storage.getSetting('hidePinnedNotes').then(Boolean),
-    storage.getSetting<t.LocalUser>('user'),
+    storage.getSetting<t.ClientLocalUser>('user'),
   ]);
 
   // Just in case make sure that the token and user from storage are in sync.
@@ -83,14 +83,10 @@ export async function login(credentials: t.UsernamePassword) {
   try {
     const loginData: t.LoginData = {
       username: credentials.username,
-      passwordClientHash: await util.calcClientPasswordHash(credentials),
+      password_client_hash: await util.calcClientPasswordHash(credentials),
     };
-    const user: t.LocalUser = await util.postApi('/api/login', loginData);
-    await storage.setSetting(user, 'user');
-    appStore.update(app => {
-      app.user = user;
-    });
-    storage.sync();
+    const loginResponse: t.LoginResponse = await util.postApi('/api/login', loginData);
+    await loggedIn(credentials, loginResponse);
   } catch (error) {
     gotError(error as Error);
   }
@@ -100,23 +96,18 @@ export async function signup(credentials: t.UsernamePassword) {
   try {
     const signupData: t.SignupData = {
       username: credentials.username,
-      passwordClientHash: await util.calcClientPasswordHash(credentials),
-      encryptionSalt: cutil.binToHexString(util.generateEncryptionSalt()),
+      password_client_hash: await util.calcClientPasswordHash(credentials),
+      encryption_salt: cutil.bytesToHexString(util.generateEncryptionSalt()),
     };
-    const user: t.LocalUser = await util.postApi('/api/signup', signupData);
+    const loginResponse: t.LoginResponse = await util.postApi('/api/signup', signupData);
 
     // We want the client to pick the encryption salt to make sure it really is random and secure.
-    if (user.encryptionSalt !== signupData.encryptionSalt) {
+    if (loginResponse.encryption_salt !== signupData.encryption_salt) {
       util.resetUserCookies();
       throw new Error('Server might be compromised. The encryption parameters were tampered with.');
     }
 
-    await storage.setSetting(user, 'user');
-
-    appStore.update(app => {
-      app.user = user;
-    });
-    storage.sync();
+    await loggedIn(credentials, loginResponse);
   } catch (error) {
     gotError(error as Error);
   }
@@ -127,7 +118,7 @@ export function logout() {
   if (!user) return;
 
   // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
-  util.postApi('/api/logout', user);
+  util.postApi('/api/logout', { token: user.token });
   storage.clearAll();
   util.resetUserCookies();
   initAppStore();
@@ -185,4 +176,24 @@ export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
   } catch (error) {
     gotError(error as Error);
   }
+}
+
+async function makeClientLocalUserFromServer(
+  credentials: t.UsernamePassword,
+  loginResponse: t.LoginResponse,
+): Promise<t.ClientLocalUser> {
+  return {
+    username: loginResponse.username,
+    token: loginResponse.token,
+    encryptionKey: await util.makeEncryptionKey(credentials.password, loginResponse.encryption_salt),
+  };
+}
+
+async function loggedIn(credentials: t.UsernamePassword, loginResponse: t.LoginResponse) {
+  const user = await makeClientLocalUserFromServer(credentials, loginResponse);
+  await storage.setSetting(user, 'user');
+  appStore.update(app => {
+    app.user = user;
+  });
+  storage.sync();
 }
