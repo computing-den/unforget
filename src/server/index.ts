@@ -43,7 +43,7 @@ app.use(cookieParser());
 app.use((req, res, next) => {
   const token = req.cookies.unforget_token as string | undefined;
   if (token) {
-    const user = db.get().prepare(`SELECT username, token FROM clients where token = ?`).get(token) as
+    const user = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
       | t.LocalUser
       | undefined;
     res.locals = { user };
@@ -60,8 +60,10 @@ app.use((req, res, next) => {
 
 app.post('/api/login', async (req, res, next) => {
   try {
-    const loginData = req.body as t.LoginData;
-    const user = db.get().prepare(`SELECT * FROM users username = :username`).get({ username: loginData.username }) as
+    let loginData = req.body as t.LoginData;
+    loginData = { ...loginData, username: loginData.username.toLowerCase() };
+    console.log('/api/login', loginData);
+    const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(loginData.username) as
       | t.DBUser
       | undefined;
 
@@ -73,7 +75,7 @@ app.post('/api/login', async (req, res, next) => {
       }
     }
 
-    res.status(401).send({ message: 'Wrong username or password.' });
+    throw new ServerError('Wrong username or password.', 401);
   } catch (error) {
     next(error);
   }
@@ -81,31 +83,36 @@ app.post('/api/login', async (req, res, next) => {
 
 app.post('/api/signup', async (req, res, next) => {
   try {
-    const signupData = req.body as t.SignupData;
+    let signupData = req.body as t.SignupData;
+    signupData = { ...signupData, username: signupData.username.toLowerCase() };
+    if (typeof signupData.username !== 'string' || signupData.username.length < 3) {
+      throw new ServerError('username must be at least 3 characters including only a-z, 0-9, _, or -', 400);
+    }
+    if (/[\/\\<>&'"]/.test(signupData.username)) {
+      throw new ServerError('invalid characters in username', 400);
+    }
+
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(signupData.username) as
       | t.DBUser
       | undefined;
+    if (user) throw new ServerError('Username already exists.', 400);
 
-    if (user) {
-      res.status(401).send({ message: 'Username already exists.' });
-    } else {
-      const password_salt = generateRandomCryptoString();
-      const password_double_hash = await calcDoublePasswordHash(signupData.passwordClientHash, password_salt);
-      const newUser: t.DBUser = {
-        username: signupData.username,
-        password_double_hash,
-        password_salt,
-        encryption_salt: signupData.encryptionSalt,
-      };
-      db.get()
-        .prepare(
-          `
+    const password_salt = generateRandomCryptoString();
+    const password_double_hash = await calcDoublePasswordHash(signupData.passwordClientHash, password_salt);
+    const newUser: t.DBUser = {
+      username: signupData.username,
+      password_double_hash,
+      password_salt,
+      encryption_salt: signupData.encryptionSalt,
+    };
+    db.get()
+      .prepare(
+        `
         INSERT INTO users (username, password_double_hash, password_salt, encryption_salt)
         VALUES (:username, :password_double_hash, :password_salt, :encryption_salt)`,
-        )
-        .run(newUser);
-      loginAndRespond(newUser, res);
-    }
+      )
+      .run(newUser);
+    loginAndRespond(newUser, res);
   } catch (error) {
     next(error);
   }
@@ -239,12 +246,13 @@ app.get(['/', '/n/:noteId', '/login'], (req, res) => {
 
 app.use((req, res, next) => {
   console.error(`Page not found: ${req.url}`);
-  res.status(404).send(`Page not found: ${req.url}`);
+  next(new ServerError(`Page not found: ${req.url}`, 404));
 });
 
 app.use(((error, req, res, next) => {
   console.error(error);
-  res.status(500).send(error.message);
+  const code = error instanceof ServerError ? error.code : 500;
+  res.status(code).send({ message: error.message });
 }) as express.ErrorRequestHandler);
 
 app.listen(Number(process.env.PORT), () => {
@@ -263,7 +271,7 @@ export async function computeSHA256(data: Uint8Array): Promise<string> {
 
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!res.locals.user) {
-    next(new Error('Forbidden'));
+    next(new ServerError('Forbidden', 403));
   } else {
     next();
   }
@@ -273,4 +281,10 @@ function generateRandomCryptoString(): string {
   return Array.from(crypto.randomBytes(64))
     .map(x => x.toString(16).padStart(2, '0'))
     .join('');
+}
+
+class ServerError extends Error {
+  constructor(message: string, public code: number) {
+    super(message);
+  }
 }

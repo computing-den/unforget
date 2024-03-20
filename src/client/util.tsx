@@ -116,7 +116,7 @@ export async function calcClientPasswordHash({ username, password }: t.UsernameP
   const encoder = new TextEncoder();
   const textBuf = encoder.encode(text);
   const hashBuf = await crypto.subtle.digest('SHA-256', textBuf);
-  return bytesToBase64DataUrl(hashBuf);
+  return bytesToBase64(hashBuf);
 }
 
 export function generateEncryptionSalt(): Uint8Array {
@@ -128,28 +128,30 @@ export function generateIV(): Uint8Array {
 }
 
 export async function bytesToBase64(bytes: ArrayBuffer): Promise<string> {
-  const dataUrl = await bytesToBase64DataUrl(bytes);
-  return await dataUrlToText(dataUrl);
+  return await extractBase64FromDataUrl(await bytesToBase64DataUrl(bytes));
 }
 
-export async function bytesToBase64DataUrl(bytes: ArrayBuffer, type = 'application/octet-stream'): Promise<string> {
+export async function bytesToBase64DataUrl(bytes: ArrayBuffer): Promise<string> {
   return await new Promise((resolve, reject) => {
-    const reader = Object.assign(new FileReader(), {
-      onload: () => resolve(reader.result as string),
-      onerror: () => reject(reader.error),
-    });
-    reader.readAsDataURL(new File([bytes], '', { type }));
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(new File([bytes], '', { type: 'application/octet-stream' }));
   });
 }
 
 export async function dataUrlToBytes(dataUrl: string): Promise<ArrayBuffer> {
   const res = await fetch(dataUrl);
-  return new Uint8Array(await res.arrayBuffer());
+  return await res.arrayBuffer();
 }
 
-export async function dataUrlToText(dataUrl: string): Promise<string> {
+export async function extractBase64FromDataUrl(dataUrl: string): Promise<string> {
   // NOTE: Apparently, data urls generated in node may have more commas.
   const segments = dataUrl.split(',');
-  if (segments.length != 2) throw new Error('dataUrlToText received unexpected input');
+  if (segments.length != 2) throw new Error('extractBase64FromDataUrl received unexpected input');
   return segments[1];
+}
+
+export async function base64ToBytes(base64: string): Promise<ArrayBuffer> {
+  return dataUrlToBytes(`data:application/octet-stream;base64,${base64}`);
 }
