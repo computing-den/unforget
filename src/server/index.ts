@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import type * as t from '../common/types.js';
 import * as db from './db.js';
-import * as cutil from '../common/util.js';
+import { ServerError, bytesToHexString, CACHE_VERSION } from '../common/util.js';
 import cookieParser from 'cookie-parser';
 import _ from 'lodash';
 
@@ -37,6 +37,8 @@ app.use('/', express.static(DIST_PUBLIC));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
+  console.log(`express ${req.method} ${req.url} X-Cache-Version: ${req.header('X-Cache-Version') || 'unknown'}`);
+
   const token = req.cookies.unforget_token as string | undefined;
   if (token) {
     const client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
@@ -52,6 +54,14 @@ app.use((req, res, next) => {
     }
   }
   next();
+});
+
+app.use('/api', (req, res, next) => {
+  if (req.query.apiProtocol === '2') {
+    next();
+  } else {
+    next(new ServerError('App requires update', 400, 'app_requires_update'));
+  }
 });
 
 app.post('/api/login', async (req, res, next) => {
@@ -249,7 +259,9 @@ app.use((req, res, next) => {
 app.use(((error, req, res, next) => {
   console.error(error);
   const code = error instanceof ServerError ? error.code : 500;
-  res.status(code).send({ message: error.message });
+  const type = error instanceof ServerError ? error.type : 'generic';
+  const errorResponse: t.ServerErrorResponse = { message: error.message, type };
+  res.status(code).send(errorResponse);
 }) as express.ErrorRequestHandler);
 
 app.listen(Number(process.env.PORT), () => {
@@ -263,7 +275,7 @@ async function calcDoublePasswordHash(password_client_hash: string, password_sal
 
 async function computeSHA256(data: Uint8Array): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return cutil.bytesToHexString(new Uint8Array(hashBuffer));
+  return bytesToHexString(new Uint8Array(hashBuffer));
 }
 
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -278,10 +290,4 @@ function generateRandomCryptoString(): string {
   return Array.from(crypto.randomBytes(64))
     .map(x => x.toString(16).padStart(2, '0'))
     .join('');
-}
-
-class ServerError extends Error {
-  constructor(message: string, public code: number) {
-    super(message);
-  }
 }

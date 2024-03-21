@@ -3,10 +3,11 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import * as u from '../common/util.js';
+import { CACHE_VERSION, ServerError } from '../common/util.js';
+import type * as t from '../common/types.js';
 
 // The name of the cache
-const CACHE_NAME = `unforget-${u.CACHE_VERSION}`;
+const CACHE_NAME = `unforget-${CACHE_VERSION}`;
 
 // The static resources that the app needs to function.
 const APP_STATIC_RESOURCES = [
@@ -40,20 +41,31 @@ const APP_STATIC_RESOURCES = [
   '/icons/bulletpoint-white.svg',
 ];
 
-// On install, cache the static resources
 self.addEventListener('install', event => {
+  // The promise that skipWaiting() returns can be safely ignored.
+  // Causes a newly installed service worker to progress into the activating state,
+  // regardless of whether there is already an active service worker.
+  self.skipWaiting();
+
   event.waitUntil(
     (async () => {
+      console.log('service worker: installing...');
+
+      // Cache the static resources.
       const cache = await caches.open(CACHE_NAME);
       cache.addAll(APP_STATIC_RESOURCES);
+
+      console.log('service worker: install done.');
     })(),
   );
 });
 
-// delete old caches on activate
 self.addEventListener('activate', event => {
   event.waitUntil(
     (async () => {
+      console.log('service worker: activating...');
+
+      // Delete old caches.
       const names = await caches.keys();
       await Promise.all(
         names.map(name => {
@@ -62,8 +74,18 @@ self.addEventListener('activate', event => {
           }
         }),
       );
+
+      // Set up storage.
       await storage.getStorage();
+
+      // Take control of the clients and refresh them.
+      // The refresh is necessary if the activate event was triggered by updateApp().
       await self.clients.claim();
+      for (const client of await self.clients.matchAll()) {
+        console.log('service worker: calling refreshPage on a client');
+        client.postMessage({ command: 'refreshPage' });
+      }
+      console.log('service worker: activated.');
     })(),
   );
 });
@@ -74,12 +96,27 @@ self.addEventListener('fetch', event => {
   event.respondWith(handleFetchEvent(event));
 });
 
+// Listen to messages from window.
+self.addEventListener('message', async event => {
+  try {
+    const message = event.data;
+    console.log('service worker: received message: ', message);
+
+    // Example of how to respond based on the message type
+    if (message.command === 'update') {
+      await self.registration.update();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+
 async function handleFetchEvent(event: FetchEvent): Promise<Response> {
   const url = new URL(event.request.url);
   const { mode, method } = event.request;
   console.log('service worker fetch: ', mode, method, url.pathname);
 
-  let response: Response | Promise<Response> | undefined;
+  let response: Response | undefined;
 
   // As a single page app, direct app to always go to cached home page.
   if (mode === 'navigate') {
@@ -106,5 +143,30 @@ async function handleFetchEvent(event: FetchEvent): Promise<Response> {
     response = await cache.match(event.request);
   }
 
-  return response ?? fetch(event.request);
+  if (response) return response;
+
+  try {
+    response = await fetch(event.request, {
+      headers: new Headers({
+        ...event.request.headers,
+        'X-Cache-Version': String(CACHE_VERSION),
+      }),
+    });
+  } catch (error) {
+    return Response.error();
+  }
+
+  if (!response.ok) {
+    try {
+      const clonedResponse = response.clone();
+      const error = ServerError.fromJSON(await clonedResponse.json());
+      if (error.type === 'app_requires_update') {
+        await self.registration.update();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return response;
 }

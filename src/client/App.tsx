@@ -18,16 +18,17 @@ export default function App() {
   // const url = new URL(location.href);
 
   useSyncOnlineStatus();
+
   useListenToStorageSync();
+  useSyncStorageWhenOnline();
+  useSyncStorageOnMountAndPeriodically();
 
-  // Sync storage on mount and periodically.
-  useEffect(() => {
-    storage.sync();
-  }, []);
-  util.useInterval(() => storage.sync(), 5000);
+  useCheckAppUpdateOnVisibilityChange();
+  useCheckAppUpdateWhenOnline();
+  useCheckAppUpdatePeriodically();
+  useCheckAppUpdateOnMount();
 
-  // Update queue count periodically.
-  util.useInterval(() => actions.updateQueueCount(), 3000);
+  useUpdateQueueCountPeriodically();
 
   const router = createBrowserRouter([
     {
@@ -104,9 +105,6 @@ function useSyncOnlineStatus() {
       appStore.update(app => {
         app.online = navigator.onLine;
       });
-      if (navigator.onLine) {
-        storage.sync();
-      }
     }
     window.addEventListener('online', callback);
     window.addEventListener('offline', callback);
@@ -115,6 +113,27 @@ function useSyncOnlineStatus() {
       window.removeEventListener('offline', callback);
     };
   }, []);
+}
+
+function useSyncStorageWhenOnline() {
+  useEffect(() => {
+    function callback() {
+      storage.sync();
+    }
+    window.addEventListener('online', callback);
+    return () => {
+      window.removeEventListener('online', callback);
+    };
+  }, []);
+}
+
+function useSyncStorageOnMountAndPeriodically() {
+  useEffect(() => {
+    storage.sync();
+  }, []);
+  if (process.env.NODE_ENV !== 'development') {
+    util.useInterval(() => storage.sync(), 5000);
+  }
 }
 
 function useListenToStorageSync() {
@@ -135,4 +154,46 @@ function useListenToStorageSync() {
     storage.addSyncListener(syncListener);
     return () => storage.removeSyncListener(syncListener);
   }, []);
+}
+
+function useCheckAppUpdateOnVisibilityChange() {
+  useEffect(() => {
+    function callback() {
+      console.log('visibility: ', document.visibilityState);
+      if (document.visibilityState === 'visible') {
+        actions.checkAppUpdate();
+      }
+    }
+    window.addEventListener('visibilitychange', callback);
+
+    return () => {
+      window.removeEventListener('visibilitychange', callback);
+    };
+  }, []);
+}
+
+function useCheckAppUpdateWhenOnline() {
+  useEffect(() => {
+    function callback() {
+      actions.checkAppUpdate();
+    }
+    window.addEventListener('online', callback);
+    return () => {
+      window.removeEventListener('online', callback);
+    };
+  }, []);
+}
+
+function useCheckAppUpdatePeriodically() {
+  util.useInterval(() => actions.checkAppUpdate(), 10 * 1000);
+}
+
+function useCheckAppUpdateOnMount() {
+  useEffect(() => {
+    actions.checkAppUpdate();
+  }, []);
+}
+
+function useUpdateQueueCountPeriodically() {
+  util.useInterval(() => actions.updateQueueCount(), 3000);
 }

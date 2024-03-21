@@ -31,6 +31,10 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
     alert(`Unforget: made by Computing Den.\n\n<cache version ${cutil.CACHE_VERSION}>`);
   }, []);
 
+  const refreshPage = useCallback(() => {
+    window.location.reload();
+  }, []);
+
   const menu: MenuItem[] = _.compact([
     app.user && { label: app.user.username, icon: '/icons/user.svg', isHeader: true },
     ...(props.menu || []),
@@ -71,7 +75,14 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
       </div>
       {app.message && (
         <div className="msg-bar">
-          <p className={app.message.type}>{app.message.text}</p>
+          <p className={app.message.type}>{app.message.text.substring(0, 100)}</p>
+        </div>
+      )}
+      {app.requirePageRefresh && (
+        <div className="refresh-page-container">
+          <button className="refresh-page" onClick={refreshPage}>
+            Update app
+          </button>
         </div>
       )}
     </div>

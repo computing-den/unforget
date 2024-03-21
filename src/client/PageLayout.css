@@ -33,6 +33,20 @@
     }
   }
 
+  .refresh-page-container {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+
+    button {
+      box-shadow: 0px 4px 14px 7px #00000022;
+      width: 200px;
+    }
+  }
+
   .content {
     margin: 0.25rem auto;
     max-width: var(--page-max-width);

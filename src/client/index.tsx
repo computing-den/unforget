@@ -8,14 +8,24 @@ async function setup() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/serviceWorker.js').then(
       registration => {
-        console.log('Service worker registration successful:', registration);
+        console.log('window: service worker registration successful:', registration);
       },
       error => {
-        console.error(`Service worker registration failed: ${error}`);
+        console.error(`window: service worker registration failed: ${error}`);
       },
     );
+
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data.command === 'refreshPage') {
+        console.log('window: received refreshPage from service worker client');
+        // window.location.reload();
+        appStore.update(app => {
+          app.requirePageRefresh = true;
+        });
+      }
+    });
   } else {
-    console.error('Service workers are not supported.');
+    console.error('window: service workers are not supported.');
   }
 
   await actions.initAppStore();

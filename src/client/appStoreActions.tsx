@@ -34,6 +34,7 @@ export async function initAppStore() {
     queueCount: 0,
     syncing: false,
     user,
+    requirePageRefresh: false,
   });
 }
 
@@ -196,4 +197,19 @@ async function loggedIn(credentials: t.UsernamePassword, loginResponse: t.LoginR
     app.user = user;
   });
   storage.sync();
+}
+
+export async function checkAppUpdate() {
+  try {
+    if (!appStore.get().online) return;
+
+    const updateInterval = process.env.NODE_ENV === 'development' ? 5 * 1000 : 24 * 3600 * 1000;
+    const lastCheck = await storage.getSetting<string>('lastAppUpdateCheck');
+    if (!lastCheck || new Date(lastCheck).valueOf() < Date.now() - updateInterval) {
+      util.postMessageToServiceWorker({ command: 'update' });
+      await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }

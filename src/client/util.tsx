@@ -1,14 +1,14 @@
 import type * as t from '../common/types.js';
-import * as cutil from '../common/util.js';
-import React, { useCallback, useState, useEffect, useLayoutEffect, useSyncExternalStore } from 'react';
+import { ServerError, bytesToHexString, hexStringToBytes, CACHE_VERSION } from '../common/util.js';
+import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
 
-export async function createFetchResponseError(res: Response): Promise<Error> {
+export async function createServerError(res: Response): Promise<ServerError> {
   const contentType = getResponseContentType(res);
   if (contentType === 'application/json') {
-    return new Error((await res.json()).message || 'unknown');
+    return ServerError.fromJSON(await res.json());
   } else {
     console.error(await res.text());
-    return new Error(`unknown response of type ${contentType}`);
+    return new ServerError(`unknown response of type ${contentType}`, res.status);
   }
 }
 
@@ -17,13 +17,27 @@ function getResponseContentType(res: Response): string | undefined {
 }
 
 export async function postApi<T>(pathname: string, json?: any): Promise<T> {
-  const res = await fetch(pathname, {
+  const params = new URLSearchParams({ apiProtocol: '2' }).toString();
+  const res = await fetch(`${pathname}?${params}`, {
+    // const res = await fetch(pathname, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: json && JSON.stringify(json),
   });
-  if (!res.ok) throw await createFetchResponseError(res);
+  if (!res.ok) {
+    const error = await createServerError(res);
+    if (error.type === 'app_requires_update') {
+      postMessageToServiceWorker({ command: 'update' });
+    }
+    throw error;
+  }
   return await res.json();
+}
+
+export function postMessageToServiceWorker(message: any) {
+  navigator.serviceWorker?.ready.then(readyRegistration => {
+    readyRegistration.active?.postMessage(message);
+  });
 }
 
 export function getCookie(name: string): string | undefined {
@@ -116,7 +130,7 @@ export async function calcClientPasswordHash({ username, password }: t.UsernameP
   const encoder = new TextEncoder();
   const textBuf = encoder.encode(text);
   const hashBuf = await crypto.subtle.digest('SHA-256', textBuf);
-  return cutil.bytesToHexString(new Uint8Array(hashBuf));
+  return bytesToHexString(new Uint8Array(hashBuf));
 }
 
 export function generateEncryptionSalt(): Uint8Array {
@@ -163,7 +177,7 @@ export async function makeEncryptionKey(password: string, salt: string): Promise
     'deriveKey',
   ]);
 
-  const saltBuf = cutil.hexStringToBytes(salt);
+  const saltBuf = hexStringToBytes(salt);
   return window.crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
@@ -182,12 +196,12 @@ export async function encrypt(data: BufferSource, key: CryptoKey): Promise<t.Enc
   const iv = generateIV();
   const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);
   const encrypted_base64 = await bytesToBase64(encrypted);
-  return { encrypted_base64, iv: cutil.bytesToHexString(iv) };
+  return { encrypted_base64, iv: bytesToHexString(iv) };
 }
 
 export async function decrypt(data: t.EncryptedData, key: CryptoKey): Promise<ArrayBuffer> {
   const encryptedBytes = await base64ToBytes(data.encrypted_base64);
-  const iv = cutil.hexStringToBytes(data.iv);
+  const iv = hexStringToBytes(data.iv);
   return window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encryptedBytes);
 }
 

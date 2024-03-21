@@ -121,6 +121,7 @@ export type AppStore = {
   syncing: boolean;
   queueCount: number;
   online: boolean;
+  requirePageRefresh: boolean;
 };
 
 export type AppStoreRecipe = (draft: Draft<AppStore>) => AppStore | void;
@@ -139,3 +140,10 @@ export type ParsedLine = {
   contentStart: number;
   lastLine: boolean;
 };
+
+export type ServerErrorResponse = {
+  message: string;
+  type: ServerErrorType;
+};
+
+export type ServerErrorType = 'app_requires_update' | 'generic';
