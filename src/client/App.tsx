@@ -1,4 +1,13 @@
-import { createBrowserRouter, RouterProvider, useRouteError, redirect, LoaderFunctionArgs } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  useRouteError,
+  Navigate,
+  useLocation,
+  Outlet,
+  LoaderFunctionArgs,
+  redirect,
+} from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
@@ -33,21 +42,29 @@ export default function App() {
   const router = createBrowserRouter([
     {
       path: '/',
+
       errorElement: <ErrorPage />,
+
       children: [
-        {
-          path: '',
-          element: <NotesPage />,
-          loader: notesPageLoaderWithAuth,
-        },
         {
           path: 'login',
           element: <LoginPage />,
         },
         {
-          path: 'n/:noteId',
-          element: <NotePage />,
-          loader: notePageLoaderWithAuth,
+          element: <Auth />,
+          // loader: authLoader,
+          children: [
+            {
+              path: '',
+              element: <NotesPage />,
+              loader: notesPageLoader,
+            },
+            {
+              path: 'n/:noteId',
+              element: <NotePage />,
+              loader: notePageLoader,
+            },
+          ],
         },
       ],
     },
@@ -56,28 +73,34 @@ export default function App() {
   return <RouterProvider router={router} />;
 }
 
-async function notePageLoaderWithAuth(args: LoaderFunctionArgs): Promise<any> {
-  console.log('calling note page loader');
-  await requireUser(args);
-  return await notePageLoader(args);
-}
+function Auth() {
+  // return <Outlet />;
+  const { user } = appStore.use();
+  const location = useLocation();
 
-async function notesPageLoaderWithAuth(args: LoaderFunctionArgs): Promise<any> {
-  console.log('calling notes page loader');
-  await requireUser(args);
-  return await notesPageLoader();
-}
+  if (user) return <Outlet />;
 
-const requireUser = async (args: LoaderFunctionArgs) => {
-  console.log('requireUser');
-  const { user } = appStore.get();
-  if (!user) {
-    const from = new URL(args.request.url);
-    const params = from.pathname === '/' ? '' : `?from=${from.pathname}`;
-    throw redirect(`/login${params}`);
+  let params = '';
+  if (location.pathname !== '/') {
+    params = new URLSearchParams({ from: location.pathname }).toString();
   }
-  return null;
-};
+  return <Navigate to={'/login' + (params ? `?${params}` : '')} replace />;
+}
+
+// async function authLoader({ request }: LoaderFunctionArgs): Promise<null> {
+//   const { user } = appStore.get();
+//   if (!user) {
+//     const pathname = new URL(request.url).pathname;
+//     let sparams = '';
+//     if (pathname !== '/') {
+//       sparams = new URLSearchParams({ from: pathname }).toString();
+//     }
+
+//     const to = '/login' + (sparams ? `?${sparams}` : '');
+//     throw redirect(to);
+//   }
+//   return null;
+// }
 
 function ErrorPage() {
   const error = useRouteError() as Error;

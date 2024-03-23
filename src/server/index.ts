@@ -67,8 +67,8 @@ app.use('/api', (req, res, next) => {
 app.post('/api/login', async (req, res, next) => {
   try {
     let loginData = req.body as t.LoginData;
+    console.log('/api/login', req.body);
     loginData = { ...loginData, username: loginData.username.toLowerCase() };
-    console.log('/api/login', loginData);
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(loginData.username) as
       | t.DBUser
       | undefined;

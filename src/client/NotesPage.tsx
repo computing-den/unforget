@@ -285,6 +285,7 @@ async function addNote(text: string, pinned: boolean): Promise<void> {
 }
 
 export async function notesPageLoader(): Promise<null> {
+  // await new Promise(resolve => setTimeout(resolve, 3000));
   // First load.
   if (appStore.get().notes.length === 0) {
     await actions.updateNotes();

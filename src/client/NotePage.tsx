@@ -132,6 +132,7 @@ export function NotePage() {
 }
 
 export async function notePageLoader({ params }: LoaderFunctionArgs): Promise<t.Note | null> {
+  // await new Promise(resolve => setTimeout(resolve, 3000));
   if (storage.syncing) await storage.waitTillSyncEnd(5000);
   return (await storage.getNote(params.noteId as string)) ?? null;
 }

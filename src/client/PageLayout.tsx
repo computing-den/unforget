@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
@@ -18,10 +18,6 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
 
   const toggleMenu = util.useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
 
-  const logout = useCallback(() => {
-    actions.logout();
-  }, []);
-
   const fullSync = useCallback(() => {
     storage.fullSync();
     actions.showMessage('syncing ...', { hideAfterTimeout: true });
@@ -39,7 +35,7 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
     app.user && { label: app.user.username, icon: '/icons/user.svg', isHeader: true },
     ...(props.menu || []),
     app.user && { label: 'Full sync', icon: '/icons/refresh-ccw.svg', onClick: fullSync },
-    app.user && { label: 'Log out', icon: '/icons/log-out.svg', onClick: logout },
+    app.user && { label: 'Log out', icon: '/icons/log-out.svg', onClick: actions.logout },
     { label: 'About', icon: '/icons/info.svg', onClick: about },
   ]);
 

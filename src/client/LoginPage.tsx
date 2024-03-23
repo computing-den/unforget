@@ -15,11 +15,12 @@ function LoginPage(props: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const usernameChanged = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value), []);
-  const passwordChanged = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value), []);
-
-  const loginCb = useCallback(() => actions.login({ username, password }), [username, password]);
-  const signupCb = useCallback(() => actions.signup({ username, password }), [username, password]);
+  async function loginCb() {
+    await actions.login({ username, password });
+  }
+  async function signupCb() {
+    await actions.signup({ username, password });
+  }
 
   const app = appStore.use();
   const location = useLocation();
@@ -43,7 +44,7 @@ function LoginPage(props: LoginPageProps) {
               required
               minLength={4}
               maxLength={50}
-              onChange={usernameChanged}
+              onChange={e => setUsername(e.target.value)}
             />
           </div>
           <div className="form-element">
@@ -55,7 +56,7 @@ function LoginPage(props: LoginPageProps) {
               required
               minLength={8}
               maxLength={100}
-              onChange={passwordChanged}
+              onChange={e => setPassword(e.target.value)}
             />
           </div>
           <div className="buttons">

@@ -4,3 +4,4 @@ private
 tsconfig.tsbuildinfo
 .env
 deploy
+*#

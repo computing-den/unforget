@@ -2,7 +2,7 @@ import type * as t from '../common/types.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
-import * as cutil from '../common/util.jsx';
+import { bytesToHexString } from '../common/util.jsx';
 import _ from 'lodash';
 
 export async function initAppStore() {
@@ -11,15 +11,6 @@ export async function initAppStore() {
     storage.getSetting('hidePinnedNotes').then(Boolean),
     storage.getSetting<t.ClientLocalUser>('user'),
   ]);
-
-  // Just in case make sure that the token and user from storage are in sync.
-  // Mostly, useful during development if we manually delete one but not the other.
-  const tokenFromCookie = util.getUserTokenFromCookie();
-  if (!tokenFromCookie || !user || user.token !== tokenFromCookie) {
-    user = undefined;
-    storage.clearAll();
-    util.resetUserCookies();
-  }
 
   appStore.set({
     showArchive,
@@ -98,7 +89,7 @@ export async function signup(credentials: t.UsernamePassword) {
     const signupData: t.SignupData = {
       username: credentials.username,
       password_client_hash: await util.calcClientPasswordHash(credentials),
-      encryption_salt: cutil.bytesToHexString(util.generateEncryptionSalt()),
+      encryption_salt: bytesToHexString(util.generateEncryptionSalt()),
     };
     const loginResponse: t.LoginResponse = await util.postApi('/api/signup', signupData);
 
@@ -114,15 +105,20 @@ export async function signup(credentials: t.UsernamePassword) {
   }
 }
 
-export function logout() {
-  const { user } = appStore.get();
-  if (!user) return;
+export async function logout() {
+  try {
+    const { user } = appStore.get();
+    if (!user) return;
 
-  // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
-  util.postApi('/api/logout', { token: user.token });
-  storage.clearAll();
-  util.resetUserCookies();
-  initAppStore();
+    await storage.clearAll();
+    util.resetUserCookies();
+    initAppStore();
+
+    // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
+    util.postApi('/api/logout', { token: user.token }).catch(console.error);
+  } catch (error) {
+    gotError(error as Error);
+  }
 }
 
 export function gotError(error: Error) {
