@@ -1,14 +1,16 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  useRouteError,
-  Navigate,
-  useLocation,
-  Outlet,
-  LoaderFunctionArgs,
-  redirect,
-} from 'react-router-dom';
-import React, { useCallback, useState, useEffect } from 'react';
+// import {
+//   createBrowserRouter,
+//   RouterProvider,
+//   useRouteError,
+//   Navigate,
+//   useLocation,
+//   Outlet,
+//   LoaderFunctionArgs,
+//   redirect,
+// } from 'react-router-dom';
+// import { Router, Route, BaseLocationHook } from 'wouter';
+import { Router, Route, Params } from './router.jsx';
+import React, { useCallback, useState, useEffect, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
@@ -17,9 +19,7 @@ import * as actions from './appStoreActions.jsx';
 import LoginPage from './LoginPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
-
 import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
 
 export default function App() {
   // const app = appStore.use();
@@ -39,53 +39,58 @@ export default function App() {
 
   useUpdateQueueCountPeriodically();
 
-  const router = createBrowserRouter([
+  const routes: Route[] = [
+    {
+      path: '/login',
+      element: <LoginPage />,
+    },
+    {
+      path: '/n/:noteId',
+      element: (params: Params) => <NotePage key={params.noteId as string} />,
+      loader: notePageLoader,
+    },
     {
       path: '/',
-
-      errorElement: <ErrorPage />,
-
-      children: [
-        {
-          path: 'login',
-          element: <LoginPage />,
-        },
-        {
-          element: <Auth />,
-          // loader: authLoader,
-          children: [
-            {
-              path: '',
-              element: <NotesPage />,
-              loader: notesPageLoader,
-            },
-            {
-              path: 'n/:noteId',
-              element: <NotePage />,
-              loader: notePageLoader,
-            },
-          ],
-        },
-      ],
+      element: <NotesPage />,
+      loader: notesPageLoader,
     },
-  ]);
+  ];
 
-  return <RouterProvider router={router} />;
+  return <Router routes={routes} fallback={<Fallback />} />;
 }
 
-function Auth() {
-  // return <Outlet />;
-  const { user } = appStore.use();
-  const location = useLocation();
-
-  if (user) return <Outlet />;
-
-  let params = '';
-  if (location.pathname !== '/') {
-    params = new URLSearchParams({ from: location.pathname }).toString();
-  }
-  return <Navigate to={'/login' + (params ? `?${params}` : '')} replace />;
+function Fallback() {
+  return 'loading';
 }
+
+// const useLocationWithTransition: BaseLocationHook = () => {
+//   const [location, setLocation] = useBrowserLocation();
+//   const [_isPending, startTransition] = useTransition();
+
+//   return [
+//     location,
+//     (to, replace = false) => {
+//       startTransition(() => {
+//         console.log('going to ', to, 'in transition');
+//         setLocation(to, replace);
+//       });
+//     },
+//   ];
+// };
+
+// function Auth() {
+//   // return <Outlet />;
+//   const { user } = appStore.use();
+//   const location = useLocation();
+
+//   if (user) return <Outlet />;
+
+//   let params = '';
+//   if (location.pathname !== '/') {
+//     params = new URLSearchParams({ from: location.pathname }).toString();
+//   }
+//   return <Navigate to={'/login' + (params ? `?${params}` : '')} replace />;
+// }
 
 // async function authLoader({ request }: LoaderFunctionArgs): Promise<null> {
 //   const { user } = appStore.get();
@@ -102,20 +107,20 @@ function Auth() {
 //   return null;
 // }
 
-function ErrorPage() {
-  const error = useRouteError() as Error;
-  console.error(error);
+// function ErrorPage() {
+//   const error = useRouteError() as Error;
+//   console.error(error);
 
-  return (
-    <div id="error-page">
-      <h1>Oops!</h1>
-      <p>Sorry, an unexpected error has occurred.</p>
-      <p>
-        <i>{error.message}</i>
-      </p>
-    </div>
-  );
-}
+//   return (
+//     <div id="error-page">
+//       <h1>Oops!</h1>
+//       <p>Sorry, an unexpected error has occurred.</p>
+//       <p>
+//         <i>{error.message}</i>
+//       </p>
+//     </div>
+//   );
+// }
 
 // function matchNotePage(pathname: string): { noteId: string } | undefined {
 //   const match = pathname.match(/^\/n\/([^\/]*)$/);

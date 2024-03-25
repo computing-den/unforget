@@ -31,7 +31,7 @@ async function setup() {
     console.error('window: service workers are not supported.');
   }
 
-  const user = await storage.getSetting<t.ClientLocalUser>('user');
+  // const user = await storage.getSetting<t.ClientLocalUser>('user');
 
   // // Just in case make sure that the token and user from storage are in sync.
   // // Mostly, useful during development if we manually delete one but not the other.

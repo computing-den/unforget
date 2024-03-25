@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useRouter } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
@@ -186,8 +186,6 @@ const Notes = memo(function Notes() {
 });
 
 const Note = memo(function Note(props: { note: t.Note }) {
-  const navigate = useNavigate();
-
   let text = props.note.text;
   // if (text && text.length > 1500) {
   //   text = text.substring(0, 1500) + '\n..........';
@@ -203,7 +201,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
   const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
 
   function clickCb(e: React.MouseEvent) {
-    navigate(`/n/${props.note.id}`, { state: { fromNotesPage: true } });
+    history.pushState({ fromNotesPage: true }, '', `/n/${props.note.id}`);
   }
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
@@ -284,13 +282,12 @@ async function addNote(text: string, pinned: boolean): Promise<void> {
   await actions.updateNotes();
 }
 
-export async function notesPageLoader(): Promise<null> {
+export async function notesPageLoader() {
   // await new Promise(resolve => setTimeout(resolve, 3000));
   // First load.
   if (appStore.get().notes.length === 0) {
     await actions.updateNotes();
   }
-  return null;
 }
 
 function countLines(text: string): number {

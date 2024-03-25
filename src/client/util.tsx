@@ -1,6 +1,6 @@
 import type * as t from '../common/types.js';
-import { ServerError, bytesToHexString, hexStringToBytes, CACHE_VERSION } from '../common/util.js';
-import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
+import { ServerError, bytesToHexString, hexStringToBytes } from '../common/util.js';
+import React, { useCallback, useState, useEffect, useLayoutEffect, createContext, useContext } from 'react';
 
 export async function createServerError(res: Response): Promise<ServerError> {
   const contentType = getResponseContentType(res);

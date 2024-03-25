@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useRouterLoading } from './router.jsx';
+// import { Link } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
@@ -38,6 +39,9 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
     app.user && { label: 'Log out', icon: '/icons/log-out.svg', onClick: actions.logout },
     { label: 'About', icon: '/icons/info.svg', onClick: about },
   ]);
+
+  // const { isLoading } = useRouterLoading();
+  // console.log('PageLayout: isLoading: ', isLoading);
 
   return (
     <div className="page-header">

@@ -1,3 +1,4 @@
+import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 import type * as t from '../common/types.js';
@@ -10,24 +11,31 @@ import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
-import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'react-router-dom';
+// import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'react-router-dom';
 
 export function NotePage() {
   const app = appStore.use();
-  const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
-  const navigate = useNavigate();
-  const location = useLocation();
+
+  const { params, loader, pathname } = useRouter();
+  console.log('NotePage: params', params);
+
+  const origNote = loader!.read() as t.Note | undefined;
+  console.log('NotePage: origNote:', origNote);
+
+  const [note, setNote] = useState(origNote);
+  // const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
+  console.log('NotePage: pathname:', pathname);
   const editorRef = useRef<EditorContext | null>(null);
 
   util.useScrollToTop();
 
   const goHome = useCallback(() => {
-    if (location.state?.fromNotesPage) {
-      navigate(-1);
+    if (history.state?.fromNotesPage) {
+      history.back();
     } else {
-      navigate('/');
+      history.pushState(null, '', '/');
     }
-  }, [location, navigate]);
+  }, []);
 
   const textChangeCb = useCallback(
     (text: string) => {
@@ -131,8 +139,15 @@ export function NotePage() {
   );
 }
 
-export async function notePageLoader({ params }: LoaderFunctionArgs): Promise<t.Note | null> {
-  // await new Promise(resolve => setTimeout(resolve, 3000));
+export async function notePageLoader({ params }: RouteMatch): Promise<t.Note | null> {
+  console.log('notePageLoader: ', params.noteId as string);
+  // await new Promise(resolve => setTimeout(resolve, 2000));
   if (storage.syncing) await storage.waitTillSyncEnd(5000);
   return (await storage.getNote(params.noteId as string)) ?? null;
 }
+
+// async function loadNote(id: string): Promise<t.Note | null> {
+//   await new Promise(resolve => setTimeout(resolve, 3000));
+//   if (storage.syncing) await storage.waitTillSyncEnd(5000);
+//   return (await storage.getNote(id)) ?? null;
+// }

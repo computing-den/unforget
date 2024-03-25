@@ -1,4 +1,5 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { useRouter } from './router.jsx';
+// import { Navigate, useLocation } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
@@ -23,11 +24,12 @@ function LoginPage(props: LoginPageProps) {
   }
 
   const app = appStore.use();
-  const location = useLocation();
+  const search = useRouter().search;
 
   if (app.user) {
-    const from = new URLSearchParams(location.search).get('from');
-    return <Navigate to={from || '/'} replace />;
+    const from = new URLSearchParams(search).get('from');
+    history.replaceState(null, '', from || '/');
+    return null;
   }
 
   return (
