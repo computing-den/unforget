@@ -240,26 +240,22 @@ export async function sync() {
   // Skip if user not logged in.
   if (!appStore.get().user) return;
 
+  if (syncing) {
+    console.log('sync deferred: already running.');
+
+    shouldSyncAgain = true;
+    return;
+  }
+
+  console.log('sync started.');
+  shouldSyncAgain = false;
+  syncing = true;
+
+  callSyncListeners({ done: false });
+
   let error: Error | undefined;
   let mergeCount = 0;
   try {
-    if (syncing) {
-      console.log('sync deferred: already running.');
-
-      shouldSyncAgain = true;
-      return;
-    }
-
-    shouldSyncAgain = false;
-    syncing = true;
-
-    console.log('sync started.');
-    callSyncListeners({ done: false });
-
-    // ===================
-    // Actual sync logic
-    // ===================
-
     // Do a full sync when syncNumber is 0 (first sync).
     if (!fullSyncRequired && (await getSyncNumber()) === 0) {
       fullSyncRequired = true;
@@ -287,15 +283,13 @@ export async function sync() {
   } catch (err) {
     console.error(err);
     error = err as Error;
-  } finally {
-    console.log('sync ended.');
-    syncing = false;
-    if (shouldSyncAgain) {
-      setTimeout(sync, 1000);
-    } else {
-      callSyncListeners({ done: true, error, mergeCount });
-    }
   }
+
+  console.log(`sync ended${error ? ' with error' : ''}`);
+  syncing = false;
+  callSyncListeners({ done: true, error, mergeCount });
+
+  if (shouldSyncAgain) setTimeout(sync, 1000);
 }
 
 export async function fullSync() {
