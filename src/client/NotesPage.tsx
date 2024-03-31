@@ -110,7 +110,7 @@ export function NotesPage(props: NotesPageProps) {
         icon={app.hidePinnedNotes ? '/icons/hide-pinned-white.svg' : '/icons/show-pinned-white.svg'}
         onClick={toggleHidePinnedNotes}
       />,
-      <PageAction icon="icons/search-white.svg" onClick={toggleSearchCb} />,
+      <PageAction icon="/icons/search-white.svg" onClick={toggleSearchCb} />,
     );
   } else {
     pageActions.push(
