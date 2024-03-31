@@ -9,7 +9,7 @@
 //   redirect,
 // } from 'react-router-dom';
 // import { Router, Route, BaseLocationHook } from 'wouter';
-import { Router, Route, Params } from './router.jsx';
+import { Router, Route, Params, Loader, useRouter } from './router.jsx';
 import React, { useCallback, useState, useEffect, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
@@ -46,13 +46,21 @@ export default function App() {
     },
     {
       path: '/n/:noteId',
-      element: (params: Params) => <NotePage key={params.noteId as string} />,
-      loader: notePageLoader,
+      element: (params: Params) => (
+        <Auth>
+          <NotePage key={params.noteId as string} />
+        </Auth>
+      ),
+      loader: loaderWithAuth(notePageLoader),
     },
     {
       path: '/',
-      element: <NotesPage />,
-      loader: notesPageLoader,
+      element: (
+        <Auth>
+          <NotesPage />
+        </Auth>
+      ),
+      loader: loaderWithAuth(notesPageLoader),
     },
   ];
 
@@ -61,6 +69,29 @@ export default function App() {
 
 function Fallback() {
   return 'loading';
+}
+
+function loaderWithAuth(loader: Loader): Loader {
+  return async match => {
+    if (appStore.get().user) return loader(match);
+  };
+}
+
+function Auth(props: { children: React.ReactNode }) {
+  const router = useRouter();
+  const app = appStore.use();
+
+  if (!app.user) {
+    let params = '';
+    if (router.pathname !== '/') {
+      params = new URLSearchParams({ from: router.pathname }).toString();
+    }
+    const pathname = '/login' + (params ? `?${params}` : '');
+    history.replaceState(null, '', pathname);
+    return null;
+  }
+
+  return props.children;
 }
 
 // const useLocationWithTransition: BaseLocationHook = () => {

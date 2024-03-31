@@ -59,9 +59,8 @@ export function getUserTokenFromCookie(): string | undefined {
   return getCookie('unforget_token');
 }
 
-export function resetUserCookies() {
-  // document.cookie = 'unforget_username=; path=/';
-  document.cookie = 'unforget_token=; path=/';
+export function setUserCookies(token: string) {
+  document.cookie = `unforget_token=${token}; path=/`;
 }
 
 export function useInterval(cb: () => void, ms: number) {

@@ -139,11 +139,15 @@ export function NotePage() {
   );
 }
 
-export async function notePageLoader({ params }: RouteMatch): Promise<t.Note | null> {
+export async function notePageLoader({ params }: RouteMatch): Promise<t.Note | undefined> {
   console.log('notePageLoader: ', params.noteId as string);
   // await new Promise(resolve => setTimeout(resolve, 2000));
-  if (storage.syncing) await storage.waitTillSyncEnd(5000);
-  return (await storage.getNote(params.noteId as string)) ?? null;
+  let note = await storage.getNote(params.noteId as string);
+  if (!note && storage.syncing) {
+    await storage.waitTillSyncEnd(5000);
+    note = await storage.getNote(params.noteId as string);
+  }
+  return note;
 }
 
 // async function loadNote(id: string): Promise<t.Note | null> {

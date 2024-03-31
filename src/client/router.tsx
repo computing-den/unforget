@@ -11,8 +11,10 @@ import React, {
 export type Route = {
   path: string;
   element: React.ReactNode | ((params: Params) => React.ReactNode);
-  loader?: (match: RouteMatch) => Promise<any>;
+  loader?: Loader;
 };
+
+export type Loader = (match: RouteMatch) => Promise<any>;
 
 export type RouterCtxType = {
   route?: Route;
