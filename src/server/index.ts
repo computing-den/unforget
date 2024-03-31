@@ -166,9 +166,9 @@ app.post('/api/log', (req, res) => {
 
 app.post('/api/partial-sync', authenticate, (req, res) => {
   console.log('POST /api/partial-sync');
-  if (process.env.NODE_ENV === 'development') {
-    console.log(req.body);
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  console.log(req.body);
+  // }
   const client = res.locals.client!;
   const partialSyncReq: t.PartialSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
@@ -190,14 +190,16 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
 
 app.post('/api/full-sync', authenticate, (req, res) => {
   console.log('POST /api/full-sync');
-  if (process.env.NODE_ENV === 'development') {
-    const fullSyncReq: t.FullSyncReq = req.body;
-    console.log(`showing 2 notes of ${fullSyncReq.notes.length}`);
-    console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(2) });
-  }
   const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
+
+  // if (process.env.NODE_ENV === 'development') {
+  // const fullSyncReq: t.FullSyncReq = req.body;
+  console.log(`showing 2 notes of ${fullSyncReq.notes.length}`);
+  console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(2) });
+  console.log('sync number from db: ', syncNumber);
+  // }
 
   const notes = db.getNotes(client);
   const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
@@ -225,9 +227,9 @@ app.post('/api/add-notes', authenticate, (req, res) => {
 
 app.post('/api/logout', (req, res, next) => {
   console.log('POST /api/logout');
-  if (process.env.NODE_ENV === 'development') {
-    console.log(req.body);
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  console.log(req.body);
+  // }
   const token = res.locals.client?.token ?? (req.body?.token as string | undefined);
   if (!token) return next(new Error('Missing token'));
   db.logout(token);
