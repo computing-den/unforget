@@ -1,6 +1,6 @@
 import type * as t from './types.js';
 
-export const CACHE_VERSION = 75;
+export const CACHE_VERSION = 76;
 
 export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   return (
@@ -118,11 +118,7 @@ export function hexStringToBytes(str: string): Uint8Array {
 }
 
 export class ServerError extends Error {
-  constructor(
-    message: string,
-    public code: number,
-    public type: t.ServerErrorType = 'generic',
-  ) {
+  constructor(message: string, public code: number, public type: t.ServerErrorType = 'generic') {
     super(message);
   }
 

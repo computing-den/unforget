@@ -191,7 +191,9 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
 app.post('/api/full-sync', authenticate, (req, res) => {
   console.log('POST /api/full-sync');
   if (process.env.NODE_ENV === 'development') {
-    console.log(req.body);
+    const fullSyncReq: t.FullSyncReq = req.body;
+    console.log(`showing 2 notes of ${fullSyncReq.notes.length}`);
+    console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(2) });
   }
   const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
