@@ -191,9 +191,7 @@ function useSyncStorageOnMountAndPeriodically() {
   useEffect(() => {
     storage.sync();
   }, []);
-  // if (process.env.NODE_ENV !== 'development') {
   util.useInterval(() => storage.sync(), 5000);
-  // }
 }
 
 function useListenToStorageSync() {

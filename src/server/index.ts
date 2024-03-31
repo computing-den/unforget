@@ -37,14 +37,12 @@ app.use('/', express.static(DIST_PUBLIC));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-  console.log(`express ${req.method} ${req.url} X-Cache-Version: ${req.header('X-Cache-Version') || 'unknown'}`);
-
   const token = req.cookies.unforget_token as string | undefined;
+  let client: t.ServerUserClient | undefined;
   if (token) {
-    const client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
+    client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
       | t.ServerUserClient
       | undefined;
-    res.locals = { client };
     if (client) {
       db.get()
         .prepare(
@@ -53,6 +51,9 @@ app.use((req, res, next) => {
         .run({ ...client, last_activity_date: new Date().toISOString() });
     }
   }
+  res.locals = { client };
+  log(res, `${req.method} ${req.url} X-Cache-Version: ${req.header('X-Cache-Version') || 'unknown'}`);
+
   next();
 });
 
@@ -67,7 +68,9 @@ app.use('/api', (req, res, next) => {
 app.post('/api/login', async (req, res, next) => {
   try {
     let loginData = req.body as t.LoginData;
-    console.log('/api/login', req.body);
+    if (process.env.NODE_ENV === 'development') {
+      log(res, '/api/login', req.body);
+    }
     loginData = { ...loginData, username: loginData.username.toLowerCase() };
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(loginData.username) as
       | t.DBUser
@@ -148,7 +151,6 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
 }
 
 app.get('/api/notes', authenticate, (req, res) => {
-  console.log('GET /api/notes');
   const client = res.locals.client!;
   const notes = db.getNotes(client);
   res.set('Cache-Control', 'no-cache').send(notes);
@@ -156,19 +158,18 @@ app.get('/api/notes', authenticate, (req, res) => {
 
 app.post('/api/got-error', (req, res) => {
   const { message } = req.body as { message: string };
-  console.error(`Client got error.\nClient: ${JSON.stringify(res.locals.client ?? null)}\nError: ${message}`);
+  logError(res, 'client error ' + message);
 });
 
 app.post('/api/log', (req, res) => {
   const { message } = req.body as { message: string };
-  console.error(`Client log.\nClient: ${JSON.stringify(res.locals.client ?? null)}\nLog: ${message}`);
+  log(res, 'client log ' + message);
 });
 
 app.post('/api/partial-sync', authenticate, (req, res) => {
-  console.log('POST /api/partial-sync');
-  // if (process.env.NODE_ENV === 'development') {
-  console.log(req.body);
-  // }
+  if (process.env.NODE_ENV === 'development') {
+    log(res, req.body);
+  }
   const client = res.locals.client!;
   const partialSyncReq: t.PartialSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
@@ -189,17 +190,16 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
 });
 
 app.post('/api/full-sync', authenticate, (req, res) => {
-  console.log('POST /api/full-sync');
   const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
-  // if (process.env.NODE_ENV === 'development') {
-  // const fullSyncReq: t.FullSyncReq = req.body;
-  console.log(`showing 2 notes of ${fullSyncReq.notes.length}`);
-  console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(0, 2) });
-  console.log('sync number from db: ', syncNumber);
-  // }
+  if (process.env.NODE_ENV === 'development') {
+    // const fullSyncReq: t.FullSyncReq = req.body;
+    log(res, `showing 2 notes of ${fullSyncReq.notes.length}`);
+    log(res, { ...fullSyncReq, notes: fullSyncReq.notes.slice(0, 2) });
+    log(res, 'sync number from db: ', syncNumber);
+  }
 
   const notes = db.getNotes(client);
   const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
@@ -210,9 +210,8 @@ app.post('/api/full-sync', authenticate, (req, res) => {
 });
 
 app.post('/api/add-notes', authenticate, (req, res) => {
-  console.log('POST /api/add-notes');
   if (process.env.NODE_ENV === 'development') {
-    console.log(req.body);
+    log(res, req.body);
   }
   const client = res.locals.client!;
   const fullSyncReq: t.FullSyncReq = req.body;
@@ -226,10 +225,10 @@ app.post('/api/add-notes', authenticate, (req, res) => {
 });
 
 app.post('/api/logout', (req, res, next) => {
-  console.log('POST /api/logout');
-  // if (process.env.NODE_ENV === 'development') {
-  console.log(req.body);
-  // }
+  if (process.env.NODE_ENV === 'development') {
+    console.log(req.body);
+  }
+
   const token = res.locals.client?.token ?? (req.body?.token as string | undefined);
   if (!token) return next(new Error('Missing token'));
   db.logout(token);
@@ -256,12 +255,12 @@ app.get(['/', '/n/:noteId', '/login'], (req, res) => {
 });
 
 app.use((req, res, next) => {
-  console.error(`Page not found: ${req.url}`);
+  logError(res, `Page not found: ${req.url}`);
   next(new ServerError(`Page not found: ${req.url}`, 404));
 });
 
 app.use(((error, req, res, next) => {
-  console.error(error);
+  logError(res, error);
   const code = error instanceof ServerError ? error.code : 500;
   const type = error instanceof ServerError ? error.type : 'generic';
   const errorResponse: t.ServerErrorResponse = { message: error.message, type };
@@ -294,4 +293,19 @@ function generateRandomCryptoString(): string {
   return Array.from(crypto.randomBytes(64))
     .map(x => x.toString(16).padStart(2, '0'))
     .join('');
+}
+
+function log(res: express.Response, ...args: any[]) {
+  console.log(`${getClientStr(res)}:`, ...args);
+}
+
+function logError(res: express.Response, ...args: any[]) {
+  console.error(`${getClientStr(res)}:`, ...args);
+}
+
+function getClientStr(res: express.Response): string {
+  if (process.env.NODE_ENV === 'development') return '';
+
+  const client = res.locals?.client;
+  return `${client ? `${client.username} (${client.token.slice(0, 5)})` : 'anonymous'}`;
 }
