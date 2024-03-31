@@ -41,11 +41,16 @@ chown -R www-data:www-data .
 # Stop service if running
 systemctl stop ${DEPLOY_SERVICE} || true
 
-# Copy the old private directory and make a backup of the old deploy.
-if [ -d '${DEPLOY_PATH}' ]; then
+# Copy the old private directory.
+if [ -d '${DEPLOY_PATH}/private' ]; then
   rsync -a '${DEPLOY_PATH}/private/' '${DEPLOY_BUILD_PATH}/private/'
+fi
+
+# Make a backup of the old deploy.
+if [ -d '${DEPLOY_PATH}' ]; then
   mv '${DEPLOY_PATH}' '${DEPLOY_BACKUP_PATH}'
 fi
+
 mv '${DEPLOY_BUILD_PATH}' '${DEPLOY_PATH}'
 
 systemctl start ${DEPLOY_SERVICE}
