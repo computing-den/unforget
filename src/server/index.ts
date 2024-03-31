@@ -197,7 +197,7 @@ app.post('/api/full-sync', authenticate, (req, res) => {
   // if (process.env.NODE_ENV === 'development') {
   // const fullSyncReq: t.FullSyncReq = req.body;
   console.log(`showing 2 notes of ${fullSyncReq.notes.length}`);
-  console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(2) });
+  console.log({ ...fullSyncReq, notes: fullSyncReq.notes.slice(0, 2) });
   console.log('sync number from db: ', syncNumber);
   // }
 
