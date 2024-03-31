@@ -154,14 +154,14 @@ app.get('/api/notes', authenticate, (req, res) => {
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
-app.post('/api/got-error', authenticate, (req, res) => {
+app.post('/api/got-error', (req, res) => {
   const { message } = req.body as { message: string };
-  console.error(`Client got error: ${message}`);
+  console.error(`Client got error.\nClient: ${JSON.stringify(res.locals.client ?? null)}\nError: ${message}`);
 });
 
-app.post('/api/log', authenticate, (req, res) => {
+app.post('/api/log', (req, res) => {
   const { message } = req.body as { message: string };
-  console.error(`Client log: ${message}`);
+  console.error(`Client log.\nClient: ${JSON.stringify(res.locals.client ?? null)}\nLog: ${message}`);
 });
 
 app.post('/api/partial-sync', authenticate, (req, res) => {

@@ -69,6 +69,18 @@ function LoginPage(props: LoginPageProps) {
               Sign up
             </button>
           </div>
+          {app.notes.length > 0 && (
+            <div className="storage-message">
+              <p>
+                There are notes in storage.
+                <br />
+                They will be synced after you log in or sign up.
+              </p>
+              <button className="button-row" onClick={actions.clearStorage}>
+                Clear local storage
+              </button>
+            </div>
+          )}
         </div>
       </PageBody>
     </PageLayout>

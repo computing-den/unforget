@@ -6,18 +6,18 @@ import * as util from './util.jsx';
 import { bytesToHexString } from '../common/util.jsx';
 import _ from 'lodash';
 
-export async function initAppStore(readFromStorage: boolean) {
-  let showArchive = false;
-  let hidePinnedNotes = false;
-  let user: t.ClientLocalUser | undefined;
+export async function initAppStore() {
+  // let showArchive = false;
+  // let hidePinnedNotes = false;
+  // let user: t.ClientLocalUser | undefined;
 
-  if (readFromStorage) {
-    [showArchive, hidePinnedNotes, user] = await Promise.all([
-      storage.getSetting('showArchive').then(Boolean),
-      storage.getSetting('hidePinnedNotes').then(Boolean),
-      storage.getSetting<t.ClientLocalUser>('user'),
-    ]);
-  }
+  // if (readFromStorage) {
+  const [showArchive, hidePinnedNotes, user] = await Promise.all([
+    storage.getSetting('showArchive').then(Boolean),
+    storage.getSetting('hidePinnedNotes').then(Boolean),
+    storage.getSetting<t.ClientLocalUser>('user'),
+  ]);
+  // }
 
   appStore.set({
     showArchive,
@@ -34,6 +34,8 @@ export async function initAppStore(readFromStorage: boolean) {
     user,
     requirePageRefresh: false,
   });
+
+  await updateNotes();
 }
 
 export async function updateNotes() {
@@ -102,7 +104,7 @@ export async function signup(credentials: t.UsernamePassword) {
 
     // We want the client to pick the encryption salt to make sure it really is random and secure.
     if (loginResponse.encryption_salt !== signupData.encryption_salt) {
-      await resetUserInStorageAndCookie();
+      await resetUser();
       throw new Error('Server might be compromised. The encryption parameters were tampered with.');
     }
 
@@ -117,12 +119,21 @@ export async function logout() {
     const { user } = appStore.get();
     if (!user) return;
 
-    await resetUserInStorageAndCookie();
+    await resetUser();
     await storage.clearAll();
-    await initAppStore(false);
+    await initAppStore();
 
     // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
     util.postApi('/api/logout', { token: user.token }).catch(console.error);
+  } catch (error) {
+    gotError(error as Error);
+  }
+}
+
+export async function clearStorage() {
+  try {
+    await storage.clearAll();
+    await initAppStore();
   } catch (error) {
     gotError(error as Error);
   }
@@ -195,19 +206,21 @@ async function makeClientLocalUserFromServer(
 
 /**
  * Mostly, useful during development if we manually delete one but not the other.
- * Just in case make sure that the token and user from storage are in sync.
+ * Just in case make sure that the token and the user in appStore are in sync.
  */
-export async function makeSureConsistentUserAndCookie(): Promise<boolean> {
+export async function makeSureConsistentUserAndCookie() {
   const tokenFromCookie = util.getUserTokenFromCookie();
-  const user = await storage.getSetting<t.ClientLocalUser>('user');
-  const haveUser = Boolean(user && tokenFromCookie && user.token === tokenFromCookie);
-  if (!haveUser) await actions.resetUserInStorageAndCookie();
-  return haveUser;
+  const { user } = appStore.get();
+  const consistent = Boolean(user && tokenFromCookie && user.token === tokenFromCookie);
+  if (!consistent) await actions.resetUser();
 }
 
-export async function resetUserInStorageAndCookie() {
+export async function resetUser() {
   util.setUserCookies('');
   await storage.setSetting(undefined, 'user');
+  appStore.update(app => {
+    app.user = undefined;
+  });
 }
 
 async function loggedIn(credentials: t.UsernamePassword, loginResponse: t.LoginResponse) {

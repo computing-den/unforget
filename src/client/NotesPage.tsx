@@ -285,9 +285,9 @@ async function addNote(text: string, pinned: boolean): Promise<void> {
 export async function notesPageLoader() {
   // await new Promise(resolve => setTimeout(resolve, 3000));
   // First load.
-  if (appStore.get().notes.length === 0) {
-    await actions.updateNotes();
-  }
+  // if (appStore.get().notes.length === 0) {
+  //   await actions.updateNotes();
+  // }
 }
 
 function countLines(text: string): number {

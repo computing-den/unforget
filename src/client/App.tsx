@@ -20,6 +20,7 @@ import LoginPage from './LoginPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 import _ from 'lodash';
+import { ServerError } from '../common/util.js';
 
 export default function App() {
   // const app = appStore.use();
@@ -51,7 +52,7 @@ export default function App() {
           <NotePage key={params.noteId as string} />
         </Auth>
       ),
-      loader: loaderWithAuth(notePageLoader),
+      loader: notePageLoader,
     },
     {
       path: '/',
@@ -60,7 +61,7 @@ export default function App() {
           <NotesPage />
         </Auth>
       ),
-      loader: loaderWithAuth(notesPageLoader),
+      loader: notesPageLoader,
     },
   ];
 
@@ -71,11 +72,11 @@ function Fallback() {
   return 'loading';
 }
 
-function loaderWithAuth(loader: Loader): Loader {
-  return async match => {
-    if (appStore.get().user) return loader(match);
-  };
-}
+// function loaderWithAuth(loader: Loader): Loader {
+//   return async match => {
+//     if (appStore.get().user) return loader(match);
+//   };
+// }
 
 function Auth(props: { children: React.ReactNode }) {
   const router = useRouter();
@@ -198,14 +199,19 @@ function useSyncStorageOnMountAndPeriodically() {
 function useListenToStorageSync() {
   // Listen to storage's sync events and update notes.
   useEffect(() => {
-    function syncListener(args: storage.SyncListenerArgs) {
+    async function syncListener(args: storage.SyncListenerArgs) {
       appStore.update(app => {
         app.syncing = !args.done;
       });
-      // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
-      // Should be ignored.
-      if (args.done && args.error && !(args.error instanceof TypeError)) {
-        actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error', hideAfterTimeout: true });
+      if (args.done && args.error) {
+        if (args.error instanceof TypeError) {
+          // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
+          // Should be ignored.
+        } else if (args.error instanceof ServerError && args.error.code === 403) {
+          await actions.resetUser();
+        } else {
+          actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error', hideAfterTimeout: true });
+        }
       }
 
       if (args.done && args.mergeCount > 0) actions.updateNotes();

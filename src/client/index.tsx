@@ -31,8 +31,8 @@ async function setup() {
     console.error('window: service workers are not supported.');
   }
 
-  const haveUser = await actions.makeSureConsistentUserAndCookie();
-  await actions.initAppStore(haveUser);
+  await actions.initAppStore();
+  await actions.makeSureConsistentUserAndCookie();
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);
