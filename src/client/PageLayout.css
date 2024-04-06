@@ -1,4 +1,4 @@
-.page-header {
+#page-header {
   height: var(--page-header-height);
   position: fixed;
   top: 0;
@@ -8,27 +8,54 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #448199;
-  z-index: 1;
+  background: var(--page-header-background);
+  z-index: var(--page-header-z-index);
 
   .msg-bar {
     position: absolute;
     top: 100%;
-    left: 0;
-    right: 0;
+    /* left: 0; */
+    /* right: 0; */
     /* width: 100%; */
-    text-align: center;
     border-top: 1px solid white;
     color: white;
     font-size: 0.8em;
-    & p {
-      margin: 0;
-      padding: 0.25rem 1rem;
-      &.error {
-        background: #b90000;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: var(--page-max-width);
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+
+    &.has-sticky {
+      &.error .msg-bar-inner-container {
+        background: none;
+        color: #b90000;
       }
-      &.info {
-        background: #609dbb;
+      &.info .msg-bar-inner-container {
+        background: none;
+        color: #609dbb;
+      }
+
+      .msg-bar-inner-container {
+        width: unset;
+      }
+    }
+
+    &.error .msg-bar-inner-container {
+      background: #b90000cc;
+    }
+    &.info .msg-bar-inner-container {
+      background: #609dbbcc;
+    }
+
+    .msg-bar-inner-container {
+      width: 100%;
+
+      & p {
+        text-align: center;
+        margin: 0;
+        padding: 0.25rem 1rem;
       }
     }
   }

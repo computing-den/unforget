@@ -13,7 +13,12 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
 }
 
-export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode; title?: string }) {
+export function PageHeader(props: {
+  menu?: MenuItem[];
+  actions?: React.ReactNode;
+  title?: string;
+  hasSticky?: boolean;
+}) {
   const app = appStore.use();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -44,7 +49,7 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
   // console.log('PageLayout: isLoading: ', isLoading);
 
   return (
-    <div className="page-header">
+    <div id="page-header">
       <div className="content">
         <div className="menu-button-container">
           <div className="menu-button">
@@ -74,8 +79,10 @@ export function PageHeader(props: { menu?: MenuItem[]; actions?: React.ReactNode
         <div className="actions">{props.actions}</div>
       </div>
       {app.message && (
-        <div className="msg-bar">
-          <p className={app.message.type}>{app.message.text.substring(0, 100)}</p>
+        <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
+          <div className="msg-bar-inner-container">
+            <p>{app.message.text.substring(0, 100)}</p>
+          </div>
         </div>
       )}
       {app.requirePageRefresh && (

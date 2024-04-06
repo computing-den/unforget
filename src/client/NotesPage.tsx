@@ -19,6 +19,7 @@ export function NotesPage(props: NotesPageProps) {
   const [newNoteText, setNewNoteText] = useState('');
   const [newNotePinned, setNewNotePinned] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [stickyEditor, setStickyEditor] = useState(false);
   const editorRef = useRef<EditorContext | null>(null);
 
   const addNoteCb = useCallback(() => {
@@ -27,7 +28,7 @@ export function NotesPage(props: NotesPageProps) {
     } else {
       setNewNoteText('');
     }
-    setEditing(false);
+    // setEditing(false);
   }, [newNoteText, newNotePinned]);
 
   const cancelNewNoteCb = useCallback(() => {
@@ -42,6 +43,31 @@ export function NotesPage(props: NotesPageProps) {
   // Update notes on mount.
   useEffect(() => {
     actions.updateNotesIfDirty();
+  }, []);
+
+  // Set editor to sticky on scroll
+  useEffect(() => {
+    function scrolled() {
+      setStickyEditor(window.scrollY > 64);
+      // const textarea = document.getElementById('new-note-editor')!;
+      // const textareaRect = textarea.getBoundingClientRect();
+      // const pageHeader = document.getElementById('page-header')!;
+      // const pageHeaderRect = pageHeader.getBoundingClientRect();
+      // if (textareaRect.bottom < pageHeaderRect.height) {
+      //   if (!stickyEditor) {
+      //     console.log('setting sticky editor to true', textareaRect.bottom, pageHeaderRect.height);
+      //     setStickyEditor(true);
+      //   }
+      // } else {
+      //   if (stickyEditor) {
+      //     console.log('setting sticky editor to false', textareaRect.bottom, pageHeaderRect.height);
+      //     setStickyEditor(false);
+      //   }
+      // }
+    }
+
+    window.addEventListener('scroll', scrolled);
+    return () => window.removeEventListener('scroll', scrolled);
   }, []);
 
   const editorFocusCb = useCallback(() => {
@@ -90,6 +116,11 @@ export function NotesPage(props: NotesPageProps) {
     editorRef.current!.cycleListStyle();
   }, []);
 
+  const editNoteCb = useCallback(() => {
+    setEditing(true);
+    editorRef.current!.focus();
+  }, []);
+
   // const insertMenu = createInsertMenu(() => editorRef.current!);
 
   const pageActions: React.ReactNode[] = [];
@@ -111,6 +142,7 @@ export function NotesPage(props: NotesPageProps) {
         onClick={toggleHidePinnedNotes}
       />,
       <PageAction icon="/icons/search-white.svg" onClick={toggleSearchCb} />,
+      <PageAction icon="/icons/add-white.svg" onClick={editNoteCb} />,
     );
   } else {
     pageActions.push(
@@ -146,10 +178,15 @@ export function NotesPage(props: NotesPageProps) {
         actions={pageActions}
         menu={menu}
         title={app.showArchive && app.search === undefined ? '/ archive' : undefined}
+        hasSticky={stickyEditor}
       />
       <PageBody>
         <div className="notes-page">
-          <div className="new-note-container">
+          <div
+            className={`new-note-container ${stickyEditor ? 'sticky' : ''} ${
+              stickyEditor && !editing ? 'invisible' : ''
+            }`}
+          >
             <Editor
               ref={editorRef}
               id="new-note-editor"

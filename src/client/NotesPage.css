@@ -10,8 +10,39 @@
     display: flex;
     flex-direction: column;
 
+    &.sticky {
+      position: sticky;
+      top: var(--page-header-height);
+      z-index: var(--sticky-z-index);
+      /* padding-top: 2rem; */
+      /* background: var(--app-background); */
+      overflow: visible;
+      .editor {
+        /* more padding to clear the top where messages are shown. */
+        /* min-height: 100px; */
+        box-shadow: 5px 5px 14px 7px #00000022;
+        padding-top: 1.2rem;
+        padding-bottom: 1.2rem;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+      }
+
+      /* IOS Safari doesn't show the shadow if it's on .editor */
+      @media (max-width: 800px) {
+        box-shadow: 5px 5px 14px 7px #00000022;
+        .editor {
+          box-shadow: none;
+        }
+      }
+    }
+
+    &.invisible {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     .editor {
-      height: 30px;
+      /* height: 30px; */
       /* transition: height 0.2s ease-in-out; */
 
       /* &.tall { */

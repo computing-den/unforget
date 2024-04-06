@@ -4,9 +4,14 @@
 /* #E8FEE1 */
 
 :root {
+  --app-background: #ddf7ff;
   --page-header-height: 2rem;
+  --page-header-background: #448199;
+  --page-header-z-index: 200;
   --page-content-margin-top: calc(var(--page-header-height) + 2rem);
   --page-max-width: 800px;
+  --menu-z-index: 100;
+  --sticky-z-index: 50;
 }
 
 html,
@@ -17,7 +22,7 @@ body {
 }
 
 body {
-  background: #ddf7ff;
+  background: var(--app-background);
   display: flex;
   flex-direction: column;
 }

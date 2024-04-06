@@ -3,7 +3,7 @@
   top: 28px;
   background: #ffffff;
   /* backdrop-filter: blur(5px); */
-  z-index: 100;
+  z-index: var(--menu-z-index);
   color: #424242;
   border-radius: 5px;
   width: 200px;

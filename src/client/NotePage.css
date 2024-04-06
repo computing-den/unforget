@@ -18,29 +18,4 @@
       padding: 1rem;
     }
   }
-
-  .save-button {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-    width: 50px;
-    height: 50px;
-    z-index: 1;
-
-    background: #fee9e1;
-    border: 1px solid #dbc7bf;
-    padding: 0.5rem;
-    border-radius: 5px;
-    transition: 0.2s background ease-in-out;
-
-    &:hover {
-      background: #fdddd2;
-    }
-
-    /* margin-top: 0.5rem; */
-    /* max-width: 150px; */
-    /* width: 100%; */
-    /* margin-left: auto; */
-    /* margin-right: auto; */
-  }
 }

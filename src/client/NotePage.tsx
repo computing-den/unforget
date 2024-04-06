@@ -130,6 +130,7 @@ export function NotePage() {
                 placeholder="What's on you mind?"
                 value={note.text ?? ''}
                 onChange={textChangeCb}
+                // autoFocus
               />
             </div>
           )}

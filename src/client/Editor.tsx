@@ -12,7 +12,7 @@ type EditorProps = {
   id?: string;
   className?: string;
   placeholder?: string;
-  autoFocus?: boolean;
+  // autoFocus?: boolean;
   readOnly?: boolean;
   onFocus?: React.FocusEventHandler<HTMLTextAreaElement>;
   onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
@@ -23,6 +23,7 @@ export type EditorContext = {
   // toggleCheckboxStyle: () => any;
   // toggleBulletpointStyle: () => any;
   cycleListStyle: () => any;
+  focus: () => any;
 };
 
 type Selection = { start: number; end: number; direction: 'forward' | 'backward' | 'none' };
@@ -105,7 +106,11 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     }
   }
 
-  useImperativeHandle<EditorContext, EditorContext>(ref, () => ({ cycleListStyle }), [cycleListStyle]);
+  function focus() {
+    textareaRef.current!.focus();
+  }
+
+  useImperativeHandle<EditorContext, EditorContext>(ref, () => ({ cycleListStyle, focus }), [cycleListStyle, focus]);
 
   function changeCb() {
     props.onChange(textareaRef.current!.value);
@@ -191,7 +196,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
       onKeyDown={keyDownCb}
       value={props.value}
       placeholder={props.placeholder}
-      autoFocus={props.autoFocus}
+      // autoFocus={props.autoFocus}
       readOnly={props.readOnly}
       onSelect={selectCb}
     />
