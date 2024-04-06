@@ -11,6 +11,7 @@ import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
+import * as icons from './icons.js';
 // import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'react-router-dom';
 
 export function NotePage() {
@@ -102,14 +103,14 @@ export function NotePage() {
   }, []);
 
   const pageActions = note && [
-    <PageAction icon="/icons/bulletpoint-white.svg" onClick={cycleListStyleCb} />,
-    <PageAction icon="/icons/trash-white.svg" onClick={deleteCb} />,
+    <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} />,
+    <PageAction icon={icons.trashWhite} onClick={deleteCb} />,
     <PageAction
-      icon={note.not_archived ? '/icons/archive-empty-white.svg' : '/icons/archive-filled-white.svg'}
+      icon={note.not_archived ? icons.archiveEmptyWhite : icons.archiveFilledWhite}
       onClick={toggleArchiveCb}
     />,
-    <PageAction icon={note.pinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'} onClick={pinCb} />,
-    <PageAction icon="/icons/check-white.svg" onClick={goHome} />,
+    <PageAction icon={note.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={pinCb} />,
+    <PageAction icon={icons.checkWhite} onClick={goHome} />,
   ];
 
   // const menu: MenuItem[] = [{ label: 'Delete note', icon: '/icons/trash-white.svg', onClick: deleteCb }];

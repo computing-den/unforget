@@ -11,6 +11,7 @@ import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
+import * as icons from './icons.js';
 
 type NotesPageProps = {};
 
@@ -126,23 +127,20 @@ export function NotesPage(props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon="/icons/bulletpoint-white.svg" onClick={cycleListStyleCb} />,
+      <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} />,
 
-      <PageAction
-        icon={newNotePinned ? '/icons/pin-filled-white.svg' : '/icons/pin-empty-white.svg'}
-        onClick={togglePinned}
-      />,
-      <PageAction icon="/icons/x-white.svg" onClick={cancelNewNoteCb} />,
-      <PageAction icon="/icons/check-white.svg" onClick={addNoteCb} />,
+      <PageAction icon={newNotePinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={togglePinned} />,
+      <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} />,
+      <PageAction icon={icons.checkWhite} onClick={addNoteCb} />,
     );
   } else if (app.search === undefined) {
     pageActions.push(
       <PageAction
-        icon={app.hidePinnedNotes ? '/icons/hide-pinned-white.svg' : '/icons/show-pinned-white.svg'}
+        icon={app.hidePinnedNotes ? icons.hidePinnedWhite : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
       />,
-      <PageAction icon="/icons/search-white.svg" onClick={toggleSearchCb} />,
-      <PageAction icon="/icons/add-white.svg" onClick={editNoteCb} />,
+      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} />,
+      <PageAction icon={icons.addWhite} onClick={editNoteCb} />,
     );
   } else {
     pageActions.push(
@@ -153,7 +151,7 @@ export function NotesPage(props: NotesPageProps) {
         onChange={searchChangeCb}
         autoFocus
       />,
-      <PageAction className="close-search" icon="/icons/x-white.svg" onClick={toggleSearchCb} />,
+      <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} />,
     );
   }
 
@@ -168,8 +166,8 @@ export function NotesPage(props: NotesPageProps) {
 
   const menu: MenuItem[] = [
     app.showArchive
-      ? { label: 'Notes', icon: '/icons/notes.svg', onClick: toggleShowArchive }
-      : { label: 'Archive', icon: '/icons/archive-empty.svg', onClick: toggleShowArchive },
+      ? { label: 'Notes', icon: icons.notes, onClick: toggleShowArchive }
+      : { label: 'Archive', icon: icons.archiveEmpty, onClick: toggleShowArchive },
   ];
 
   return (
@@ -178,7 +176,7 @@ export function NotesPage(props: NotesPageProps) {
         actions={pageActions}
         menu={menu}
         title={app.showArchive && app.search === undefined ? '/ archive' : undefined}
-        hasSticky={stickyEditor}
+        hasSticky={stickyEditor && editing}
       />
       <PageBody>
         <div className="notes-page">
@@ -295,7 +293,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
 
   return (
     <pre className="note" onMouseDown={onMouseDown} onClick={onClick}>
-      {Boolean(props.note.pinned) && <img className="pin" src="/icons/pin-filled.svg" />}
+      {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
       {lines.map(renderLine)}
     </pre>
   );

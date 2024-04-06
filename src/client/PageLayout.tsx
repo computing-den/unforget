@@ -8,6 +8,7 @@ import * as util from './util.js';
 import * as cutil from '../common/util.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
+import * as icons from './icons.js';
 
 export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
@@ -38,11 +39,11 @@ export function PageHeader(props: {
   }, []);
 
   const menu: MenuItem[] = _.compact([
-    app.user && { label: app.user.username, icon: '/icons/user.svg', isHeader: true },
+    app.user && { label: app.user.username, icon: icons.user, isHeader: true },
     ...(props.menu || []),
-    app.user && { label: 'Full sync', icon: '/icons/refresh-ccw.svg', onClick: fullSync },
-    app.user && { label: 'Log out', icon: '/icons/log-out.svg', onClick: actions.logout },
-    { label: 'About', icon: '/icons/info.svg', onClick: about },
+    app.user && { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
+    app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
+    { label: 'About', icon: icons.info, onClick: about },
   ]);
 
   // const { isLoading } = useRouterLoading();
@@ -54,7 +55,7 @@ export function PageHeader(props: {
         <div className="menu-button-container">
           <div className="menu-button">
             <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
-              <img src="/icons/menu-white.svg" />
+              <img src={icons.menuWhite} />
             </a>
             {menuOpen && <Menu menu={menu} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
           </div>
@@ -117,7 +118,7 @@ export function PageAction(props: {
 
   // We need action-container because <a> cannot be nested inside another <a> which we need for the menu.
   return (
-    <div className="action">
+    <div className="action" key={`${props.label || '_'} ${props.icon || '_'}`}>
       <a
         href="#"
         onClick={clicked}

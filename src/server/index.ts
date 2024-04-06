@@ -8,9 +8,12 @@ import * as db from './db.js';
 import { ServerError, bytesToHexString, CACHE_VERSION } from '../common/util.js';
 import cookieParser from 'cookie-parser';
 import _ from 'lodash';
+import fs from 'node:fs';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const DIST_PUBLIC = path.join(process.cwd(), 'dist/public');
+
+// const icons = _.filter(fs.readdirSync(path.join(PUBLIC, 'icons')), name => name.endsWith('.svg'));
 
 declare global {
   namespace Express {
@@ -236,6 +239,8 @@ app.post('/api/logout', (req, res, next) => {
 });
 
 app.get(['/', '/n/:noteId', '/login'], (req, res) => {
+  // const preload = _.map(icons, icon => `<link rel="preload" href="/icons/${icon}" as="image">`).join('\n');
+  // const preload = '';
   res.send(`<!DOCTYPE html>
 <html lang="en">
   <head>
