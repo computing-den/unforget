@@ -147,3 +147,7 @@ export type ServerErrorResponse = {
 };
 
 export type ServerErrorType = 'app_requires_update' | 'generic';
+
+export type HistoryState = {
+  // fromNotesPage?: boolean;
+};

@@ -216,7 +216,8 @@ const Note = memo(function Note(props: { note: t.Note }) {
   const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
 
   function clickCb(e: React.MouseEvent) {
-    history.pushState({ fromNotesPage: true }, '', `/n/${props.note.id}`);
+    // const historyState: t.HistoryState = { fromNotesPage: true };
+    history.pushState(null, '', `/n/${props.note.id}`);
   }
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);

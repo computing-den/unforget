@@ -31,11 +31,11 @@ export function NotePage() {
   util.useScrollToTop();
 
   const goHome = useCallback(() => {
-    if (history.state?.fromNotesPage) {
-      history.back();
-    } else {
-      history.pushState(null, '', '/');
-    }
+    // if (history.state?.fromNotesPage) {
+    //   history.back();
+    // } else {
+    history.pushState(null, '', '/');
+    // }
   }, []);
 
   const textChangeCb = useCallback(
