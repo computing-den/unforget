@@ -61,6 +61,19 @@ export async function updateNotes() {
   }
 }
 
+export function reduceNotePages(lastItemIndex: number) {
+  console.log(`trying to reduce note pages lastItemIndex: ${lastItemIndex}`);
+  const { notePages, notePageSize } = appStore.get();
+  const newNotePages = Math.floor((lastItemIndex + 1 + (notePageSize - 1)) / notePageSize);
+  if (newNotePages < notePages) {
+    console.log(`reducing note pages from ${notePages} to ${newNotePages}`);
+    appStore.update(app => {
+      app.notes = app.notes.slice(0, newNotePages * notePageSize);
+      app.notePages = newNotePages;
+    });
+  }
+}
+
 export async function updateNotesIfDirty() {
   const { notesUpdateTimestamp, notesUpdateRequestTimestamp } = appStore.get();
   if (notesUpdateTimestamp < notesUpdateRequestTimestamp) {

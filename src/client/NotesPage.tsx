@@ -45,6 +45,8 @@ export function NotesPage(props: NotesPageProps) {
   useEffect(() => {
     function scrolled() {
       setStickyEditor(window.scrollY > 64);
+      reduceNotePagesDebounced();
+
       // const textarea = document.getElementById('new-note-editor')!;
       // const textareaRect = textarea.getBoundingClientRect();
       // const pageHeader = document.getElementById('page-header')!;
@@ -315,3 +317,16 @@ function countLines(text: string): number {
   for (let i = 0; i < text.length; i++) if (text[i] === '\n') count++;
   return count;
 }
+
+function reduceNotePagesImmediately() {
+  const notes = document.querySelectorAll('.note');
+  for (const [i, note] of notes.entries()) {
+    const rect = note.getBoundingClientRect();
+    if (rect.top > window.innerHeight * 2 + window.scrollY) {
+      actions.reduceNotePages(i);
+      break;
+    }
+  }
+}
+
+const reduceNotePagesDebounced = _.debounce(reduceNotePagesImmediately, 1000);
