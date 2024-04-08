@@ -1,4 +1,4 @@
-import { Link, useRouterLoading } from './router.jsx';
+import { Link, useRouter } from './router.jsx';
 // import { Link } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import * as actions from './appStoreActions.jsx';
@@ -38,9 +38,25 @@ export function PageHeader(props: {
     window.location.reload();
   }, []);
 
+  const router = useRouter();
+
+  const goToNotes = useCallback(() => {
+    if (router.pathname !== '/') {
+      history.pushState(null, '', '/');
+    }
+  }, [router]);
+
+  const goToArchive = useCallback(() => {
+    if (router.pathname !== '/archive') {
+      history.pushState(null, '', '/archive');
+    }
+  }, [router]);
+
   const menu: MenuItem[] = _.compact([
     app.user && { label: app.user.username, icon: icons.user, isHeader: true },
     ...(props.menu || []),
+    { label: 'Notes', icon: icons.notes, onClick: goToNotes },
+    { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
     app.user && { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
     app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
     { label: 'About', icon: icons.info, onClick: about },

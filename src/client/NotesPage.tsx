@@ -1,4 +1,4 @@
-import { useRouter } from './router.jsx';
+import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
@@ -39,11 +39,6 @@ export function NotesPage(props: NotesPageProps) {
 
   const newNoteTextChanged = useCallback((text: string) => {
     setNewNoteText(text);
-  }, []);
-
-  // Update notes on mount.
-  useEffect(() => {
-    actions.updateNotesIfDirty();
   }, []);
 
   // Set editor to sticky on scroll
@@ -155,26 +150,10 @@ export function NotesPage(props: NotesPageProps) {
     );
   }
 
-  const toggleShowArchive = useCallback(() => {
-    const value = !app.showArchive;
-    storage.setSetting(value, 'showArchive');
-    appStore.update(app => {
-      app.showArchive = !app.showArchive;
-    });
-    actions.updateNotes();
-  }, [app.showArchive]);
-
-  const menu: MenuItem[] = [
-    app.showArchive
-      ? { label: 'Notes', icon: icons.notes, onClick: toggleShowArchive }
-      : { label: 'Archive', icon: icons.archiveEmpty, onClick: toggleShowArchive },
-  ];
-
   return (
     <PageLayout>
       <PageHeader
         actions={pageActions}
-        menu={menu}
         title={app.showArchive && app.search === undefined ? '/ archive' : undefined}
         hasSticky={stickyEditor && editing}
       />
@@ -317,12 +296,16 @@ async function addNote(text: string, pinned: boolean): Promise<void> {
   await actions.updateNotes();
 }
 
-export async function notesPageLoader() {
-  // await new Promise(resolve => setTimeout(resolve, 3000));
-  // First load.
-  // if (appStore.get().notes.length === 0) {
-  //   await actions.updateNotes();
-  // }
+export async function notesPageLoader(match: RouteMatch) {
+  // When transitioning to / or /archive, we only want to update the notes if necessary.
+  appStore.update(app => {
+    const showArchive = match.pathname === '/archive';
+    if (showArchive !== app.showArchive) {
+      app.showArchive = showArchive;
+      app.notesUpdateRequestTimestamp = Date.now();
+    }
+  });
+  actions.updateNotesIfDirty(); // Intentionally do not await.
 }
 
 function countLines(text: string): number {

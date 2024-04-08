@@ -3,7 +3,7 @@ import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.js';
 import * as util from './util.jsx';
-import { bytesToHexString } from '../common/util.jsx';
+import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
 import _ from 'lodash';
 
 export async function initAppStore() {
@@ -23,8 +23,8 @@ export async function initAppStore() {
     showArchive,
     hidePinnedNotes,
     notes: [],
-    notesLastModificationTimestamp: 0,
-    notesLastUpdateTimestamp: -1,
+    notesUpdateRequestTimestamp: 0,
+    notesUpdateTimestamp: -1,
     notePages: 1,
     notePageSize: 50,
     allNotePagesLoaded: false,
@@ -43,6 +43,7 @@ export async function updateNotes() {
     const start = Date.now();
     console.log('updateNotes started');
     const { notePages, notePageSize, hidePinnedNotes, search, showArchive } = appStore.get();
+    const notesUpdateTimestamp = Date.now();
     const { done, notes } = await storage.getNotes({
       limit: notePageSize * notePages,
       hidePinnedNotes,
@@ -52,7 +53,7 @@ export async function updateNotes() {
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;
-      app.notesLastUpdateTimestamp = Date.now();
+      app.notesUpdateTimestamp = notesUpdateTimestamp;
     });
     console.log(`updateNotes done in ${Date.now() - start}ms`);
   } catch (error) {
@@ -61,8 +62,8 @@ export async function updateNotes() {
 }
 
 export async function updateNotesIfDirty() {
-  const { notesLastUpdateTimestamp, notesLastModificationTimestamp } = appStore.get();
-  if (notesLastUpdateTimestamp < notesLastModificationTimestamp) {
+  const { notesUpdateTimestamp, notesUpdateRequestTimestamp } = appStore.get();
+  if (notesUpdateTimestamp < notesUpdateRequestTimestamp) {
     await updateNotes();
   }
 }
@@ -168,7 +169,7 @@ export async function saveNote(note: t.Note, opts?: { message?: string; immediat
       showMessage(opts.message, { type: 'info', hideAfterTimeout: true });
     }
     appStore.update(app => {
-      app.notesLastModificationTimestamp = Date.now();
+      app.notesUpdateRequestTimestamp = Date.now();
     });
     if (opts?.immediateSync) {
       storage.sync();
@@ -243,6 +244,18 @@ export async function checkAppUpdate() {
       await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
     }
   } catch (error) {
-    console.error(error);
+    gotError(error as Error);
+  }
+}
+
+export async function notifyAppUpdate() {
+  try {
+    const lastNotifiedCacheVersion = await storage.getSetting<number>('lastNotifiedCacheVersion');
+    if (lastNotifiedCacheVersion !== CACHE_VERSION) {
+      if (lastNotifiedCacheVersion) showMessage('app updated', { hideAfterTimeout: true });
+      await storage.setSetting(CACHE_VERSION, 'lastNotifiedCacheVersion');
+    }
+  } catch (error) {
+    gotError(error as Error);
   }
 }

@@ -40,6 +40,8 @@ export default function App() {
 
   useUpdateQueueCountPeriodically();
 
+  useNotifyAppUpdate();
+
   const routes: Route[] = [
     {
       path: '/login',
@@ -53,6 +55,15 @@ export default function App() {
         </Auth>
       ),
       loader: notePageLoader,
+    },
+    {
+      path: '/archive',
+      element: (
+        <Auth>
+          <NotesPage />
+        </Auth>
+      ),
+      loader: notesPageLoader,
     },
     {
       path: '/',
@@ -259,4 +270,10 @@ function useCheckAppUpdateOnMount() {
 
 function useUpdateQueueCountPeriodically() {
   util.useInterval(() => actions.updateQueueCount(), 3000);
+}
+
+function useNotifyAppUpdate() {
+  useEffect(() => {
+    actions.notifyAppUpdate();
+  }, []);
 }

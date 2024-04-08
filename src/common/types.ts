@@ -111,8 +111,8 @@ export type AppStore = {
   showArchive: boolean;
   notes: Note[];
   search?: string;
-  notesLastModificationTimestamp: number;
-  notesLastUpdateTimestamp: number;
+  notesUpdateRequestTimestamp: number;
+  notesUpdateTimestamp: number;
   notePages: number;
   notePageSize: number;
   allNotePagesLoaded: boolean;

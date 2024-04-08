@@ -102,7 +102,6 @@ self.addEventListener('message', async event => {
     const message = event.data;
     console.log('service worker: received message: ', message);
 
-    // Example of how to respond based on the message type
     if (message.command === 'update') {
       await self.registration.update();
     }

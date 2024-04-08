@@ -31,7 +31,7 @@ export type RouterLoadingCtxType = {
 export type Params = Record<string, string>;
 // export type FallbackArgs = {isLoading: boolean};
 
-export type RouteMatch = { route: Route; params: Params };
+export type RouteMatch = { route: Route; params: Params; pathname: string };
 
 type WrappedPromise<T> = { read: () => T; status: 'pending' | 'success' | 'error' };
 
@@ -112,7 +112,7 @@ function matchRoute(pathname: string, routes: Route[]): RouteMatch | undefined {
   for (const route of routes) {
     const expectedParts = route.path.split('/');
     const params = matchParts(actualParts, expectedParts);
-    if (params) return { route, params };
+    if (params) return { route, params, pathname };
   }
 }
 
