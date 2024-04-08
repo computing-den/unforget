@@ -238,7 +238,7 @@ app.post('/api/logout', (req, res, next) => {
   res.send({ ok: true });
 });
 
-app.get(['/', '/n/:noteId', '/login'], (req, res) => {
+app.get(['/', '/archive', '/n/:noteId', '/login'], (req, res) => {
   // const preload = _.map(icons, icon => `<link rel="preload" href="/icons/${icon}" as="image">`).join('\n');
   // const preload = '';
   res.send(`<!DOCTYPE html>

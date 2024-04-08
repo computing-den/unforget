@@ -19,6 +19,7 @@ export function PageHeader(props: {
   actions?: React.ReactNode;
   title?: string;
   hasSticky?: boolean;
+  hasSearch?: boolean;
 }) {
   const app = appStore.use();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,7 +67,7 @@ export function PageHeader(props: {
   // console.log('PageLayout: isLoading: ', isLoading);
 
   return (
-    <div id="page-header">
+    <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''}`}>
       <div className="content">
         <div className="menu-button-container">
           <div className="menu-button">
@@ -89,7 +90,7 @@ export function PageHeader(props: {
               Unforget
             </Link>
           </h1>
-          {props.title && <h2 className="page-title">{props.title}</h2>}
+          {props.title && <h2>{props.title}</h2>}
           {app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
           {/*app.online && <div className="online-indicator" />*/}
         </div>
@@ -134,12 +135,8 @@ export function PageAction(props: {
 
   // We need action-container because <a> cannot be nested inside another <a> which we need for the menu.
   return (
-    <div className="action" key={`${props.label || '_'} ${props.icon || '_'}`}>
-      <a
-        href="#"
-        onClick={clicked}
-        className={`page-action-menu-trigger reset ${props.bold ? 'bold' : ''} ${props.className || ''}`}
-      >
+    <div className={`action ${props.className || ''}`} key={`${props.label || '_'} ${props.icon || '_'}`}>
+      <a href="#" onClick={clicked} className={`page-action-menu-trigger reset ${props.bold ? 'bold' : ''}`}>
         {props.label}
         {props.icon && <img src={props.icon} />}
       </a>

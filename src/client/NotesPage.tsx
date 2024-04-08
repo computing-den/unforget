@@ -154,8 +154,9 @@ export function NotesPage(props: NotesPageProps) {
     <PageLayout>
       <PageHeader
         actions={pageActions}
-        title={app.showArchive && app.search === undefined ? '/ archive' : undefined}
+        title={app.showArchive ? '/ archive' : undefined}
         hasSticky={stickyEditor && editing}
+        hasSearch={app.search !== undefined}
       />
       <PageBody>
         <div className="notes-page">

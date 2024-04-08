@@ -11,6 +11,12 @@
   background: var(--page-header-background);
   z-index: var(--page-header-z-index);
 
+  &.has-search .content .title h2 {
+    @media (max-width: 440px) {
+      display: none;
+    }
+  }
+
   .msg-bar {
     position: absolute;
     top: 100%;
@@ -103,6 +109,8 @@
       margin-left: 0.5rem;
       display: flex;
       align-items: center;
+      margin-right: 1rem;
+      white-space: nowrap;
 
       /* .logo { */
       /*   position: absolute; */
@@ -173,6 +181,9 @@
       }
 
       & input.search {
+        /* flex: 1; */
+        width: 100%;
+        max-width: 350px;
         /* width: 500px; */
         /* margin: 0 auto; */
         border: 1px solid #aadfef;
