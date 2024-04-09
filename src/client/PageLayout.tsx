@@ -31,7 +31,7 @@ export function PageHeader(props: {
   }, []);
 
   const about = useCallback(() => {
-    alert(`Unforget: made by Computing Den.\n\n<cache version ${cutil.CACHE_VERSION}>`);
+    alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`);
   }, []);
 
   const refreshPage = useCallback(() => {
