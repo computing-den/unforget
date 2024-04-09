@@ -28,7 +28,7 @@ export function PageHeader(props: {
 
   const fullSync = useCallback(() => {
     storage.fullSync();
-    actions.showMessage('syncing ...', { hideAfterTimeout: true });
+    actions.showMessage('syncing ...');
   }, []);
 
   const about = useCallback(() => {

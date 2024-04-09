@@ -87,6 +87,7 @@ export function NotesPage(props: NotesPageProps) {
       app.hidePinnedNotes = value;
     });
     actions.updateNotes();
+    actions.showMessage(value ? 'Showing pinned notes' : 'Hiding pinned notes');
   }, [app.hidePinnedNotes]);
 
   const loadMore = useCallback(() => {
@@ -132,11 +133,11 @@ export function NotesPage(props: NotesPageProps) {
     );
   } else if (app.search === undefined) {
     pageActions.push(
+      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} />,
       <PageAction
         icon={app.hidePinnedNotes ? icons.hidePinnedWhite : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
       />,
-      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} />,
       <PageAction icon={icons.addWhite} onClick={editNoteCb} />,
     );
   } else {

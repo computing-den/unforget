@@ -219,7 +219,7 @@ function useListenToStorageSync() {
         } else if (args.error instanceof ServerError && args.error.code === 403) {
           await actions.resetUser();
         } else {
-          actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error', hideAfterTimeout: true });
+          actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error' });
         }
       }
 

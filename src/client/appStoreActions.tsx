@@ -155,31 +155,29 @@ export async function clearStorage() {
 
 export function gotError(error: Error) {
   console.error(error);
-  showMessage(error.message, { type: 'error', hideAfterTimeout: true });
+  showMessage(error.message, { type: 'error' });
   if (error.message) util.postApi('/api/got-error', { message: error.message });
 }
 
-export function showMessage(text: string, opts?: { type?: 'info' | 'error'; hideAfterTimeout?: boolean }) {
+export function showMessage(text: string, opts?: { type?: 'info' | 'error' }) {
   const timestamp = Date.now();
   appStore.update(app => {
     app.message = { text, type: opts?.type || 'info', timestamp };
   });
-  if (opts?.hideAfterTimeout) {
-    setTimeout(() => {
-      if (appStore.get().message?.timestamp === timestamp) {
-        appStore.update(app => {
-          app.message = undefined;
-        });
-      }
-    }, 5000);
-  }
+  setTimeout(() => {
+    if (appStore.get().message?.timestamp === timestamp) {
+      appStore.update(app => {
+        app.message = undefined;
+      });
+    }
+  }, 5000);
 }
 
 export async function saveNote(note: t.Note, opts?: { message?: string; immediateSync?: boolean }) {
   try {
     await storage.saveNote(note);
     if (opts?.message) {
-      showMessage(opts.message, { type: 'info', hideAfterTimeout: true });
+      showMessage(opts.message, { type: 'info' });
     }
     appStore.update(app => {
       app.notesUpdateRequestTimestamp = Date.now();
@@ -265,7 +263,7 @@ export async function notifyAppUpdate() {
   try {
     const lastNotifiedCacheVersion = await storage.getSetting<number>('lastNotifiedCacheVersion');
     if (lastNotifiedCacheVersion !== CACHE_VERSION) {
-      if (lastNotifiedCacheVersion) showMessage('app updated', { hideAfterTimeout: true });
+      if (lastNotifiedCacheVersion) showMessage('app updated');
       await storage.setSetting(CACHE_VERSION, 'lastNotifiedCacheVersion');
     }
   } catch (error) {
