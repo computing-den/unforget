@@ -56,10 +56,10 @@
     }
 
     &.error .msg-bar-inner-container {
-      background: #b90000cc;
+      background: #b90000ee;
     }
     &.info .msg-bar-inner-container {
-      background: #609dbbcc;
+      background: #609dbbee;
     }
 
     .msg-bar-inner-container {
