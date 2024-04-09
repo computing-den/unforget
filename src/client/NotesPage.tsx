@@ -16,29 +16,52 @@ type NotesPageProps = {};
 
 export function NotesPage(props: NotesPageProps) {
   const app = appStore.use();
-  const [newNoteText, setNewNoteText] = useState('');
-  const [newNotePinned, setNewNotePinned] = useState(false);
+  const [newNote, setNewNote] = useState<t.Note>();
+  // const [newNoteText, setNewNoteText] = useState('');
+  // const [newNotePinned, setNewNotePinned] = useState(false);
   const [editing, setEditing] = useState(false);
   const [stickyEditor, setStickyEditor] = useState(false);
   const editorRef = useRef<EditorContext | null>(null);
 
-  const addNoteCb = useCallback(() => {
-    if (newNoteText) {
-      addNote(newNoteText, newNotePinned).then(() => setNewNoteText(''));
+  function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
+    let savedNote = {
+      ...(newNote ?? createNewNote()),
+      ...changes,
+      modification_date: new Date().toISOString(),
+    };
+    setNewNote(savedNote);
+    actions.saveNote(savedNote);
+  }
+
+  function confirmNewNoteCb() {
+    if (newNote?.text?.trim()) {
+      actions.showMessage('Note added', { type: 'info' });
+      editorRef.current!.focus();
     } else {
-      setNewNoteText('');
+      setEditing(false);
     }
-    // setEditing(false);
-  }, [newNoteText, newNotePinned]);
+    setNewNote(undefined);
+    actions.updateNotesIfDirty();
+  }
 
-  const cancelNewNoteCb = useCallback(() => {
-    setNewNoteText('');
+  async function cancelNewNoteCb() {
+    if (newNote) {
+      // It's possible that before we confirmed or cancelled the new note,
+      // it was changed from another session. In that case, we don't want
+      // to delete the note.
+      const noteInStorage = await storage.getNote(newNote.id);
+      if (!noteInStorage || !cutil.isNoteNewerThan(noteInStorage, newNote)) {
+        saveNewNote({ text: null, not_deleted: 0 });
+      }
+    }
+    setNewNote(undefined);
     setEditing(false);
-  }, []);
+    actions.updateNotesIfDirty();
+  }
 
-  const newNoteTextChanged = useCallback((text: string) => {
-    setNewNoteText(text);
-  }, []);
+  function newNoteTextChanged(text: string) {
+    saveNewNote({ text });
+  }
 
   // Set editor to sticky on scroll
   useEffect(() => {
@@ -51,19 +74,20 @@ export function NotesPage(props: NotesPageProps) {
     return () => window.removeEventListener('scroll', scrolled);
   }, []);
 
-  const editorFocusCb = useCallback(() => {
+  function editorFocusCb() {
     setEditing(true);
-  }, []);
+  }
 
-  const editorBlurCb = useCallback(() => {
+  function editorBlurCb() {
     // setEditing(false);
-  }, []);
+  }
 
-  const togglePinned = useCallback(() => {
-    setNewNotePinned(!newNotePinned);
-  }, [newNotePinned]);
+  function togglePinned() {
+    editorRef.current!.focus();
+    saveNewNote({ pinned: newNote?.pinned ? 0 : 1 });
+  }
 
-  const toggleHidePinnedNotes = useCallback(async () => {
+  function toggleHidePinnedNotes() {
     const value = !app.hidePinnedNotes;
     storage.setSetting(value, 'hidePinnedNotes');
     appStore.update(app => {
@@ -71,46 +95,46 @@ export function NotesPage(props: NotesPageProps) {
     });
     actions.updateNotes();
     actions.showMessage(value ? 'Showing pinned notes' : 'Hiding pinned notes');
-  }, [app.hidePinnedNotes]);
+  }
 
-  const loadMore = useCallback(() => {
+  function loadMore() {
     appStore.update(app => {
       app.notePages++;
     });
     actions.updateNotes();
-  }, []);
+  }
 
-  const toggleSearchCb = useCallback(() => {
+  function toggleSearchCb() {
     appStore.update(app => {
       app.search = app.search === undefined ? '' : undefined;
     });
     actions.updateNotes();
-  }, []);
+  }
 
-  const searchChangeCb = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  function searchChangeCb(e: React.ChangeEvent<HTMLInputElement>) {
     appStore.update(app => {
       app.search = e.target.value;
     });
     actions.updateNotesDebounced();
-  }, []);
+  }
 
-  const cycleListStyleCb = useCallback(() => {
+  function cycleListStyleCb() {
     editorRef.current!.cycleListStyle();
-  }, []);
+  }
 
-  const editNoteCb = useCallback(() => {
+  function editNoteCb() {
     setEditing(true);
     editorRef.current!.focus();
-  }, []);
+  }
 
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
       <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} />,
 
-      <PageAction icon={newNotePinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={togglePinned} />,
+      <PageAction icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={togglePinned} />,
       <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} />,
-      <PageAction icon={icons.checkWhite} onClick={addNoteCb} />,
+      <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} />,
     );
   } else if (app.search === undefined) {
     pageActions.push(
@@ -154,7 +178,7 @@ export function NotesPage(props: NotesPageProps) {
               id="new-note-editor"
               className="text-input"
               placeholder="What's on you mind?"
-              value={newNoteText}
+              value={newNote?.text ?? ''}
               onChange={newNoteTextChanged}
               autoExpand
               onFocus={editorFocusCb}
@@ -264,22 +288,17 @@ const Note = memo(function Note(props: { note: t.Note }) {
   );
 });
 
-async function addNote(text: string, pinned: boolean): Promise<void> {
-  document.getElementById('new-note-editor')!.focus();
-  if (!text) return;
-
-  const newNote: t.Note = {
+function createNewNote(): t.Note {
+  return {
     id: uuid(),
-    text,
+    text: '',
     creation_date: new Date().toISOString(),
     modification_date: new Date().toISOString(),
     order: Date.now(),
     not_deleted: 1,
     not_archived: 1,
-    pinned: pinned ? 1 : 0,
+    pinned: 0,
   };
-  await actions.saveNote(newNote, { message: 'note added', immediateSync: true });
-  await actions.updateNotes();
 }
 
 export async function notesPageLoader(match: RouteMatch) {

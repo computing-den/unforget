@@ -55,7 +55,7 @@ async function setup() {
   // Initial sync with server.
   storage.sync();
 
-  // Listen to server sync events and update notes.
+  // Listen to server sync events and update notes if there are any changes from the server.
   storage.addSyncListener(async function syncListener(args: storage.SyncListenerArgs) {
     appStore.update(app => {
       app.syncing = !args.done;

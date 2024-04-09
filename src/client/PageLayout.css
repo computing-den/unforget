@@ -19,7 +19,7 @@
 
   .msg-bar {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 0.1rem);
     /* left: 0; */
     /* right: 0; */
     /* width: 100%; */
@@ -31,9 +31,12 @@
     max-width: var(--page-max-width);
     width: 100%;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
+    pointer-events: none;
 
     &.has-sticky {
+      /* justify-content: flex-end; */
+
       &.error .msg-bar-inner-container {
         background: none;
         color: #b90000;
@@ -44,7 +47,11 @@
       }
 
       .msg-bar-inner-container {
+        padding: 0;
+        box-shadow: none;
         width: unset;
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
     }
 
@@ -56,7 +63,10 @@
     }
 
     .msg-bar-inner-container {
-      width: 100%;
+      /* width: 100%; */
+      padding: 0 2rem;
+      border-radius: 3px;
+      box-shadow: 0px 4px 14px 1px #00000022;
 
       & p {
         text-align: center;
