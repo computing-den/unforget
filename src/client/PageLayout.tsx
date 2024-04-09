@@ -40,8 +40,10 @@ export function PageHeader(props: {
 
   const router = useRouter();
 
-  const goToNotes = useCallback(() => {
-    if (router.pathname !== '/') {
+  const goToNotes = util.useCallbackCancelEvent(() => {
+    if (router.pathname === '/') {
+      window.scrollTo(0, 0);
+    } else {
       history.pushState(null, '', '/');
     }
   }, [router]);
@@ -85,9 +87,9 @@ export function PageHeader(props: {
             </div>
             */}
           <h1 className="heading">
-            <Link to="/" className="reset">
+            <a href="/" className="reset" onClick={goToNotes}>
               Unforget
-            </Link>
+            </a>
           </h1>
           {props.title && <h2>{props.title}</h2>}
           {app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}

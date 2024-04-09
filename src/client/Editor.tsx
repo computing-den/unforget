@@ -1,4 +1,12 @@
-import React, { useCallback, useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
 import { MenuItem } from './Menu.js';
@@ -173,7 +181,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (props.autoExpand) {
       const editor = textareaRef.current!;
       const style = window.getComputedStyle(editor);

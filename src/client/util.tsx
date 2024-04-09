@@ -1,6 +1,6 @@
 import type * as t from '../common/types.js';
 import { ServerError, bytesToHexString, hexStringToBytes } from '../common/util.js';
-import { useRouter } from './router.jsx';
+import { useRouter, storeScrollY } from './router.jsx';
 import React, { useCallback, useState, useEffect, useLayoutEffect, createContext, useContext } from 'react';
 
 export async function createServerError(res: Response): Promise<ServerError> {
@@ -47,14 +47,6 @@ export function getCookie(name: string): string | undefined {
     .find(row => row.startsWith(name + '='))
     ?.split('=')[1];
 }
-
-// TODO get from indexeddb
-// export function getUserFromCookie(): t.LocalUser | undefined {
-//   const username = getCookie('unforget_username');
-//   const token = getCookie('unforget_token');
-//   console.log('getUserFromCookie: ', username, token);
-//   if (username && token) return { username, token };
-// }
 
 export function getUserTokenFromCookie(): string | undefined {
   return getCookie('unforget_token');
@@ -122,13 +114,14 @@ export function useClickWithoutDrag(cb: React.MouseEventHandler): {
   return { onClick, onMouseDown };
 }
 
-export function useRestoreScrollY() {
+export function useStoreAndRestoreScrollY() {
   const { state } = useRouter();
-  useEffect(() => {
-    if (Number.isFinite(state?.scrollY)) {
-      window.scrollTo(0, state!.scrollY!);
-    }
-  }, []);
+  useLayoutEffect(() => {
+    window.scrollTo(0, state?.scrollY ?? 0);
+
+    window.addEventListener('scroll', storeScrollY);
+    return () => window.removeEventListener('scroll', storeScrollY);
+  }, [state?.index]);
 }
 
 /**

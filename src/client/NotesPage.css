@@ -12,6 +12,7 @@
 
     &.sticky {
       position: sticky;
+
       top: var(--page-header-height);
       z-index: var(--sticky-z-index);
       overflow: visible;
@@ -20,10 +21,12 @@
         /* more padding to clear the top where messages are shown. */
         /* min-height: 100px; */
         box-shadow: 5px 5px 14px 7px #00000022;
-        padding-top: 1.2rem;
-        padding-bottom: 1.2rem;
         border-top-left-radius: 0;
         border-top-right-radius: 0;
+
+        /* NOTE Chaning the size of the editor causes jumps on scroll position restoration during page transitions */
+        /* padding-top: 1.2rem; */
+        /* padding-bottom: 1.2rem; */
       }
 
       /* IOS Safari doesn't show the shadow if it's on .editor */
@@ -47,6 +50,7 @@
 
   .notes {
     margin-top: 2rem;
+
     border: 1px solid #94becd;
     border-radius: 5px;
     border-top: 0;

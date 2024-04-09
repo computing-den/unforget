@@ -1,4 +1,4 @@
-import { Router, Route, Params, Loader, useRouter } from './router.jsx';
+import { Router, Route, Params, RouteMatch, Loader, useRouter } from './router.jsx';
 import React, { useCallback, useState, useEffect, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
@@ -23,7 +23,7 @@ export default function App() {
     },
     {
       path: '/n/:noteId',
-      element: (params: Params) => (
+      element: ({ params }) => (
         <Auth>
           <NotePage key={params.noteId as string} />
         </Auth>
@@ -34,7 +34,7 @@ export default function App() {
       path: '/archive',
       element: (
         <Auth>
-          <NotesPage />
+          <NotesPage key="/archive" />
         </Auth>
       ),
       loader: notesPageLoader,
@@ -43,7 +43,7 @@ export default function App() {
       path: '/',
       element: (
         <Auth>
-          <NotesPage />
+          <NotesPage key="/" />
         </Auth>
       ),
       loader: notesPageLoader,
@@ -54,7 +54,7 @@ export default function App() {
 }
 
 function Fallback() {
-  return 'loading';
+  return null;
 }
 
 function Auth(props: { children: React.ReactNode }) {

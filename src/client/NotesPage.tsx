@@ -15,7 +15,6 @@ import * as icons from './icons.js';
 type NotesPageProps = {};
 
 export function NotesPage(props: NotesPageProps) {
-  util.useRestoreScrollY();
   const app = appStore.use();
   const [newNote, setNewNote] = useState<t.Note>();
   // const [newNoteText, setNewNoteText] = useState('');
@@ -23,6 +22,7 @@ export function NotesPage(props: NotesPageProps) {
   const [editing, setEditing] = useState(false);
   const [stickyEditor, setStickyEditor] = useState(false);
   const editorRef = useRef<EditorContext | null>(null);
+  util.useStoreAndRestoreScrollY();
 
   function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
     let savedNote = {
@@ -64,13 +64,14 @@ export function NotesPage(props: NotesPageProps) {
     saveNewNote({ text });
   }
 
-  // Set editor to sticky on scroll
+  // Set editor's stickiness on mount and on scroll.
   useEffect(() => {
     function scrolled() {
       setStickyEditor(window.scrollY > 64);
       reduceNotePagesDebounced();
     }
 
+    scrolled();
     window.addEventListener('scroll', scrolled);
     return () => window.removeEventListener('scroll', scrolled);
   }, []);
@@ -319,7 +320,9 @@ export async function notesPageLoader(match: RouteMatch) {
       app.notesUpdateRequestTimestamp = Date.now();
     }
   });
-  actions.updateNotesIfDirty(); // Intentionally do not await.
+
+  // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
+  await actions.updateNotesIfDirty();
 }
 
 function countLines(text: string): number {

@@ -12,7 +12,7 @@ export type HistoryState = { index?: number; scrollY?: number };
 
 export type Route = {
   path: string;
-  element: React.ReactNode | ((params: Params) => React.ReactNode);
+  element: React.ReactNode | ((match: RouteMatch) => React.ReactNode);
   loader?: Loader;
 };
 
@@ -92,11 +92,11 @@ export function Link(props: { to: string; className?: string; children: React.Re
   );
 }
 
-function Suspender(props: { children: React.ReactNode | ((params: Params) => React.ReactNode) }) {
+function Suspender(props: { children: Route['element'] }) {
   const { loaderData, match } = useContext(RouterCtx);
   loaderData?.read(); // It'll throw a promise if not yet resolved.
   if (typeof props.children === 'function') {
-    return props.children(match?.params ?? {});
+    return props.children(match!);
   } else {
     return props.children;
   }
@@ -203,9 +203,18 @@ function assertHistoryStateType(data: any) {
 let origReplaceState: (data: any, unused: string, url?: string | URL | null) => void;
 let origPushState: (data: any, unused: string, url?: string | URL | null) => void;
 
-function setHistoryStateScrollY() {
+/**
+ * For some reason the browser sometimes does it properly and sometimes not.
+ * Probably due to the whole React suspense and the delay in page transition.
+ * So, we do it manually.
+ */
+export function setUpManualScrollRestoration() {
+  window.history.scrollRestoration = 'manual';
+}
+
+export function storeScrollY() {
   const state: HistoryState = { ...window.history.state, scrollY: window.scrollY };
-  origReplaceState.call(window.history, state, '');
+  origReplaceState.call(window.history, state, ''); // Won't dispatch any events.
 }
 
 /**
@@ -218,7 +227,6 @@ export function patchHistory() {
   origReplaceState = window.history.replaceState;
   window.history.pushState = function pushState(data: any, unused: string, url?: string | URL | null) {
     assertHistoryStateType(data);
-    setHistoryStateScrollY();
     const state: HistoryState = { ...data, index: (window.history.state?.index ?? 0) + 1 };
     origPushState.call(this, state, unused, url);
     const event = new Event(eventPushState);
@@ -226,7 +234,6 @@ export function patchHistory() {
   };
   window.history.replaceState = function replaceState(data: any, unused: string, url?: string | URL | null) {
     assertHistoryStateType(data);
-    setHistoryStateScrollY();
     const state: HistoryState = { ...data, index: window.history.state?.index ?? 0 };
     origReplaceState.call(this, state, unused, url);
     const event = new Event(eventReplaceState);
