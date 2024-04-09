@@ -288,7 +288,7 @@ async function computeSHA256(data: Uint8Array): Promise<string> {
 
 function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!res.locals.client) {
-    next(new ServerError('Forbidden', 403));
+    next(new ServerError('Unauthorized', 401));
   } else {
     next();
   }

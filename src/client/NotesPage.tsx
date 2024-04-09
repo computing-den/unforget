@@ -46,22 +46,6 @@ export function NotesPage(props: NotesPageProps) {
     function scrolled() {
       setStickyEditor(window.scrollY > 64);
       reduceNotePagesDebounced();
-
-      // const textarea = document.getElementById('new-note-editor')!;
-      // const textareaRect = textarea.getBoundingClientRect();
-      // const pageHeader = document.getElementById('page-header')!;
-      // const pageHeaderRect = pageHeader.getBoundingClientRect();
-      // if (textareaRect.bottom < pageHeaderRect.height) {
-      //   if (!stickyEditor) {
-      //     console.log('setting sticky editor to true', textareaRect.bottom, pageHeaderRect.height);
-      //     setStickyEditor(true);
-      //   }
-      // } else {
-      //   if (stickyEditor) {
-      //     console.log('setting sticky editor to false', textareaRect.bottom, pageHeaderRect.height);
-      //     setStickyEditor(false);
-      //   }
-      // }
     }
 
     window.addEventListener('scroll', scrolled);

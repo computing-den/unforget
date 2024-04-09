@@ -259,7 +259,7 @@ export async function checkAppUpdate() {
   }
 }
 
-export async function notifyAppUpdate() {
+export async function notifyIfAppUpdated() {
   try {
     const lastNotifiedCacheVersion = await storage.getSetting<number>('lastNotifiedCacheVersion');
     if (lastNotifiedCacheVersion !== CACHE_VERSION) {
