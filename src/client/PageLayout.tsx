@@ -1,5 +1,4 @@
 import { Link, useRouter } from './router.jsx';
-// import { Link } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';

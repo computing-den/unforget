@@ -1,4 +1,4 @@
-import { useRouter, RouteMatch } from './router.jsx';
+import { RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
@@ -7,7 +7,6 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import { Editor, EditorContext } from './Editor.jsx';
-import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -103,8 +102,6 @@ export function NotesPage(props: NotesPageProps) {
     setEditing(true);
     editorRef.current!.focus();
   }, []);
-
-  // const insertMenu = createInsertMenu(() => editorRef.current!);
 
   const pageActions: React.ReactNode[] = [];
   if (editing) {

@@ -400,20 +400,21 @@ export async function countQueuedNotes(): Promise<number> {
   return res.result;
 }
 
-export async function waitTillSyncEnd(ms: number) {
-  await Promise.race([
-    new Promise<void>(resolve => {
-      function cb() {
-        if (!syncing) {
-          removeSyncListener(cb);
-          resolve();
-        }
-      }
-      addSyncListener(cb);
-    }),
-    new Promise(resolve => setTimeout(resolve, ms)),
-  ]);
-}
+// TODO it doesn't take into account shouldSyncAgain
+// export async function waitTillSyncEnd(ms: number) {
+//   await Promise.race([
+//     new Promise<void>(resolve => {
+//       function cb() {
+//         if (!syncing) {
+//           removeSyncListener(cb);
+//           resolve();
+//         }
+//       }
+//       addSyncListener(cb);
+//     }),
+//     new Promise(resolve => setTimeout(resolve, ms)),
+//   ]);
+// }
 
 export async function getSetting<T = unknown>(key: string): Promise<T | undefined> {
   const res = await transaction([SETTINGS_STORE], 'readonly', async tx => {

@@ -89,15 +89,15 @@ export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList
 //   return () => window.removeEventListener('popstate', cb);
 // }
 
-export function useScrollToTop() {
-  useLayoutEffect(() => {
-    document.documentElement.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'instant',
-    });
-  }, []);
-}
+// export function useScrollToTop() {
+//   useLayoutEffect(() => {
+//     document.documentElement.scrollTo({
+//       top: 0,
+//       left: 0,
+//       behavior: 'instant',
+//     });
+//   }, []);
+// }
 
 export function useClickWithoutDrag(cb: React.MouseEventHandler): {
   onClick: React.MouseEventHandler;

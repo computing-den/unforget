@@ -1,14 +1,3 @@
-// import {
-//   createBrowserRouter,
-//   RouterProvider,
-//   useRouteError,
-//   Navigate,
-//   useLocation,
-//   Outlet,
-//   LoaderFunctionArgs,
-//   redirect,
-// } from 'react-router-dom';
-// import { Router, Route, BaseLocationHook } from 'wouter';
 import { Router, Route, Params, Loader, useRouter } from './router.jsx';
 import React, { useCallback, useState, useEffect, memo } from 'react';
 import type * as t from '../common/types.js';

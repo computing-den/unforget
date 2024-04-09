@@ -2,6 +2,7 @@ import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { produce } from 'immer';
 import type * as t from '../common/types.js';
+import { isNoteNewerThan } from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
@@ -12,7 +13,6 @@ import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 import * as icons from './icons.js';
-// import { LoaderFunctionArgs, useLoaderData, useNavigate, useLocation } from 'react-router-dom';
 
 export function NotePage() {
   const app = appStore.use();
@@ -20,15 +20,26 @@ export function NotePage() {
   const { params, loader, pathname } = useRouter();
   console.log('NotePage: params', params);
 
-  const origNote = loader!.read() as t.Note | undefined;
-  console.log('NotePage: origNote:', origNote);
+  const [note, setNote] = useState(loader!.read() as t.Note | undefined);
 
-  const [note, setNote] = useState(origNote);
-  // const [note, setNote] = useState(useLoaderData() as t.Note | undefined);
-  console.log('NotePage: pathname:', pathname);
+  // Check for changes from the server and possibly replace it.
+  useEffect(() => {
+    async function callback(args: storage.SyncListenerArgs) {
+      if (args.done && args.mergeCount > 0) {
+        const newNote = await storage.getNote(params!.noteId as string);
+        if (newNote && isNoteNewerThan(newNote, note)) {
+          setNote(newNote);
+        }
+      }
+    }
+
+    storage.addSyncListener(callback);
+    return () => storage.removeSyncListener(callback);
+  }, [note]);
+
   const editorRef = useRef<EditorContext | null>(null);
 
-  util.useScrollToTop();
+  // util.useScrollToTop();
 
   const goHome = useCallback(() => {
     // if (history.state?.fromNotesPage) {
@@ -113,8 +124,6 @@ export function NotePage() {
     <PageAction icon={icons.checkWhite} onClick={goHome} />,
   ];
 
-  // const menu: MenuItem[] = [{ label: 'Delete note', icon: '/icons/trash-white.svg', onClick: deleteCb }];
-
   return (
     <PageLayout>
       <PageHeader actions={pageActions} />
@@ -142,18 +151,5 @@ export function NotePage() {
 }
 
 export async function notePageLoader({ params }: RouteMatch): Promise<t.Note | undefined> {
-  console.log('notePageLoader: ', params.noteId as string);
-  // await new Promise(resolve => setTimeout(resolve, 2000));
-  let note = await storage.getNote(params.noteId as string);
-  if (!note && storage.syncing) {
-    await storage.waitTillSyncEnd(5000);
-    note = await storage.getNote(params.noteId as string);
-  }
-  return note;
+  return await storage.getNote(params.noteId as string);
 }
-
-// async function loadNote(id: string): Promise<t.Note | null> {
-//   await new Promise(resolve => setTimeout(resolve, 3000));
-//   if (storage.syncing) await storage.waitTillSyncEnd(5000);
-//   return (await storage.getNote(id)) ?? null;
-// }

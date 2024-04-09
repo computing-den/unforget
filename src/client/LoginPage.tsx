@@ -1,5 +1,4 @@
 import { useRouter } from './router.jsx';
-// import { Navigate, useLocation } from 'react-router-dom';
 import React, { useCallback, useState, useEffect } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
