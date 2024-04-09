@@ -8,6 +8,8 @@ import React, {
   Suspense,
 } from 'react';
 
+export type HistoryState = { index?: number; scrollY?: number };
+
 export type Route = {
   path: string;
   element: React.ReactNode | ((params: Params) => React.ReactNode);
@@ -17,11 +19,11 @@ export type Route = {
 export type Loader = (match: RouteMatch) => Promise<any>;
 
 export type RouterCtxType = {
-  route?: Route;
-  params?: Record<string, string>;
-  search?: string;
+  match?: RouteMatch;
+  search: string;
   pathname: string;
-  loader?: WrappedPromise<any>;
+  state: HistoryState | null;
+  loaderData?: WrappedPromise<any>;
 };
 
 export type RouterLoadingCtxType = {
@@ -35,24 +37,25 @@ export type RouteMatch = { route: Route; params: Params; pathname: string };
 
 type WrappedPromise<T> = { read: () => T; status: 'pending' | 'success' | 'error' };
 
-const RouterCtx = createContext<RouterCtxType>({ pathname: '/' });
+const RouterCtx = createContext<RouterCtxType>({ pathname: '/', search: '', state: null });
 const RouterLoadingCtx = createContext<RouterLoadingCtxType>({ isLoading: false });
 // const dataLoaderCache = new Map<string, WrappedPromise<any>>();
 
 export function Router(props: { routes: Route[]; fallback: React.ReactNode }) {
   const pathname = useWindowLocationPathname();
   const search = useWindowLocationSearch();
+  const state = useWindowHistoryState();
   const match = useMemo(() => matchRoute(pathname, props.routes), [pathname, props.routes]);
   const routerCtxValue: RouterCtxType = useMemo(() => {
     console.log('Creating router context for ', pathname);
     return {
-      route: match?.route,
-      params: match?.params,
+      match,
       pathname,
       search,
-      loader: match?.route.loader && wrapPromise(match.route.loader(match)),
+      state,
+      loaderData: match?.route.loader && wrapPromise(match.route.loader(match)),
     };
-  }, [match, pathname, search]);
+  }, [match, pathname, search, state]);
   const deferredCtxValue = useDeferredValue(routerCtxValue);
 
   const routerLoadingCtx = {
@@ -66,7 +69,7 @@ export function Router(props: { routes: Route[]; fallback: React.ReactNode }) {
     <Suspense fallback={props.fallback}>
       <RouterCtx.Provider value={deferredCtxValue}>
         <RouterLoadingCtx.Provider value={routerLoadingCtx}>
-          <Suspender>{deferredCtxValue.route!.element}</Suspender>
+          <Suspender>{deferredCtxValue.match?.route.element}</Suspender>
         </RouterLoadingCtx.Provider>
       </RouterCtx.Provider>
     </Suspense>
@@ -90,10 +93,10 @@ export function Link(props: { to: string; className?: string; children: React.Re
 }
 
 function Suspender(props: { children: React.ReactNode | ((params: Params) => React.ReactNode) }) {
-  const { loader, params } = useContext(RouterCtx);
-  loader?.read();
+  const { loaderData, match } = useContext(RouterCtx);
+  loaderData?.read(); // It'll throw a promise if not yet resolved.
   if (typeof props.children === 'function') {
-    return props.children(params!);
+    return props.children(match?.params ?? {});
   } else {
     return props.children;
   }
@@ -139,17 +142,22 @@ const events = [eventPopstate, eventPushState, eventReplaceState, eventHashchang
 // export const navigate = (to: string, opts?: { replace?: boolean; state?: any }) =>
 //   opts?.replace ? window.history.replaceState(opts?.state, '', to) : window.history.pushState(opts?.state, '', to);
 
-export const useWindowLocationPathname = () => useSyncExternalStore(subscribeToLocationUpdates, getLocationPathname);
+export const useWindowLocationPathname = () => useSyncExternalStore(subscribeToHistoryUpdates, getLocationPathname);
 function getLocationPathname(): string {
   return window.location.pathname;
 }
 
-export const useWindowLocationSearch = () => useSyncExternalStore(subscribeToLocationUpdates, getLocationSearch);
+export const useWindowLocationSearch = () => useSyncExternalStore(subscribeToHistoryUpdates, getLocationSearch);
 function getLocationSearch(): string {
   return window.location.search;
 }
 
-function subscribeToLocationUpdates(callback: () => void) {
+export const useWindowHistoryState = () => useSyncExternalStore(subscribeToHistoryUpdates, getHistoryState);
+function getHistoryState(): HistoryState | null {
+  return window.history.state;
+}
+
+function subscribeToHistoryUpdates(callback: () => void) {
   for (const event of events) {
     window.addEventListener(event, callback);
   }
@@ -187,24 +195,41 @@ function wrapPromise<T>(promise: Promise<T>): WrappedPromise<T> {
   };
 }
 
-// Monkey patch window.history.
-(function monkeyPatchHistory() {
-  const origPushState = window.history.pushState;
-  const origReplaceState = window.history.replaceState;
-  window.history.pushState = function pushState(data: any, unused: string, url?: string | URL | null | undefined) {
-    const result = origPushState.call(this, data, unused, url);
+function assertHistoryStateType(data: any) {
+  if (data !== null && data !== undefined && typeof data !== 'object')
+    throw new Error('Please provide an object as history state');
+}
+
+let origReplaceState: (data: any, unused: string, url?: string | URL | null) => void;
+let origPushState: (data: any, unused: string, url?: string | URL | null) => void;
+
+function setHistoryStateScrollY() {
+  const state: HistoryState = { ...window.history.state, scrollY: window.scrollY };
+  origReplaceState.call(window.history, state, '');
+}
+
+/**
+ * Monkey patch window.history to dispatch 'pushstate' and 'replacestate' events.
+ * Also keep extra data the history state:
+ *   index: number so that for example we know if history.back() can be called.
+ */
+export function patchHistory() {
+  origPushState = window.history.pushState;
+  origReplaceState = window.history.replaceState;
+  window.history.pushState = function pushState(data: any, unused: string, url?: string | URL | null) {
+    assertHistoryStateType(data);
+    setHistoryStateScrollY();
+    const state: HistoryState = { ...data, index: (window.history.state?.index ?? 0) + 1 };
+    origPushState.call(this, state, unused, url);
     const event = new Event(eventPushState);
     window.dispatchEvent(event);
-    return result;
   };
-  window.history.replaceState = function replaceState(
-    data: any,
-    unused: string,
-    url?: string | URL | null | undefined,
-  ) {
-    const result = origReplaceState.call(this, data, unused, url);
+  window.history.replaceState = function replaceState(data: any, unused: string, url?: string | URL | null) {
+    assertHistoryStateType(data);
+    setHistoryStateScrollY();
+    const state: HistoryState = { ...data, index: window.history.state?.index ?? 0 };
+    origReplaceState.call(this, state, unused, url);
     const event = new Event(eventReplaceState);
     window.dispatchEvent(event);
-    return result;
   };
-})();
+}

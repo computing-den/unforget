@@ -15,6 +15,7 @@ import * as icons from './icons.js';
 type NotesPageProps = {};
 
 export function NotesPage(props: NotesPageProps) {
+  util.useRestoreScrollY();
   const app = appStore.use();
   const [newNote, setNewNote] = useState<t.Note>();
   // const [newNoteText, setNewNoteText] = useState('');
@@ -230,16 +231,18 @@ const Note = memo(function Note(props: { note: t.Note }) {
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
 
-  function inputClickCb(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    const target = e.target as HTMLInputElement;
-    const lineIndex = Number(target.dataset.lineIndex);
+  function inputChangeCb(e: React.ChangeEvent<HTMLInputElement>) {
+    const lineIndex = Number(e.target.dataset.lineIndex);
     const line = lines[lineIndex];
-    const newLineText = cutil.toggleLineCheckbox(line);
+    const newLineText = cutil.setLineCheckbox(line, e.target.checked);
     const newText = cutil.insertText(props.note.text!, newLineText, line.start, line.end);
     const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
     actions.saveNoteAndQuickUpdateNotes(newNote);
+  }
+
+  function inputClickCb(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   function renderLine(line: t.ParsedLine, i: number): React.ReactNode {
@@ -262,6 +265,7 @@ const Note = memo(function Note(props: { note: t.Note }) {
             <input
               type="checkbox"
               key={`input-${props.note.id}-${i}`}
+              onChange={inputChangeCb}
               onClick={inputClickCb}
               data-line-index={i}
               checked={line.checked}
@@ -310,7 +314,7 @@ export async function notesPageLoader(match: RouteMatch) {
       app.notesUpdateRequestTimestamp = Date.now();
     }
   });
-  actions.updateNotesIfDirty(); // Intentionally do not await.
+  // actions.updateNotesIfDirty(); // Intentionally do not await.
 }
 
 function countLines(text: string): number {

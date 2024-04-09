@@ -1,6 +1,7 @@
 import type * as t from '../common/types.js';
 import { createRoot } from 'react-dom/client';
 import * as storage from './storage.js';
+import { patchHistory } from './router.jsx';
 import * as util from './util.jsx';
 import React from 'react';
 import App from './App.jsx';
@@ -95,6 +96,15 @@ async function setup() {
 
   // Notify user if app updated.
   actions.notifyIfAppUpdated();
+
+  // Manual scroll restoration.
+  // For some reason the browser sometimes does it properly and sometimes not.
+  // Probably due to the whole React suspense and the delay in page transition.
+  // So, we do it manually.
+  window.history.scrollRestoration = 'manual';
+
+  // Patch history required for our router.
+  patchHistory();
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);

@@ -1,6 +1,6 @@
 import type * as t from './types.js';
 
-export const CACHE_VERSION = 83;
+export const CACHE_VERSION = 84;
 
 export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   return (
@@ -85,7 +85,11 @@ export function insertText(text: string, segment: string, start: number, end?: n
 }
 
 export function toggleLineCheckbox(line: t.ParsedLine): string {
-  return ' '.repeat(line.padding) + line.bullet + ' ' + (line.checked ? '[ ] ' : '[x] ') + line.body;
+  return setLineCheckbox(line, !line.checked);
+}
+
+export function setLineCheckbox(line: t.ParsedLine, checked: boolean): string {
+  return ' '.repeat(line.padding) + line.bullet + ' ' + (checked ? '[x] ' : '[ ] ') + line.body;
 }
 
 export function calcNewSelection(

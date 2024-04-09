@@ -1,32 +1,28 @@
 import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { produce } from 'immer';
 import type * as t from '../common/types.js';
 import { isNoteNewerThan } from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
-import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import { Editor, EditorContext } from './Editor.jsx';
-import { MenuItem } from './Menu.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
 import * as icons from './icons.js';
 
 export function NotePage() {
   const app = appStore.use();
 
-  const { params, loader, pathname } = useRouter();
-  console.log('NotePage: params', params);
+  const { match, loaderData, state: historyState } = useRouter();
+  console.log('NotePage: params', match!.params);
 
-  const [note, setNote] = useState(loader!.read() as t.Note | undefined);
+  const [note, setNote] = useState(loaderData!.read() as t.Note | undefined);
 
   // Check for changes from the server and possibly replace it.
   useEffect(() => {
     async function callback(args: storage.SyncListenerArgs) {
       if (args.done && args.mergeCount > 0) {
-        const newNote = await storage.getNote(params!.noteId as string);
+        const newNote = await storage.getNote(match!.params.noteId as string);
         if (newNote && isNoteNewerThan(newNote, note)) {
           setNote(newNote);
         }
@@ -39,14 +35,12 @@ export function NotePage() {
 
   const editorRef = useRef<EditorContext | null>(null);
 
-  // util.useScrollToTop();
-
   const goHome = useCallback(() => {
-    // if (history.state?.fromNotesPage) {
-    //   history.back();
-    // } else {
-    history.pushState(null, '', '/');
-    // }
+    if ((historyState?.index ?? 0) > 0) {
+      history.back();
+    } else {
+      history.pushState(null, '', '/');
+    }
   }, []);
 
   const textChangeCb = useCallback(

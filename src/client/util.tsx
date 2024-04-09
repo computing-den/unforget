@@ -1,5 +1,6 @@
 import type * as t from '../common/types.js';
 import { ServerError, bytesToHexString, hexStringToBytes } from '../common/util.js';
+import { useRouter } from './router.jsx';
 import React, { useCallback, useState, useEffect, useLayoutEffect, createContext, useContext } from 'react';
 
 export async function createServerError(res: Response): Promise<ServerError> {
@@ -119,6 +120,15 @@ export function useClickWithoutDrag(cb: React.MouseEventHandler): {
   );
 
   return { onClick, onMouseDown };
+}
+
+export function useRestoreScrollY() {
+  const { state } = useRouter();
+  useEffect(() => {
+    if (Number.isFinite(state?.scrollY)) {
+      window.scrollTo(0, state!.scrollY!);
+    }
+  }, []);
 }
 
 /**
