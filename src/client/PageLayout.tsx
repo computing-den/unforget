@@ -30,6 +30,11 @@ export function PageHeader(props: {
     actions.showMessage('Syncing ...');
   }, []);
 
+  const forceCheckAppUpdate = useCallback(() => {
+    actions.forceCheckAppUpdate();
+    actions.showMessage('Checking for updates ...');
+  }, []);
+
   const about = useCallback(() => {
     alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`);
   }, []);
@@ -61,6 +66,7 @@ export function PageHeader(props: {
     { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
     app.user && { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
     app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
+    { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
     { label: 'About', icon: icons.info, onClick: about },
   ]);
 

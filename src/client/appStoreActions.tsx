@@ -248,15 +248,27 @@ export async function checkAppUpdate() {
   try {
     if (!appStore.get().online) return;
 
-    const updateInterval = process.env.NODE_ENV === 'development' ? 5 * 1000 : 24 * 3600 * 1000;
+    const updateInterval = process.env.NODE_ENV === 'development' ? 10 * 1000 : 24 * 3600 * 1000;
     const lastCheck = await storage.getSetting<string>('lastAppUpdateCheck');
     if (!lastCheck || new Date(lastCheck).valueOf() < Date.now() - updateInterval) {
-      util.postMessageToServiceWorker({ command: 'update' });
-      await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
+      await checkAppUpdateHelper();
     }
   } catch (error) {
     gotError(error as Error);
   }
+}
+
+export async function forceCheckAppUpdate() {
+  try {
+    await checkAppUpdateHelper();
+  } catch (error) {
+    gotError(error as Error);
+  }
+}
+
+async function checkAppUpdateHelper() {
+  util.postMessageToServiceWorker({ command: 'update' });
+  await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
 }
 
 export async function notifyIfAppUpdated() {
