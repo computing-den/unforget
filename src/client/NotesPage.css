@@ -40,13 +40,8 @@
       pointer-events: none;
     }
 
-    .editor {
-      /* height: 30px; */
-      /* transition: height 0.2s ease-in-out; */
-
-      /* &.tall { */
-      /*   height: 100px; */
-      /* } */
+    &:not(.sticky) .editor:focus {
+      outline: 2px solid #aadfef;
     }
   }
 
