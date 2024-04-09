@@ -131,20 +131,25 @@ export function NotesPage(props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} />,
+      <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
 
-      <PageAction icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={togglePinned} />,
-      <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} />,
-      <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} />,
+      <PageAction
+        icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
+        onClick={togglePinned}
+        title={newNote?.pinned ? 'Unpin' : 'Pin'}
+      />,
+      <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} title="Cancel" />,
+      <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} title="Done" />,
     );
   } else if (app.search === undefined) {
     pageActions.push(
-      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} />,
+      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} title="Search" />,
       <PageAction
         icon={app.hidePinnedNotes ? icons.hidePinnedWhite : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
+        title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
       />,
-      <PageAction icon={icons.addWhite} onClick={editNoteCb} />,
+      <PageAction icon={icons.addWhite} onClick={editNoteCb} title="New note" />,
     );
   } else {
     pageActions.push(
@@ -155,7 +160,7 @@ export function NotesPage(props: NotesPageProps) {
         onChange={searchChangeCb}
         autoFocus
       />,
-      <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} />,
+      <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} title="Close search" />,
     );
   }
 
@@ -314,7 +319,7 @@ export async function notesPageLoader(match: RouteMatch) {
       app.notesUpdateRequestTimestamp = Date.now();
     }
   });
-  // actions.updateNotesIfDirty(); // Intentionally do not await.
+  actions.updateNotesIfDirty(); // Intentionally do not await.
 }
 
 function countLines(text: string): number {

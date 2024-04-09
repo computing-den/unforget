@@ -19,11 +19,11 @@
 
   .msg-bar {
     position: absolute;
-    top: calc(100% + 0.1rem);
+    top: calc(100% + 0.2rem);
     /* left: 0; */
     /* right: 0; */
     /* width: 100%; */
-    border-top: 1px solid white;
+    /* border-top: 1px solid white; */
     color: white;
     font-size: 0.8em;
     margin-left: auto;

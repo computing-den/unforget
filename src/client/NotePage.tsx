@@ -59,7 +59,7 @@ export function NotePage() {
       not_archived: note!.not_archived ? 0 : 1,
     };
     actions
-      .saveNote(newNote, { message: newNote.not_archived ? 'unarchived' : 'archived', immediateSync: true })
+      .saveNote(newNote, { message: newNote.not_archived ? 'Unarchived' : 'Archived', immediateSync: true })
       .then(() => {
         setNote(newNote);
         if (!newNote.not_archived) goHome();
@@ -69,7 +69,7 @@ export function NotePage() {
   const deleteCb = useCallback(() => {
     if (confirm('Are you sure you want to delete this note?')) {
       const newNote: t.Note = { ...note!, modification_date: new Date().toISOString(), text: null, not_deleted: 0 };
-      actions.saveNote(newNote, { message: 'deleted', immediateSync: true }).then(() => {
+      actions.saveNote(newNote, { message: 'Deleted', immediateSync: true }).then(() => {
         setNote(newNote);
         goHome();
       });
@@ -79,7 +79,7 @@ export function NotePage() {
   const pinCb = useCallback(() => {
     const newNote = { ...note!, modification_date: new Date().toISOString(), pinned: note!.pinned ? 0 : 1 };
     actions
-      .saveNote(newNote, { message: note!.pinned ? 'unpinned' : 'pinned', immediateSync: true })
+      .saveNote(newNote, { message: note!.pinned ? 'Unpinned' : 'Pinned', immediateSync: true })
       .then(() => setNote(newNote));
   }, [note]);
 
@@ -108,14 +108,19 @@ export function NotePage() {
   }, []);
 
   const pageActions = note && [
-    <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} />,
-    <PageAction icon={icons.trashWhite} onClick={deleteCb} />,
+    <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
+    <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete" />,
     <PageAction
       icon={note.not_archived ? icons.archiveEmptyWhite : icons.archiveFilledWhite}
       onClick={toggleArchiveCb}
+      title="Archive"
     />,
-    <PageAction icon={note.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite} onClick={pinCb} />,
-    <PageAction icon={icons.checkWhite} onClick={goHome} />,
+    <PageAction
+      icon={note.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
+      onClick={pinCb}
+      title={note.pinned ? 'Unpin' : 'Pin'}
+    />,
+    <PageAction icon={icons.checkWhite} onClick={goHome} title="Done" />,
   ];
 
   return (

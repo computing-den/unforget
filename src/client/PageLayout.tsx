@@ -27,7 +27,7 @@ export function PageHeader(props: {
 
   const fullSync = useCallback(() => {
     storage.fullSync();
-    actions.showMessage('syncing ...');
+    actions.showMessage('Syncing ...');
   }, []);
 
   const about = useCallback(() => {
@@ -124,6 +124,7 @@ export function PageAction(props: {
   onClick?: () => any;
   bold?: boolean;
   menu?: MenuItem[];
+  title: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = util.useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
@@ -134,7 +135,11 @@ export function PageAction(props: {
 
   // We need action-container because <a> cannot be nested inside another <a> which we need for the menu.
   return (
-    <div className={`action ${props.className || ''}`} key={`${props.label || '_'} ${props.icon || '_'}`}>
+    <div
+      className={`action ${props.className || ''}`}
+      key={`${props.label || '_'} ${props.icon || '_'}`}
+      title={props.title}
+    >
       <a href="#" onClick={clicked} className={`page-action-menu-trigger reset ${props.bold ? 'bold' : ''}`}>
         {props.label}
         {props.icon && <img src={props.icon} />}

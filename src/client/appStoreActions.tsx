@@ -263,7 +263,7 @@ export async function notifyIfAppUpdated() {
   try {
     const lastNotifiedCacheVersion = await storage.getSetting<number>('lastNotifiedCacheVersion');
     if (lastNotifiedCacheVersion !== CACHE_VERSION) {
-      if (lastNotifiedCacheVersion) showMessage('app updated');
+      if (lastNotifiedCacheVersion) showMessage('App updated');
       await storage.setSetting(CACHE_VERSION, 'lastNotifiedCacheVersion');
     }
   } catch (error) {
