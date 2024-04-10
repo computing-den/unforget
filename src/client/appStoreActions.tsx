@@ -159,6 +159,11 @@ export function gotError(error: Error) {
   if (error.message) util.postApi('/api/got-error', { message: error.message });
 }
 
+export function logToServer(...args: any[]) {
+  console.log(...args);
+  util.postApi('/api/log', { message: args.map(x => String(x)).join(' ') });
+}
+
 export function showMessage(text: string, opts?: { type?: 'info' | 'error' }) {
   const timestamp = Date.now();
   appStore.update(app => {

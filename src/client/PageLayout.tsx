@@ -36,7 +36,12 @@ export function PageHeader(props: {
   }, []);
 
   const about = useCallback(() => {
-    alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`);
+    actions.logToServer('ABOUT');
+    setTimeout(
+      () =>
+        alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`),
+      0,
+    );
   }, []);
 
   const refreshPage = useCallback(() => {

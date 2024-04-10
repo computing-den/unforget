@@ -55,7 +55,12 @@ app.use((req, res, next) => {
     }
   }
   res.locals = { client };
-  log(res, `${req.method} ${req.url} X-Cache-Version: ${req.header('X-Cache-Version') || 'unknown'}`);
+  log(
+    res,
+    `${req.method} ${req.url} X-Service-Worker-Cache-Version: ${
+      req.header('X-Service-Worker-Cache-Version') || 'unknown'
+    }, X-Client-Cache-Version: ${req.header('X-Client-Cache-Version') || 'unknown'}`,
+  );
 
   next();
 });

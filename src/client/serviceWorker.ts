@@ -146,7 +146,7 @@ async function handleFetchEvent(event: FetchEvent): Promise<Response> {
 
   try {
     response = await fetch(event.request, {
-      headers: new Headers([...event.request.headers, ['X-Cache-Version', String(CACHE_VERSION)]]),
+      headers: new Headers([...event.request.headers, ['X-Service-Worker-Cache-Version', String(CACHE_VERSION)]]),
     });
   } catch (error) {
     return Response.error();

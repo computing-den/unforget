@@ -1,5 +1,5 @@
 import type * as t from '../common/types.js';
-import { ServerError, bytesToHexString, hexStringToBytes } from '../common/util.js';
+import { ServerError, bytesToHexString, hexStringToBytes, CACHE_VERSION } from '../common/util.js';
 import { useRouter, storeScrollY } from './router.jsx';
 import React, { useCallback, useState, useEffect, useLayoutEffect, createContext, useContext } from 'react';
 
@@ -22,7 +22,7 @@ export async function postApi<T>(pathname: string, json?: any): Promise<T> {
   const res = await fetch(`${pathname}?${params}`, {
     // const res = await fetch(pathname, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Client-Cache-Version': String(CACHE_VERSION) },
     body: json && JSON.stringify(json),
   });
   if (!res.ok) {
