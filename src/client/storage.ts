@@ -4,6 +4,8 @@ import * as util from './util.jsx';
 import * as appStore from './appStore.jsx';
 import { v4 as uuid } from 'uuid';
 import _ from 'lodash';
+import log from './logger.js';
+import * as api from './api.js';
 
 let _db: IDBDatabase | undefined;
 
@@ -28,7 +30,7 @@ let saveNoteQueueActive: boolean = false;
 
 export async function getStorage(): Promise<IDBDatabase> {
   _db ??= await new Promise<IDBDatabase>((resolve, reject) => {
-    console.log('setting up storage');
+    log('setting up storage');
     const dbOpenReq = indexedDB.open(DB_NAME, 53);
 
     dbOpenReq.onerror = () => {
@@ -70,11 +72,11 @@ export async function transaction<T>(
       tx = db.transaction(storeNames, mode);
       let res: T;
       tx.oncomplete = () => {
-        // console.log('transaction succeeded');
+        // log('transaction succeeded');
         resolve(res);
       };
       tx.onerror = () => {
-        console.log('transaction error', tx!.error);
+        log('transaction error', tx!.error);
         reject(tx!.error);
       };
       res = await callback(tx);
@@ -82,7 +84,7 @@ export async function transaction<T>(
       try {
         tx?.abort();
       } catch (error2) {
-        console.error('transaction abort() failed', error2);
+        log.error('transaction abort() failed', error2);
       } finally {
         reject(error);
       }
@@ -104,7 +106,7 @@ async function saveNextNoteInQueue() {
 
   try {
     await saveNoteQueueItem(item);
-    console.log('saved note ', item.note.text);
+    log('saved note ', item.note.text);
     item.resolve();
   } catch (error) {
     item.reject(error as Error);
@@ -176,7 +178,7 @@ export async function getNotes(opts?: {
           } else if (note.pinned && opts?.hidePinnedNotes) {
             cursor.continue();
           } else if (regexps && !regexps.every(regexp => regexp.test(note.text ?? ''))) {
-            console.log(`matched regexps in ${Date.now() - start}ms`);
+            log(`matched regexps in ${Date.now() - start}ms`);
             cursor.continue();
           } else {
             notes.push(note);
@@ -241,13 +243,13 @@ export async function sync() {
   if (!appStore.get().user) return;
 
   if (syncing) {
-    console.log('sync deferred: already running.');
+    log('sync deferred: already running.');
 
     shouldSyncAgain = true;
     return;
   }
 
-  console.log('sync started.');
+  log('sync started.');
   shouldSyncAgain = false;
   syncing = true;
 
@@ -265,7 +267,7 @@ export async function sync() {
     // Partial sync. Server will either send partial sync data or request a full sync.
     if (!fullSyncRequired) {
       const partialSyncReq: t.PartialSyncReq = await getPartialSyncData();
-      const partialSyncRes: t.PartialSyncRes = await util.postApi('/api/partial-sync', partialSyncReq);
+      const partialSyncRes: t.PartialSyncRes = await api.post('/api/partial-sync', partialSyncReq);
       // Server already checks if sync numbers are the same. But just to be sure we do it here too.
       if (partialSyncRes.type === 'ok' && partialSyncReq.syncNumber === partialSyncRes.syncNumber) {
         mergeCount = await mergeSyncData(partialSyncReq, partialSyncRes);
@@ -277,18 +279,16 @@ export async function sync() {
     // Full sync.
     if (fullSyncRequired) {
       const fullSyncReq: t.FullSyncReq = await getFullSyncData();
-      const fullSyncRes: t.FullSyncRes = await util.postApi('/api/full-sync', fullSyncReq);
+      const fullSyncRes: t.FullSyncRes = await api.post('/api/full-sync', fullSyncReq);
       mergeCount = await mergeSyncData(fullSyncReq, fullSyncRes);
       fullSyncRequired = false;
     }
   } catch (err) {
-    console.error(err);
+    log.error(err);
     error = err as Error;
   }
 
-  const message = `sync ended${error ? ' with error' : ''} in ${Date.now() - start}ms`;
-  console.log(message);
-  if (mergeCount > 0) util.postApi('/api/log', { message });
+  log(`sync ended${error ? ' with error' : ''} in ${Date.now() - start}ms`);
 
   syncing = false;
   callSyncListeners({ done: true, error, mergeCount });
@@ -336,7 +336,7 @@ function callSyncListeners(args: SyncListenerArgs) {
     try {
       listener(args);
     } catch (error2) {
-      console.error(error2);
+      log.error(error2);
     }
   }
 }

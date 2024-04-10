@@ -4,7 +4,7 @@ declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
-import type * as t from '../common/types.js';
+// import log from './logger.js';
 
 // The name of the cache
 const CACHE_NAME = `unforget-${CACHE_VERSION}`;
@@ -137,7 +137,7 @@ async function handleFetchEvent(event: FetchEvent): Promise<Response> {
     //   response = new Response(JSON.stringify({ ok: true }), {
     //     headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
     //   });
-  } else if (!Number(process.env.DISABLE_CACHE)) {
+  } else if (method === 'GET' && !Number(process.env.DISABLE_CACHE)) {
     const cache = await caches.open(CACHE_NAME);
     response = await cache.match(event.request);
   }

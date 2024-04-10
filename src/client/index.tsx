@@ -8,21 +8,22 @@ import App from './App.jsx';
 import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
 import { ServerError } from '../common/util.js';
+import log from './logger.js';
 
 async function setup() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/serviceWorker.js').then(
       registration => {
-        console.log('window: service worker registration successful:', registration);
+        log('window: service worker registration successful:', registration);
       },
       error => {
-        console.error(`window: service worker registration failed: ${error}`);
+        log.error(`window: service worker registration failed: ${error}`);
       },
     );
 
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data.command === 'refreshPage') {
-        console.log('window: received refreshPage from service worker client');
+        log('window: received refreshPage from service worker client');
         // window.location.reload();
         appStore.update(app => {
           app.requirePageRefresh = true;
@@ -30,7 +31,7 @@ async function setup() {
       }
     });
   } else {
-    console.error('window: service workers are not supported.');
+    log.error('window: service workers are not supported.');
   }
 
   await actions.initAppStore();

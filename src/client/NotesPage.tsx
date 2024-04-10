@@ -11,6 +11,7 @@ import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 import * as icons from './icons.js';
+import log from './logger.js';
 
 type NotesPageProps = {};
 
@@ -231,7 +232,6 @@ const Note = memo(function Note(props: { note: t.Note }) {
   const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
 
   function clickCb(e: React.MouseEvent) {
-    // const historyState: t.HistoryState = { fromNotesPage: true };
     history.pushState(null, '', `/n/${props.note.id}`);
   }
 

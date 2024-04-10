@@ -1,5 +1,5 @@
-import { Link, useRouter } from './router.jsx';
-import React, { useCallback, useState, useEffect } from 'react';
+import { useRouter } from './router.jsx';
+import React, { useCallback, useState } from 'react';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
 import * as storage from './storage.js';
@@ -8,6 +8,7 @@ import * as cutil from '../common/util.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
 import * as icons from './icons.js';
+import log from './logger.js';
 
 export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
@@ -36,12 +37,7 @@ export function PageHeader(props: {
   }, []);
 
   const about = useCallback(() => {
-    actions.logToServer('ABOUT');
-    setTimeout(
-      () =>
-        alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`),
-      0,
-    );
+    alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`);
   }, []);
 
   const refreshPage = useCallback(() => {
@@ -76,7 +72,7 @@ export function PageHeader(props: {
   ]);
 
   // const { isLoading } = useRouterLoading();
-  // console.log('PageLayout: isLoading: ', isLoading);
+  // log('PageLayout: isLoading: ', isLoading);
 
   return (
     <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''}`}>

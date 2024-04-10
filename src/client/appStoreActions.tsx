@@ -3,6 +3,8 @@ import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.js';
 import * as util from './util.jsx';
+import log from './logger.js';
+import * as api from './api.js';
 import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
 import _ from 'lodash';
 
@@ -41,7 +43,7 @@ export async function initAppStore() {
 export async function updateNotes() {
   try {
     const start = Date.now();
-    console.log('updateNotes started');
+    log('updateNotes started');
     const { notePages, notePageSize, hidePinnedNotes, search, showArchive } = appStore.get();
     const notesUpdateTimestamp = Date.now();
     const { done, notes } = await storage.getNotes({
@@ -55,18 +57,18 @@ export async function updateNotes() {
       app.allNotePagesLoaded = done;
       app.notesUpdateTimestamp = notesUpdateTimestamp;
     });
-    console.log(`updateNotes done in ${Date.now() - start}ms`);
+    log(`updateNotes done in ${Date.now() - start}ms`);
   } catch (error) {
     gotError(error as Error);
   }
 }
 
 export function reduceNotePages(lastItemIndex: number) {
-  console.log(`trying to reduce note pages lastItemIndex: ${lastItemIndex}`);
+  log(`trying to reduce note pages lastItemIndex: ${lastItemIndex}`);
   const { notePages, notePageSize } = appStore.get();
   const newNotePages = Math.floor((lastItemIndex + 1 + (notePageSize - 1)) / notePageSize);
   if (newNotePages < notePages) {
-    console.log(`reducing note pages from ${notePages} to ${newNotePages}`);
+    log(`reducing note pages from ${notePages} to ${newNotePages}`);
     appStore.update(app => {
       app.notes = app.notes.slice(0, newNotePages * notePageSize);
       app.notePages = newNotePages;
@@ -100,7 +102,7 @@ export async function login(credentials: t.UsernamePassword) {
       username: credentials.username,
       password_client_hash: await util.calcClientPasswordHash(credentials),
     };
-    const loginResponse: t.LoginResponse = await util.postApi('/api/login', loginData);
+    const loginResponse: t.LoginResponse = await api.post('/api/login', loginData);
     await loggedIn(credentials, loginResponse);
   } catch (error) {
     gotError(error as Error);
@@ -114,7 +116,7 @@ export async function signup(credentials: t.UsernamePassword) {
       password_client_hash: await util.calcClientPasswordHash(credentials),
       encryption_salt: bytesToHexString(util.generateEncryptionSalt()),
     };
-    const loginResponse: t.LoginResponse = await util.postApi('/api/signup', signupData);
+    const loginResponse: t.LoginResponse = await api.post('/api/signup', signupData);
 
     // We want the client to pick the encryption salt to make sure it really is random and secure.
     if (loginResponse.encryption_salt !== signupData.encryption_salt) {
@@ -138,7 +140,7 @@ export async function logout() {
     await initAppStore();
 
     // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
-    util.postApi('/api/logout', { token: user.token }).catch(console.error);
+    api.post('/api/logout', { token: user.token }).catch(log.error);
   } catch (error) {
     gotError(error as Error);
   }
@@ -154,14 +156,8 @@ export async function clearStorage() {
 }
 
 export function gotError(error: Error) {
-  console.error(error);
+  log.error(error);
   showMessage(error.message, { type: 'error' });
-  if (error.message) util.postApi('/api/got-error', { message: error.message });
-}
-
-export function logToServer(...args: any[]) {
-  console.log(...args);
-  util.postApi('/api/log', { message: args.map(x => String(x)).join(' ') });
 }
 
 export function showMessage(text: string, opts?: { type?: 'info' | 'error' }) {
@@ -272,7 +268,7 @@ export async function forceCheckAppUpdate() {
 }
 
 async function checkAppUpdateHelper() {
-  util.postMessageToServiceWorker({ command: 'update' });
+  api.postMessageToServiceWorker({ command: 'update' });
   await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
 }
 

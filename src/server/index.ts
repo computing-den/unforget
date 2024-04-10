@@ -5,10 +5,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import type * as t from '../common/types.js';
 import * as db from './db.js';
-import { ServerError, bytesToHexString, CACHE_VERSION } from '../common/util.js';
+import { ServerError, bytesToHexString } from '../common/util.js';
 import cookieParser from 'cookie-parser';
 import _ from 'lodash';
-import fs from 'node:fs';
 
 const PUBLIC = path.join(process.cwd(), 'public');
 const DIST_PUBLIC = path.join(process.cwd(), 'dist/public');
@@ -164,14 +163,16 @@ app.get('/api/notes', authenticate, (req, res) => {
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
-app.post('/api/got-error', (req, res) => {
+app.post('/api/error', (req, res) => {
   const { message } = req.body as { message: string };
-  logError(res, 'client error ' + message);
+  logError(res, 'client error: ' + message);
+  res.send({ ok: true });
 });
 
 app.post('/api/log', (req, res) => {
   const { message } = req.body as { message: string };
-  log(res, 'client log ' + message);
+  log(res, 'client log: ' + message);
+  res.send({ ok: true });
 });
 
 app.post('/api/partial-sync', authenticate, (req, res) => {
@@ -306,16 +307,16 @@ function generateRandomCryptoString(): string {
 }
 
 function log(res: express.Response, ...args: any[]) {
-  console.log(`${getClientStr(res)}:`, ...args);
+  console.log(getClientStr(res), ...args);
 }
 
 function logError(res: express.Response, ...args: any[]) {
-  console.error(`${getClientStr(res)}:`, ...args);
+  console.error(getClientStr(res), ...args);
 }
 
 function getClientStr(res: express.Response): string {
   if (process.env.NODE_ENV === 'development') return '';
 
   const client = res.locals?.client;
-  return `${client ? `${client.username} (${client.token.slice(0, 5)})` : 'anonymous'}`;
+  return `${client ? `${client.username} (${client.token.slice(0, 5)}):` : 'anonymous:'}`;
 }

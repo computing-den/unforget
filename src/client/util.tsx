@@ -1,45 +1,9 @@
 import type * as t from '../common/types.js';
-import { ServerError, bytesToHexString, hexStringToBytes, CACHE_VERSION } from '../common/util.js';
+import { bytesToHexString, hexStringToBytes } from '../common/util.js';
 import { useRouter, storeScrollY } from './router.jsx';
-import React, { useCallback, useState, useEffect, useLayoutEffect, createContext, useContext } from 'react';
-
-export async function createServerError(res: Response): Promise<ServerError> {
-  const contentType = getResponseContentType(res);
-  if (contentType === 'application/json') {
-    return ServerError.fromJSON(await res.json());
-  } else {
-    console.error(await res.text());
-    return new ServerError(`unknown response of type ${contentType}`, res.status);
-  }
-}
-
-function getResponseContentType(res: Response): string | undefined {
-  return res.headers.get('Content-Type')?.split(/\s*;\s*/g)[0];
-}
-
-export async function postApi<T>(pathname: string, json?: any): Promise<T> {
-  const params = new URLSearchParams({ apiProtocol: '2' }).toString();
-  const res = await fetch(`${pathname}?${params}`, {
-    // const res = await fetch(pathname, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Client-Cache-Version': String(CACHE_VERSION) },
-    body: json && JSON.stringify(json),
-  });
-  if (!res.ok) {
-    const error = await createServerError(res);
-    if (error.type === 'app_requires_update') {
-      postMessageToServiceWorker({ command: 'update' });
-    }
-    throw error;
-  }
-  return await res.json();
-}
-
-export function postMessageToServiceWorker(message: any) {
-  navigator.serviceWorker?.ready.then(readyRegistration => {
-    readyRegistration.active?.postMessage(message);
-  });
-}
+import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
+import log from './logger.js';
+import * as api from './api.js';
 
 export function getCookie(name: string): string | undefined {
   return document.cookie
@@ -108,7 +72,7 @@ export function useClickWithoutDrag(cb: React.MouseEventHandler): {
         if (dist < 5) return cb(e);
       }
     },
-    [cb],
+    [cb, mouseDownPos],
   );
 
   return { onClick, onMouseDown };
@@ -213,7 +177,7 @@ export async function encryptNotes(notes: t.Note[], key: CryptoKey): Promise<t.E
   for (const note of notes) {
     res.push(await encryptNote(note, key));
   }
-  if (res.length) console.log(`encrypted ${res.length} notes in ${Date.now() - start}ms`);
+  if (res.length) log(`encrypted ${res.length} notes in ${Date.now() - start}ms`);
   return res;
 }
 
@@ -229,13 +193,7 @@ export async function decryptNotes(notes: t.EncryptedNote[], key: CryptoKey): Pr
   for (const note of notes) {
     res.push(await decryptNote(note, key));
   }
-  if (res.length) {
-    const message = `decrypted ${res.length} notes in ${Date.now() - start}ms`;
-    console.log(message);
-    // if (process.env.NODE_ENV === 'development') {
-    postApi('/api/log', { message });
-    // }
-  }
+  if (res.length) log(`decrypted ${res.length} notes in ${Date.now() - start}ms`);
   return res;
 }
 

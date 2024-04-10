@@ -152,7 +152,6 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   }
 
   function selectCb() {
-    console.log('selectCb');
     const textarea = textareaRef.current!;
     setLastSelection(selection);
     setSelection({
@@ -173,10 +172,6 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
       document.execCommand('insertText', false, line.bullet + ' ' + (line.checked ? '[ ] ' : '[x] '));
       textarea.setSelectionRange(lastSelection!.start, lastSelection!.end, lastSelection!.direction);
     }
-
-    // const message = `clickCb: ${textareaRef.current!.selectionStart} ${textareaRef.current!.selectionEnd}`;
-    // util.postApi('/api/log', { message });
-    // console.log(message);
   }
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);

@@ -9,12 +9,13 @@ import { Editor, EditorContext } from './Editor.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
+import log from './logger.js';
 
 export function NotePage() {
   const app = appStore.use();
 
   const { match, loaderData, state: historyState } = useRouter();
-  console.log('NotePage: params', match!.params);
+  log('NotePage: params', match!.params);
 
   const [note, setNote] = useState(loaderData!.read() as t.Note | undefined);
 

@@ -172,11 +172,13 @@
     }
 
     .actions {
+      flex: 1 0 0;
       height: 100%;
-      margin-left: auto;
+      /* margin-left: auto; */
       margin-right: 0.5rem;
       display: flex;
       align-items: center;
+      justify-content: flex-end;
 
       .action + .action {
         margin-left: 1.5rem;
@@ -193,7 +195,7 @@
       & input.search {
         /* flex: 1; */
         width: 100%;
-        max-width: 350px;
+        max-width: 300px;
         /* width: 500px; */
         /* margin: 0 auto; */
         border: 1px solid #aadfef;

@@ -7,6 +7,7 @@ import React, {
   useSyncExternalStore,
   Suspense,
 } from 'react';
+import log from './logger.js';
 
 export type HistoryState = { index?: number; scrollY?: number };
 
@@ -47,7 +48,7 @@ export function Router(props: { routes: Route[]; fallback: React.ReactNode }) {
   const state = useWindowHistoryState();
   const match = useMemo(() => matchRoute(pathname, props.routes), [pathname, props.routes]);
   const routerCtxValue: RouterCtxType = useMemo(() => {
-    console.log('Creating router context for ', pathname);
+    log('Creating router context for ', pathname);
     return {
       match,
       pathname,
@@ -61,7 +62,7 @@ export function Router(props: { routes: Route[]; fallback: React.ReactNode }) {
   const routerLoadingCtx = {
     isLoading: deferredCtxValue !== routerCtxValue,
   };
-  console.log('router: isLoading: ', routerLoadingCtx.isLoading);
+  log('router: isLoading: ', routerLoadingCtx.isLoading);
 
   // NOTE It is important that Suspense is not above the Router, otherwise when an element suspends,
   // the useMemo's and useState's of the Router will be called more than once.
@@ -226,17 +227,27 @@ export function patchHistory() {
   origPushState = window.history.pushState;
   origReplaceState = window.history.replaceState;
   window.history.pushState = function pushState(data: any, unused: string, url?: string | URL | null) {
-    assertHistoryStateType(data);
-    const state: HistoryState = { ...data, index: (window.history.state?.index ?? 0) + 1 };
-    origPushState.call(this, state, unused, url);
-    const event = new Event(eventPushState);
-    window.dispatchEvent(event);
+    try {
+      log(`pushState (patched) ${url} started`);
+      assertHistoryStateType(data);
+      const state: HistoryState = { ...data, index: (window.history.state?.index ?? 0) + 1 };
+      origPushState.call(this, state, unused, url);
+      const event = new Event(eventPushState);
+      window.dispatchEvent(event);
+      log(`pushState (patched) ${url} done`);
+    } catch (error) {
+      log.error(error);
+    }
   };
   window.history.replaceState = function replaceState(data: any, unused: string, url?: string | URL | null) {
-    assertHistoryStateType(data);
-    const state: HistoryState = { ...data, index: window.history.state?.index ?? 0 };
-    origReplaceState.call(this, state, unused, url);
-    const event = new Event(eventReplaceState);
-    window.dispatchEvent(event);
+    try {
+      assertHistoryStateType(data);
+      const state: HistoryState = { ...data, index: window.history.state?.index ?? 0 };
+      origReplaceState.call(this, state, unused, url);
+      const event = new Event(eventReplaceState);
+      window.dispatchEvent(event);
+    } catch (error) {
+      log.error(error);
+    }
   };
 }
