@@ -97,7 +97,7 @@ export function NotesPage(props: NotesPageProps) {
       app.hidePinnedNotes = value;
     });
     actions.updateNotes();
-    actions.showMessage(value ? 'Showing pinned notes' : 'Hiding pinned notes');
+    actions.showMessage(value ? 'Hiding pinned notes' : 'Showing pinned notes');
   }
 
   function loadMore() {
