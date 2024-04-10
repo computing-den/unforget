@@ -64,7 +64,7 @@ export async function transaction<T>(
   callback: (tx: IDBTransaction) => T,
 ): Promise<T> {
   const db = await getStorage();
-  return new Promise(async (resolve, reject) => {
+  return new Promise<T>(async (resolve, reject) => {
     let tx: IDBTransaction | undefined;
     try {
       tx = db.transaction(storeNames, mode);
@@ -255,6 +255,7 @@ export async function sync() {
 
   let error: Error | undefined;
   let mergeCount = 0;
+  const start = Date.now();
   try {
     // Do a full sync when syncNumber is 0 (first sync).
     if (!fullSyncRequired && (await getSyncNumber()) === 0) {
@@ -285,7 +286,10 @@ export async function sync() {
     error = err as Error;
   }
 
-  console.log(`sync ended${error ? ' with error' : ''}`);
+  const message = `sync ended${error ? ' with error' : ''} in ${Date.now() - start}ms`;
+  console.log(message);
+  if (mergeCount > 0) util.postApi('/api/log', { message });
+
   syncing = false;
   callSyncListeners({ done: true, error, mergeCount });
 
