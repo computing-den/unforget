@@ -229,7 +229,13 @@ export async function decryptNotes(notes: t.EncryptedNote[], key: CryptoKey): Pr
   for (const note of notes) {
     res.push(await decryptNote(note, key));
   }
-  if (res.length) console.log(`decrypted ${res.length} notes in ${Date.now() - start}ms`);
+  if (res.length) {
+    const message = `decrypted ${res.length} notes in ${Date.now() - start}ms`;
+    console.log(message);
+    // if (process.env.NODE_ENV === 'development') {
+    postApi('/api/log', { message });
+    // }
+  }
   return res;
 }
 
