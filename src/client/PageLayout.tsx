@@ -14,6 +14,14 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
 }
 
+export function PageHeaderCompact() {
+  return (
+    <div id="page-header" className="compact">
+      <h1 className="heading">Unforget</h1>
+    </div>
+  );
+}
+
 export function PageHeader(props: {
   menu?: MenuItem[];
   actions?: React.ReactNode;

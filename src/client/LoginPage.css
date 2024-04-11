@@ -36,12 +36,23 @@
     }
   }
 
-  .storage-message {
+  .section {
     margin-top: 2rem;
-    text-align: center;
     border-top: 1px solid #aadfef;
-    p {
-      margin: 2rem 1rem 1rem 1rem;
+    padding-top: 1rem;
+    p + p {
+      margin: 1rem;
+    }
+  }
+
+  .welcome {
+    text-align: center;
+  }
+
+  .storage-message {
+    text-align: center;
+    button {
+      width: 100%;
     }
   }
 }

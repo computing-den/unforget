@@ -34,11 +34,33 @@ body {
 }
 
 button {
-  background: #fee9e1;
-  border: 1px solid #dbc7bf;
+  background: var(--app-background);
+  border: 1px solid #448199;
   padding: 0.5rem;
   border-radius: 5px;
   transition: 0.2s background ease-in-out;
+  color: #000;
+
+  &:hover {
+    background: #cfecf5;
+  }
+
+  &:focus-visible {
+    outline: 1px solid #448199;
+  }
+
+  &.primary {
+    background: #448199;
+    color: #fff;
+
+    &:hover {
+      background: #3e778e;
+    }
+
+    /* &:focus-visible { */
+    /* outline: 1px solid #448199; */
+    /* } */
+  }
 
   &.button-row {
     margin-left: auto;
@@ -51,14 +73,6 @@ button {
       border-radius: 0;
       width: 100%;
     }
-  }
-
-  &:hover {
-    background: #fdddd2;
-  }
-
-  &:focus-visible {
-    outline: 1px solid #f39e7d;
   }
 }
 

@@ -195,7 +195,7 @@ export function NotesPage(props: NotesPageProps) {
           </div>
           <Notes />
           {!app.allNotePagesLoaded && (
-            <button className="load-more button-row" onClick={loadMore}>
+            <button className="load-more primary button-row" onClick={loadMore}>
               Load more
             </button>
           )}

@@ -12,6 +12,15 @@
   z-index: var(--page-header-z-index);
   box-shadow: 0px 4px 14px 1px #00000022;
 
+  &.compact {
+    h1 {
+      font-size: 1rem;
+      letter-spacing: 0px;
+      font-family: monospace;
+      color: white;
+    }
+  }
+
   &.has-search .content .title h2 {
     @media (max-width: 440px) {
       display: none;
