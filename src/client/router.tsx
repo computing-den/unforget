@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import log from './logger.js';
 
-export type HistoryState = { index?: number; scrollY?: number };
+export type HistoryState = { index: number; scrollY?: number };
 
 export type Route = {
   path: string;
@@ -23,7 +23,7 @@ export type RouterCtxType = {
   match?: RouteMatch;
   search: string;
   pathname: string;
-  state: HistoryState | null;
+  state: HistoryState;
   loaderData?: WrappedPromise<any>;
 };
 
@@ -38,7 +38,7 @@ export type RouteMatch = { route: Route; params: Params; pathname: string };
 
 type WrappedPromise<T> = { read: () => T; status: 'pending' | 'success' | 'error' };
 
-const RouterCtx = createContext<RouterCtxType>({ pathname: '/', search: '', state: null });
+const RouterCtx = createContext<RouterCtxType>({ pathname: '/', search: '', state: { index: 0 } });
 const RouterLoadingCtx = createContext<RouterLoadingCtxType>({ isLoading: false });
 // const dataLoaderCache = new Map<string, WrappedPromise<any>>();
 
@@ -154,7 +154,7 @@ function getLocationSearch(): string {
 }
 
 export const useWindowHistoryState = () => useSyncExternalStore(subscribeToHistoryUpdates, getHistoryState);
-function getHistoryState(): HistoryState | null {
+function getHistoryState(): HistoryState {
   return window.history.state;
 }
 
@@ -214,6 +214,7 @@ export function setUpManualScrollRestoration() {
 }
 
 export function storeScrollY() {
+  console.log('storeScrollY');
   const state: HistoryState = { ...window.history.state, scrollY: window.scrollY };
   origReplaceState.call(window.history, state, ''); // Won't dispatch any events.
 }
@@ -230,7 +231,7 @@ export function patchHistory() {
     try {
       log(`pushState (patched) ${url} started`);
       assertHistoryStateType(data);
-      const state: HistoryState = { ...data, index: (window.history.state?.index ?? 0) + 1 };
+      const state: HistoryState = { ...data, index: window.history.state.index + 1 };
       origPushState.call(this, state, unused, url);
       const event = new Event(eventPushState);
       window.dispatchEvent(event);
@@ -242,7 +243,7 @@ export function patchHistory() {
   window.history.replaceState = function replaceState(data: any, unused: string, url?: string | URL | null) {
     try {
       assertHistoryStateType(data);
-      const state: HistoryState = { ...data, index: window.history.state?.index ?? 0 };
+      const state: HistoryState = { ...data, index: window.history.state.index };
       origReplaceState.call(this, state, unused, url);
       const event = new Event(eventReplaceState);
       window.dispatchEvent(event);
@@ -250,4 +251,9 @@ export function patchHistory() {
       log.error(error);
     }
   };
+
+  // Initialize history.state
+  if (!Number.isFinite(window.history.state?.index)) {
+    origReplaceState.call(window.history, { index: 0 }, '');
+  }
 }

@@ -4,6 +4,7 @@ import { useRouter, storeScrollY } from './router.jsx';
 import React, { useCallback, useState, useEffect, useLayoutEffect } from 'react';
 import log from './logger.js';
 import * as api from './api.js';
+import _ from 'lodash';
 
 export function getCookie(name: string): string | undefined {
   return document.cookie
@@ -83,8 +84,9 @@ export function useStoreAndRestoreScrollY() {
   useLayoutEffect(() => {
     window.scrollTo(0, state?.scrollY ?? 0);
 
-    window.addEventListener('scroll', storeScrollY);
-    return () => window.removeEventListener('scroll', storeScrollY);
+    const storeScrollYRateLimited = _.debounce(storeScrollY, 100, { leading: false, trailing: true });
+    window.addEventListener('scroll', storeScrollYRateLimited);
+    return () => window.removeEventListener('scroll', storeScrollYRateLimited);
   }, [state?.index]);
 }
 

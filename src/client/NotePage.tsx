@@ -24,9 +24,7 @@ export function NotePage() {
     async function callback(args: storage.SyncListenerArgs) {
       if (args.done && args.mergeCount > 0) {
         const newNote = await storage.getNote(match!.params.noteId as string);
-        if (newNote && isNoteNewerThan(newNote, note)) {
-          setNote(newNote);
-        }
+        if (newNote && isNoteNewerThan(newNote, note)) setNote(newNote);
       }
     }
 
@@ -37,7 +35,7 @@ export function NotePage() {
   const editorRef = useRef<EditorContext | null>(null);
 
   const goHome = useCallback(() => {
-    if ((historyState?.index ?? 0) > 0) {
+    if (historyState.index > 0) {
       history.back();
     } else {
       history.pushState(null, '', '/');
