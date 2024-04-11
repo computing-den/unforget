@@ -119,7 +119,9 @@ export function PageHeader(props: {
       )}
       {app.requirePageRefresh && (
         <div className="update-app-container">
-          <button onClick={actions.updateApp}>Update app</button>
+          <button className="primary" onClick={actions.updateApp}>
+            Update app
+          </button>
         </div>
       )}
     </div>

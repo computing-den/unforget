@@ -13,7 +13,7 @@
   box-shadow: 0px 4px 14px 1px #00000022;
 
   &.compact {
-    h1 {
+    & h1 {
       font-size: 1rem;
       letter-spacing: 0px;
       font-family: monospace;
@@ -94,7 +94,7 @@
     display: flex;
     justify-content: center;
 
-    button {
+    & button {
       box-shadow: 0px 4px 14px 7px #00000022;
       width: 200px;
     }
