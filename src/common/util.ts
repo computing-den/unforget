@@ -1,6 +1,6 @@
 import type * as t from './types.js';
 
-export const CACHE_VERSION = 140;
+export const CACHE_VERSION = 141;
 
 export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   return (
