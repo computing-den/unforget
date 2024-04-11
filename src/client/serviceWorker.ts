@@ -82,8 +82,8 @@ self.addEventListener('activate', event => {
       // The refresh is necessary if the activate event was triggered by updateApp().
       await self.clients.claim();
       for (const client of await self.clients.matchAll()) {
-        console.log('service worker: calling refreshPage on a client');
-        client.postMessage({ command: 'refreshPage' });
+        console.log('service worker: informing client of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
+        client.postMessage({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
       }
       console.log('service worker: activated.');
     })(),

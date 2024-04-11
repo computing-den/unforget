@@ -272,12 +272,28 @@ async function checkAppUpdateHelper() {
   await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
 }
 
+export async function requireAppUpdate() {
+  appStore.update(app => {
+    app.message = undefined;
+    app.requirePageRefresh = true;
+  });
+}
+
+export async function updateApp() {
+  try {
+    await storage.setSetting(true, 'updatingApp');
+    window.location.reload();
+  } catch (error) {
+    gotError(error as Error);
+  }
+}
+
 export async function notifyIfAppUpdated() {
   try {
-    const lastNotifiedCacheVersion = await storage.getSetting<number>('lastNotifiedCacheVersion');
-    if (lastNotifiedCacheVersion !== CACHE_VERSION) {
-      if (lastNotifiedCacheVersion) showMessage('App updated');
-      await storage.setSetting(CACHE_VERSION, 'lastNotifiedCacheVersion');
+    const updatingApp = await storage.getSetting('updatingApp');
+    if (updatingApp) {
+      showMessage('App updated');
+      await storage.setSetting(false, 'updatingApp');
     }
   } catch (error) {
     gotError(error as Error);

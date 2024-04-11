@@ -7,7 +7,7 @@ import React from 'react';
 import App from './App.jsx';
 import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
-import { ServerError } from '../common/util.js';
+import { ServerError, CACHE_VERSION } from '../common/util.js';
 import log from './logger.js';
 
 async function setup() {
@@ -22,12 +22,15 @@ async function setup() {
     );
 
     navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data.command === 'refreshPage') {
-        log('window: received refreshPage from service worker client');
-        // window.location.reload();
-        appStore.update(app => {
-          app.requirePageRefresh = true;
-        });
+      if (event.data.command === 'serviceWorkerActivated') {
+        log(
+          `window: received serviceWorkerActivated from service worker with cache version ${event.data.cacheVersion}`,
+        );
+
+        if (event.data.cacheVersion > CACHE_VERSION) {
+          log(`window: require a page refresh to upgrade from ${CACHE_VERSION} to ${event.data.cacheVersion}`);
+          actions.requireAppUpdate();
+        }
       }
     });
   } else {

@@ -40,10 +40,6 @@ export function PageHeader(props: {
     alert(`Made by Computing Den.\nReach us at sean@computing-den.com.\n\n[cache version ${cutil.CACHE_VERSION}]`);
   }, []);
 
-  const refreshPage = useCallback(() => {
-    window.location.reload();
-  }, []);
-
   const router = useRouter();
 
   const goToNotes = util.useCallbackCancelEvent(() => {
@@ -112,10 +108,8 @@ export function PageHeader(props: {
         </div>
       )}
       {app.requirePageRefresh && (
-        <div className="refresh-page-container">
-          <button className="refresh-page" onClick={refreshPage}>
-            Update app
-          </button>
+        <div className="update-app-container">
+          <button onClick={actions.updateApp}>Update app</button>
         </div>
       )}
     </div>
