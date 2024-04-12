@@ -84,6 +84,9 @@ self.addEventListener('activate', event => {
       for (const client of await self.clients.matchAll()) {
         console.log('service worker: informing client of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
         client.postMessage({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
+
+        // For backward compatibility:
+        client.postMessage({ command: 'refreshPage' });
       }
       console.log('service worker: activated.');
     })(),
