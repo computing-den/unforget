@@ -129,7 +129,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     let text = textarea.value;
     let cur = textarea.selectionStart;
     if (e.key === 'Enter' && !e.shiftKey) {
-      textarea.focus();
+      // textarea.focus();
 
       const line = cutil.parseLine(text, cur);
       if (cur < line.bodyStart) return;
