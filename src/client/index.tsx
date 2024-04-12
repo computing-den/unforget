@@ -37,8 +37,14 @@ async function setup() {
     log.error('window: service workers are not supported.');
   }
 
+  // Initialize app store.
   await actions.initAppStore();
   await actions.makeSureConsistentUserAndCookie();
+
+  // Set up a demo user.
+  if (!appStore.get().user) {
+    await actions.setUpDemo();
+  }
 
   // Sync online status.
   function onlineChanged() {

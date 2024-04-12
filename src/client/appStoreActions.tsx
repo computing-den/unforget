@@ -7,6 +7,7 @@ import log from './logger.js';
 import * as api from './api.js';
 import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
 import _ from 'lodash';
+import { v4 as uuid } from 'uuid';
 
 export async function initAppStore() {
   // let showArchive = false;
@@ -38,6 +39,22 @@ export async function initAppStore() {
   });
 
   await updateNotes();
+}
+
+export async function setUpDemo() {
+  const encryption_salt = bytesToHexString(util.generateEncryptionSalt());
+  const note: t.Note = {
+    id: uuid(),
+    text: 'test1',
+    creation_date: new Date().toISOString(),
+    modification_date: new Date().toISOString(),
+    not_deleted: 1,
+    not_archived: 1,
+    pinned: 0,
+    order: Date.now(),
+  };
+  await loggedIn({ username: 'demo', password: 'demo' }, { username: 'demo', token: 'demo', encryption_salt });
+  await saveNote(note);
 }
 
 export async function updateNotes() {
@@ -96,20 +113,20 @@ export async function updateQueueCount() {
   }
 }
 
-export async function login(credentials: t.UsernamePassword) {
+export async function login(credentials: t.UsernamePassword, opts?: { importDemoNotes?: boolean }) {
   try {
     const loginData: t.LoginData = {
       username: credentials.username,
       password_client_hash: await util.calcClientPasswordHash(credentials),
     };
     const loginResponse: t.LoginResponse = await api.post('/api/login', loginData);
-    await loggedIn(credentials, loginResponse);
+    await loggedIn(credentials, loginResponse, opts);
   } catch (error) {
     gotError(error as Error);
   }
 }
 
-export async function signup(credentials: t.UsernamePassword) {
+export async function signup(credentials: t.UsernamePassword, opts?: { importDemoNotes?: boolean }) {
   try {
     const signupData: t.SignupData = {
       username: credentials.username,
@@ -124,7 +141,7 @@ export async function signup(credentials: t.UsernamePassword) {
       throw new Error('Server might be compromised. The encryption parameters were tampered with.');
     }
 
-    await loggedIn(credentials, loginResponse);
+    await loggedIn(credentials, loginResponse, opts);
   } catch (error) {
     gotError(error as Error);
   }
@@ -193,6 +210,14 @@ export async function saveNote(note: t.Note, opts?: { message?: string; immediat
   }
 }
 
+// export async function clearNotes() {
+//   await storage.clearNotes();
+//   appStore.update(app => {
+//     app.notes = [];
+//     app.notesUpdateRequestTimestamp = Date.now();
+//   });
+// }
+
 export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
   try {
     await storage.saveNote(note);
@@ -236,8 +261,16 @@ export async function resetUser() {
   });
 }
 
-async function loggedIn(credentials: t.UsernamePassword, loginResponse: t.LoginResponse) {
+async function loggedIn(
+  credentials: t.UsernamePassword,
+  loginResponse: t.LoginResponse,
+  opts?: { importDemoNotes?: boolean },
+) {
   const user = await makeClientLocalUserFromServer(credentials, loginResponse);
+  util.setUserCookies(loginResponse.token); // Needed for the demo user.
+  if (!opts?.importDemoNotes) {
+    await clearStorage();
+  }
   await storage.setSetting(user, 'user');
   appStore.update(app => {
     app.user = user;

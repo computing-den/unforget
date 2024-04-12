@@ -66,15 +66,22 @@ export function PageHeader(props: {
     }
   }, [router]);
 
+  const goToLogin = useCallback(() => {
+    if (router.pathname !== '/login') {
+      history.pushState(null, '', '/login');
+    }
+  }, [router]);
+
   const menu: MenuItem[] = _.compact([
     app.user && { label: app.user.username, icon: icons.user, isHeader: true },
+    app.user?.username === 'demo' && { label: 'Log in', icon: icons.notes, onClick: goToLogin },
     ...(props.menu || []),
     app.user && { label: 'Notes', icon: icons.notes, onClick: goToNotes },
     app.user && { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
     app.user && { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
-    app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
     { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
     { label: 'About', icon: icons.info, onClick: about },
+    app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
   ]);
 
   // const { isLoading } = useRouterLoading();
@@ -105,7 +112,7 @@ export function PageHeader(props: {
             </a>
           </h1>
           {props.title && <h2>{props.title}</h2>}
-          {app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
+          {app.user?.username !== 'demo' && app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
           {/*app.online && <div className="online-indicator" />*/}
         </div>
         <div className="actions">{props.actions}</div>

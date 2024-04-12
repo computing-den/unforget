@@ -1,4 +1,4 @@
-import { useRouter } from './router.jsx';
+import { useRouter, Link } from './router.jsx';
 import React, { useCallback, useState, useEffect } from 'react';
 import type * as t from '../common/types.js';
 import * as storage from './storage.js';
@@ -14,12 +14,13 @@ type LoginPageProps = {};
 function LoginPage(props: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [importDemoNotes, setImportDemoNotes] = useState(false);
 
   async function loginCb() {
-    await actions.login({ username, password });
+    await actions.login({ username, password }, { importDemoNotes });
   }
   async function signupCb() {
-    await actions.signup({ username, password });
+    await actions.signup({ username, password }, { importDemoNotes });
   }
 
   function keyDownCb(e: React.KeyboardEvent) {
@@ -29,7 +30,7 @@ function LoginPage(props: LoginPageProps) {
   const app = appStore.use();
   const search = useRouter().search;
 
-  if (app.user) {
+  if (app.user && app.user?.username !== 'demo') {
     const from = new URLSearchParams(search).get('from');
     history.replaceState(null, '', from || '/');
     return null;
@@ -66,6 +67,15 @@ function LoginPage(props: LoginPageProps) {
               onKeyDown={keyDownCb}
             />
           </div>
+          {app.user?.username === 'demo' && app.notes.length > 0 && (
+            <div className="form-element">
+              <label>
+                <input type="checkbox" onChange={e => setImportDemoNotes(e.target.checked)} checked={importDemoNotes} />{' '}
+                Import {app.notes.length} {app.notes.length === 1 ? 'note' : 'notes'} from demo user (
+                <Link to="/">see notes</Link>)
+              </label>
+            </div>
+          )}
           <div className="buttons">
             <button className="login primary" onClick={loginCb}>
               Log in
@@ -74,21 +84,21 @@ function LoginPage(props: LoginPageProps) {
               Sign up
             </button>
           </div>
-          <div className="section welcome">
+          {/*<div className="section welcome">
             <p>Unforget is a note taking app.</p>
             <p>Notes will be encrypted on your device(s).</p>
             <p>Nobody can recover your notes if you lose your password.</p>
-          </div>
-          {app.notes.length > 0 && (
+            </div>*/}
+          {/*app.notes.length > 0 && (
             <div className="section storage-message">
               <p>
-                There are notes in storage.
+                There are existing notes on this device.
                 <br />
-                They will be synced after you log in or sign up.
+                They'll be synced after you log in or sign up.
               </p>
               <button onClick={actions.clearStorage}>Clear local storage</button>
             </div>
-          )}
+            )*/}
         </div>
       </PageBody>
     </PageLayout>

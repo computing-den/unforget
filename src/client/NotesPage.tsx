@@ -7,6 +7,7 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import { Editor, EditorContext } from './Editor.jsx';
+import { DemoPopup } from './DemoPopup.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -199,6 +200,7 @@ export function NotesPage(props: NotesPageProps) {
               Load more
             </button>
           )}
+          {app.user?.username === 'demo' && <DemoPopup />}
         </div>
       </PageBody>
     </PageLayout>

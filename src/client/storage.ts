@@ -242,6 +242,9 @@ export async function sync() {
   // Skip if user not logged in.
   if (!appStore.get().user) return;
 
+  // Skip if this is a demo.
+  if (appStore.get().user?.username === 'demo') return;
+
   if (syncing) {
     log('sync deferred: already running.');
 
@@ -310,6 +313,13 @@ export async function clearAll() {
     for (const name of storeNames) tx.objectStore(name).clear();
   });
 }
+
+// export async function clearNotes() {
+//   const storeNames = [NOTES_STORE, NOTES_QUEUE_STORE];
+//   await transaction(storeNames, 'readwrite', tx => {
+//     for (const name of storeNames) tx.objectStore(name).clear();
+//   });
+// }
 
 export function addSyncListener(listener: SyncListener) {
   syncListeners.push(listener);

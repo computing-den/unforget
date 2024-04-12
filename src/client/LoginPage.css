@@ -16,9 +16,11 @@
     label {
       /* width: 80px; */
     }
-    input {
+    input[type='text'] {
       margin-top: 0.25rem;
-      /* flex: 1; */
+    }
+    input[type='checkbox'] {
+      vertical-align: middle;
     }
   }
 
