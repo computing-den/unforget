@@ -36,7 +36,8 @@
       display: flex;
       align-items: center;
       font-size: 1.1em;
-      background: #e1efff;
+      background: var(--menu-header-background);
+      /* background: #e1efff; */
       padding: 0.5rem 1rem;
       border-bottom: 1px solid #cacfd5;
     }

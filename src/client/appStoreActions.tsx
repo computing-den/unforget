@@ -8,6 +8,8 @@ import * as api from './api.js';
 import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
+import demoNote1 from './demoNote1.txt';
+import demoNote2 from './demoNote2.txt';
 
 export async function initAppStore() {
   // let showArchive = false;
@@ -43,18 +45,34 @@ export async function initAppStore() {
 
 export async function setUpDemo() {
   const encryption_salt = bytesToHexString(util.generateEncryptionSalt());
-  const note: t.Note = {
-    id: uuid(),
-    text: 'test1',
-    creation_date: new Date().toISOString(),
-    modification_date: new Date().toISOString(),
-    not_deleted: 1,
-    not_archived: 1,
-    pinned: 0,
-    order: Date.now(),
-  };
   await loggedIn({ username: 'demo', password: 'demo' }, { username: 'demo', token: 'demo', encryption_salt });
-  await saveNote(note);
+
+  const order = Date.now();
+  const notes: t.Note[] = [
+    {
+      id: uuid(),
+      text: demoNote1,
+      creation_date: new Date().toISOString(),
+      modification_date: new Date().toISOString(),
+      not_deleted: 1,
+      not_archived: 1,
+      pinned: 0,
+      order,
+    },
+    {
+      id: uuid(),
+      text: demoNote2,
+      creation_date: new Date().toISOString(),
+      modification_date: new Date().toISOString(),
+      not_deleted: 1,
+      not_archived: 1,
+      pinned: 0,
+      order: order - 1,
+    },
+  ];
+  for (const note of notes) {
+    await saveNote(note);
+  }
 }
 
 export async function updateNotes() {
@@ -151,6 +169,10 @@ export async function logout() {
   try {
     const { user } = appStore.get();
     if (!user) return;
+
+    // Calling a history API here may not work due to the timing.
+    // It may still redirect to /login witht a from=XXX search param.
+    // window.history.replaceState(null, '', '/');
 
     await resetUser();
     await storage.clearAll();
@@ -267,10 +289,10 @@ async function loggedIn(
   opts?: { importDemoNotes?: boolean },
 ) {
   const user = await makeClientLocalUserFromServer(credentials, loginResponse);
-  util.setUserCookies(loginResponse.token); // Needed for the demo user.
   if (!opts?.importDemoNotes) {
     await clearStorage();
   }
+  util.setUserCookies(loginResponse.token); // Needed for the demo user.
   await storage.setSetting(user, 'user');
   appStore.update(app => {
     app.user = user;

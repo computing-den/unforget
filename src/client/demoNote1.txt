@@ -1,0 +1,21 @@
+Welcome!
+
+
+Unforget is a minimalist's note taking app featuring:
+
+- [x] Import from Google Keep
+- [x] Offline first - sync when online
+- [x] Priavcy first - end-to-end encryption
+- [x] Instant Sync
+- [x] Plain text - small subset of markdown
+- [x] Desktop/Mobile/Web - no Electron.js
+- [x] Open source with optional self hosting
+- [x] Export notes as JSON
+- [x] Public APIs - make your own clients
+- [x] One-Click install
+
+Unforget is made by Computing Den, a software company specializing in web technologies.
+Check us out at computing-den.com.
+
+Shahab "Sean" Shirazi
+sean@computing-den.com

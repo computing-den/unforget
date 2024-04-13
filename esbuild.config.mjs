@@ -11,7 +11,7 @@ const context = await esbuild.context({
   treeShaking: true,
   define: Object.fromEntries(Object.keys(process.env).map(key => [`process.env.${key}`, `"${process.env[key]}"`])),
   plugins: [reporterPlugin()],
-  loader: { '.svg': 'dataurl' },
+  loader: { '.svg': 'dataurl', '.txt': 'text' },
 });
 
 if (process.argv.includes('--watch')) {

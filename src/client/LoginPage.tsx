@@ -14,13 +14,13 @@ type LoginPageProps = {};
 function LoginPage(props: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [importDemoNotes, setImportDemoNotes] = useState(false);
+  // const [importDemoNotes, setImportDemoNotes] = useState(false);
 
   async function loginCb() {
-    await actions.login({ username, password }, { importDemoNotes });
+    await actions.login({ username, password }, { importDemoNotes: false });
   }
   async function signupCb() {
-    await actions.signup({ username, password }, { importDemoNotes });
+    await actions.signup({ username, password }, { importDemoNotes: true });
   }
 
   function keyDownCb(e: React.KeyboardEvent) {
@@ -67,7 +67,7 @@ function LoginPage(props: LoginPageProps) {
               onKeyDown={keyDownCb}
             />
           </div>
-          {app.user?.username === 'demo' && app.notes.length > 0 && (
+          {/*app.user?.username === 'demo' && app.notes.length > 0 && (
             <div className="form-element">
               <label>
                 <input type="checkbox" onChange={e => setImportDemoNotes(e.target.checked)} checked={importDemoNotes} />{' '}
@@ -75,7 +75,7 @@ function LoginPage(props: LoginPageProps) {
                 <Link to="/">see notes</Link>)
               </label>
             </div>
-          )}
+          )*/}
           <div className="buttons">
             <button className="login primary" onClick={loginCb}>
               Log in

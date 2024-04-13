@@ -1,12 +1,8 @@
-/* #E1F6FE */
-/* #F8E1FE */
-/* #FEE9E1 */
-/* #E8FEE1 */
-
 :root {
   --app-background: #ddf7ff;
   --page-header-height: 2rem;
   --page-header-background: #448199;
+  --menu-header-background: #d6f5ff;
   --page-header-z-index: 200;
   --page-content-margin-top: calc(var(--page-header-height) + 2rem);
   --page-max-width: 800px;
@@ -95,7 +91,7 @@ button {
 
 h2.page-message {
   text-align: center;
-  color: #444;
+  color: #666;
 }
 
 a.reset {

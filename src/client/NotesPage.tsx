@@ -7,7 +7,6 @@ import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import { Editor, EditorContext } from './Editor.jsx';
-import { DemoPopup } from './DemoPopup.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
@@ -195,12 +194,13 @@ export function NotesPage(props: NotesPageProps) {
             />
           </div>
           <Notes />
+          {!app.notes.length && app.syncing && <h2 className="page-message">Loading...</h2>}
+          {!app.notes.length && !app.syncing && <h2 className="page-message">Not found</h2>}
           {!app.allNotePagesLoaded && (
             <button className="load-more primary button-row" onClick={loadMore}>
               Load more
             </button>
           )}
-          {app.user?.username === 'demo' && <DemoPopup />}
         </div>
       </PageBody>
     </PageLayout>

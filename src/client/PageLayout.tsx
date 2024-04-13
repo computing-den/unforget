@@ -73,8 +73,8 @@ export function PageHeader(props: {
   }, [router]);
 
   const menu: MenuItem[] = _.compact([
-    app.user && { label: app.user.username, icon: icons.user, isHeader: true },
-    app.user?.username === 'demo' && { label: 'Log in', icon: icons.notes, onClick: goToLogin },
+    app.user && { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
+    app.user?.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
     ...(props.menu || []),
     app.user && { label: 'Notes', icon: icons.notes, onClick: goToNotes },
     app.user && { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },

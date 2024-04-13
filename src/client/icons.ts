@@ -9,6 +9,7 @@ export { default as checkWhite } from '../../public/icons/check-white.svg';
 export { default as hidePinnedWhite } from '../../public/icons/hide-pinned-white.svg';
 export { default as info } from '../../public/icons/info.svg';
 export { default as logOut } from '../../public/icons/log-out.svg';
+export { default as logIn } from '../../public/icons/log-in.svg';
 export { default as menuWhite } from '../../public/icons/menu-white.svg';
 export { default as notes } from '../../public/icons/notes.svg';
 export { default as pinEmpty } from '../../public/icons/pin-empty.svg';
