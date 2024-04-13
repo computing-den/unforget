@@ -52,9 +52,8 @@
   .notes {
     margin-top: 2rem;
 
-    border: 1px solid #94becd;
-    border-radius: 5px;
-    border-top: 0;
+    border: 1px solid var(--box-border-color);
+    border-radius: var(--box-border-radius);
 
     @media (max-width: 800px) {
       border-radius: 0;
@@ -63,8 +62,7 @@
     }
 
     .note {
-      padding: 0.5rem 1rem;
-      border-top: 1px solid #94becd;
+      padding: 1rem;
       transition: 0.2s background ease-in-out;
       cursor: pointer;
       font-family: inherit;
@@ -88,7 +86,7 @@
       }
 
       & + .note {
-        /* margin-top: 0.5rem; */
+        border-top: 1px solid var(--box-border-color);
       }
 
       & img.pin {
@@ -108,8 +106,9 @@
         width: 16px;
         height: 16px;
         /* border-radius: 20px; */
-        vertical-align: middle;
+        vertical-align: text-bottom;
         margin: 0;
+        margin-right: 0.25rem;
       }
     }
   }

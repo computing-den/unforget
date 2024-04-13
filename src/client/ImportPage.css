@@ -1,0 +1,89 @@
+.import-page {
+  /* flex: 1; */
+  margin: var(--page-content-margin-top) auto;
+  max-width: var(--page-max-width);
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  border: 1px solid var(--box-border-color);
+  border-radius: var(--box-border-radius);
+
+  @media (max-width: 800px) {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  .page-content {
+    /* display: flex; */
+    /* flex-direction: column; */
+    /* align-items: center; */
+    padding: 2rem 1rem;
+    text-align: center;
+
+    @media (max-width: 800px) {
+      padding-top: 0;
+      /* text-align: left; */
+    }
+
+    & h1 {
+      margin-top: 0;
+      margin-bottom: 3rem;
+    }
+
+    & p {
+      margin: 1rem;
+      font-size: 1.3rem;
+    }
+
+    & p.wait-for-download {
+      margin-top: 3rem;
+      color: #333;
+      font-style: italic;
+    }
+
+    & p.on-device {
+      margin-top: 3rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* .file { */
+    /*   /\* margin-top: 1rem; *\/ */
+    /*   max-width: 500px; */
+    /*   width: 100%; */
+
+    /*   @media (max-width: 800px) { */
+    /*     /\* max-width: unset; *\/ */
+    /*   } */
+    /* } */
+
+    & input[type='file'] {
+      display: none;
+    }
+
+    & button.import {
+      /* margin-top: 1rem; */
+      /* padding-left: 4rem; */
+      /* padding-right: 4rem; */
+      max-width: 300px;
+      width: 100%;
+    }
+  }
+
+  /* .-container { */
+  /*   flex: 1; */
+  /*   display: flex; */
+  /*   flex-direction: column; */
+  /*   position: relative; */
+
+  /*   .editor { */
+  /*     flex: 1; */
+  /*     padding: 1rem; */
+  /*   } */
+  /* } */
+}

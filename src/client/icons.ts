@@ -22,6 +22,7 @@ export { default as showPinnedWhite } from '../../public/icons/show-pinned-white
 export { default as trashWhite } from '../../public/icons/trash-white.svg';
 export { default as user } from '../../public/icons/user.svg';
 export { default as xWhite } from '../../public/icons/x-white.svg';
+export { default as googleKeep } from '../../public/icons/google-keep.svg';
 
 // const icons = {
 //   'add-white': addWhite,

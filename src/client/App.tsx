@@ -8,6 +8,7 @@ import * as actions from './appStoreActions.jsx';
 import LoginPage from './LoginPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
+import { ImportPage } from './ImportPage.jsx';
 import _ from 'lodash';
 import { ServerError } from '../common/util.js';
 
@@ -29,6 +30,14 @@ export default function App() {
         </Auth>
       ),
       loader: notePageLoader,
+    },
+    {
+      path: '/import',
+      element: (
+        <Auth>
+          <ImportPage key="/import" />
+        </Auth>
+      ),
     },
     {
       path: '/archive',

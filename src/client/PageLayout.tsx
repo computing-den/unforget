@@ -61,28 +61,32 @@ export function PageHeader(props: {
   }, [router]);
 
   const goToArchive = useCallback(() => {
-    if (router.pathname !== '/archive') {
-      history.pushState(null, '', '/archive');
-    }
+    if (router.pathname !== '/archive') history.pushState(null, '', '/archive');
   }, [router]);
 
   const goToLogin = useCallback(() => {
-    if (router.pathname !== '/login') {
-      history.pushState(null, '', '/login');
-    }
+    if (router.pathname !== '/login') history.pushState(null, '', '/login');
   }, [router]);
 
-  const menu: MenuItem[] = _.compact([
-    app.user && { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
-    app.user?.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
-    ...(props.menu || []),
-    app.user && { label: 'Notes', icon: icons.notes, onClick: goToNotes },
-    app.user && { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
-    app.user && { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
-    { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
-    { label: 'About', icon: icons.info, onClick: about },
-    app.user && { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
-  ]);
+  const goToImport = useCallback(() => {
+    if (router.pathname !== '/import') history.pushState(null, '', '/import');
+  }, [router]);
+
+  let menu: MenuItem[] | undefined;
+  if (app.user) {
+    menu = _.compact([
+      { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
+      app.user.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
+      ...(props.menu || []),
+      { label: 'Notes', icon: icons.notes, onClick: goToNotes },
+      { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
+      { label: 'Import Google Keep', icon: icons.googleKeep, onClick: goToImport },
+      { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
+      { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
+      { label: 'About', icon: icons.info, onClick: about },
+      { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
+    ]);
+  }
 
   // const { isLoading } = useRouterLoading();
   // log('PageLayout: isLoading: ', isLoading);
@@ -90,14 +94,16 @@ export function PageHeader(props: {
   return (
     <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''}`}>
       <div className="content">
-        <div className="menu-button-container">
-          <div className="menu-button">
-            <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
-              <img src={icons.menuWhite} />
-            </a>
-            {menuOpen && <Menu menu={menu} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
+        {!_.isEmpty(menu) && (
+          <div className="menu-button-container">
+            <div className="menu-button">
+              <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
+                <img src={icons.menuWhite} />
+              </a>
+              {menuOpen && <Menu menu={menu} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
+            </div>
           </div>
-        </div>
+        )}
         <div className="title">
           {/*
           <div className="logo">
