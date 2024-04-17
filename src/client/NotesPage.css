@@ -51,66 +51,6 @@
 
   .notes {
     margin-top: 2rem;
-
-    border: 1px solid var(--box-border-color);
-    border-radius: var(--box-border-radius);
-
-    @media (max-width: 800px) {
-      border-radius: 0;
-      border-left: 0;
-      border-right: 0;
-    }
-
-    .note {
-      padding: 1rem;
-      transition: 0.2s background ease-in-out;
-      cursor: pointer;
-      font-family: inherit;
-      white-space: pre-wrap;
-      word-break: break-word;
-      word-wrap: break-word;
-      line-height: 1.5;
-      margin: 0;
-      position: relative;
-
-      &:hover {
-        background: #d0ebf5;
-      }
-
-      .title {
-        font-weight: bold;
-      }
-
-      & p {
-        margin: 0.5rem 0;
-      }
-
-      & + .note {
-        border-top: 1px solid var(--box-border-color);
-      }
-
-      & img.pin {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 20px;
-        opacity: 0.5;
-      }
-
-      & input[type='checkbox'] {
-        border: 1px solid #aadfef;
-        border-radius: 5px;
-        outline: none;
-        padding: 0.5rem 0.75rem;
-        /* outline: none; */
-        width: 16px;
-        height: 16px;
-        /* border-radius: 20px; */
-        vertical-align: text-bottom;
-        margin: 0;
-        margin-right: 0.25rem;
-      }
-    }
   }
 
   & button.load-more {

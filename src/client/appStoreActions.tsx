@@ -8,8 +8,8 @@ import * as api from './api.js';
 import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
-import demoNote1 from './demoNote1.txt';
-import demoNote2 from './demoNote2.txt';
+import demoNote1 from './notes/demoNote1.txt';
+import demoNote2 from './notes/demoNote2.txt';
 
 export async function initAppStore() {
   // let showArchive = false;
@@ -214,8 +214,12 @@ export function showMessage(text: string, opts?: { type?: 'info' | 'error' }) {
 }
 
 export async function saveNote(note: t.Note, opts?: { message?: string; immediateSync?: boolean }) {
+  await saveNotes([note], opts);
+}
+
+export async function saveNotes(notes: t.Note[], opts?: { message?: string; immediateSync?: boolean }) {
   try {
-    await storage.saveNote(note);
+    await storage.saveNotes(notes);
     if (opts?.message) {
       showMessage(opts.message, { type: 'info' });
     }

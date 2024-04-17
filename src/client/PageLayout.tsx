@@ -72,6 +72,10 @@ export function PageHeader(props: {
     if (router.pathname !== '/import') history.pushState(null, '', '/import');
   }, [router]);
 
+  const goToExport = useCallback(() => {
+    if (router.pathname !== '/export') history.pushState(null, '', '/export');
+  }, [router]);
+
   let menu: MenuItem[] | undefined;
   if (app.user) {
     menu = _.compact([
@@ -80,11 +84,12 @@ export function PageHeader(props: {
       ...(props.menu || []),
       { label: 'Notes', icon: icons.notes, onClick: goToNotes },
       { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
-      { label: 'Import Google Keep', icon: icons.googleKeep, onClick: goToImport },
-      { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync },
-      { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
+      { label: 'Import', icon: icons.import, onClick: goToImport },
+      { label: 'Export', icon: icons.export, onClick: goToExport },
       { label: 'About', icon: icons.info, onClick: about },
-      { label: 'Log out', icon: icons.logOut, onClick: actions.logout },
+      { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
+      { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
+      { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },
     ]);
   }
 
@@ -100,7 +105,7 @@ export function PageHeader(props: {
               <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
                 <img src={icons.menuWhite} />
               </a>
-              {menuOpen && <Menu menu={menu} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
+              {menuOpen && <Menu menu={menu!} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
             </div>
           </div>
         )}

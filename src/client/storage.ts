@@ -93,33 +93,50 @@ export async function transaction<T>(
 }
 
 export async function saveNote(note: t.Note) {
+  return saveNotes([note]);
+}
+
+export async function saveNotes(notes: t.Note[]) {
+  const promises = notes.map(enqueueNote);
+  saveNextNotesInQueue(); // Don't await here.
+  await Promise.all(promises);
+}
+
+function enqueueNote(note: t.Note): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     saveNoteQueue.unshift({ note, resolve, reject });
-    if (!saveNoteQueueActive) saveNextNoteInQueue();
   });
 }
 
-async function saveNextNoteInQueue() {
-  const item = saveNoteQueue.pop();
-  saveNoteQueueActive = Boolean(item);
-  if (!item) return;
+async function saveNextNotesInQueue() {
+  if (saveNoteQueueActive) return;
+  if (saveNoteQueue.length === 0) return;
+
+  const items = [...saveNoteQueue];
+  saveNoteQueue.length = 0;
 
   try {
-    await saveNoteQueueItem(item);
-    log('saved note ', item.note.text);
-    item.resolve();
+    await saveNoteQueueItems(items);
+    log(
+      'saved notes ',
+      items.map(item => item.note.text),
+    );
+    for (const item of items) item.resolve();
   } catch (error) {
-    item.reject(error as Error);
+    for (const item of items) item.reject(error as Error);
   } finally {
-    saveNextNoteInQueue();
+    saveNoteQueueActive = false;
+    saveNextNotesInQueue(); // Don't await here.
   }
 }
 
-async function saveNoteQueueItem(item: SaveNoteQueueItem) {
+async function saveNoteQueueItems(items: SaveNoteQueueItem[]) {
   await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', tx => {
-    tx.objectStore(NOTES_STORE).put(item.note);
-    const noteHead: t.NoteHead = { id: item.note.id, modification_date: item.note.modification_date };
-    tx.objectStore(NOTES_QUEUE_STORE).put(noteHead);
+    for (const item of items) {
+      tx.objectStore(NOTES_STORE).put(item.note);
+      const noteHead: t.NoteHead = { id: item.note.id, modification_date: item.note.modification_date };
+      tx.objectStore(NOTES_QUEUE_STORE).put(noteHead);
+    }
   });
 }
 

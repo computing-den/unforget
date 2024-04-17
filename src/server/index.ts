@@ -193,9 +193,8 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
   const notes = db.getQueuedNotes(client);
   const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes, syncNumber };
 
-  res.send(partialSyncRes);
-
   db.mergeSyncData(client, partialSyncReq, partialSyncRes);
+  res.send(partialSyncRes);
 });
 
 app.post('/api/full-sync', authenticate, (req, res) => {
@@ -213,12 +212,11 @@ app.post('/api/full-sync', authenticate, (req, res) => {
   const notes = db.getNotes(client);
   const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
 
-  res.send(fullSyncRes);
-
   db.mergeSyncData(client, fullSyncReq, fullSyncRes);
+  res.send(fullSyncRes);
 });
 
-app.post('/api/add-notes', authenticate, (req, res) => {
+app.post('/api/add-notes', authenticate, (req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     log(res, req.body);
   }
@@ -228,9 +226,8 @@ app.post('/api/add-notes', authenticate, (req, res) => {
 
   const fullSyncRes: t.FullSyncRes = { notes: [], syncNumber };
 
-  res.send(fullSyncRes);
-
   db.mergeSyncData(client, fullSyncReq, fullSyncRes);
+  res.send({ ok: true });
 });
 
 app.post('/api/logout', (req, res, next) => {

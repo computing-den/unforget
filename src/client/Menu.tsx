@@ -2,6 +2,7 @@ import React, { useCallback, useState, useEffect, useRef } from 'react';
 
 export type MenuItem = {
   isHeader?: boolean;
+  hasTopSeparator?: boolean;
   label: string;
   icon: string;
   onClick?: () => any;
@@ -41,7 +42,7 @@ export function Menu(props: MenuProps) {
               <img src={item.icon} />
             </li>
           ) : (
-            <li key={i}>
+            <li key={i} className={item.hasTopSeparator ? 'has-top-separator' : ''}>
               <a href="#" onClick={menuItemClicked} className="reset" data-menu-index={i}>
                 {item.label}
                 <img src={item.icon} />

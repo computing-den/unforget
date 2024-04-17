@@ -23,6 +23,8 @@ export { default as trashWhite } from '../../public/icons/trash-white.svg';
 export { default as user } from '../../public/icons/user.svg';
 export { default as xWhite } from '../../public/icons/x-white.svg';
 export { default as googleKeep } from '../../public/icons/google-keep.svg';
+export { default as export } from '../../public/icons/export.svg';
+export { default as import } from '../../public/icons/import.svg';
 
 // const icons = {
 //   'add-white': addWhite,

@@ -11,6 +11,7 @@ import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 import * as icons from './icons.js';
+import { Notes } from './Notes.jsx';
 import log from './logger.js';
 
 type NotesPageProps = {};
@@ -193,9 +194,9 @@ export function NotesPage(props: NotesPageProps) {
               onBlur={editorBlurCb}
             />
           </div>
-          <Notes />
+          {app.notes.length > 0 && <NotesFromApp />}
           {!app.notes.length && app.syncing && <h2 className="page-message">Loading...</h2>}
-          {!app.notes.length && !app.syncing && <h2 className="page-message">Not found</h2>}
+          {!app.notes.length && !app.syncing && <h2 className="page-message">No notes found</h2>}
           {!app.allNotePagesLoaded && (
             <button className="load-more primary button-row" onClick={loadMore}>
               Load more
@@ -207,97 +208,9 @@ export function NotesPage(props: NotesPageProps) {
   );
 }
 
-const Notes = memo(function Notes() {
+const NotesFromApp = memo(function NotesFromApp() {
   const app = appStore.use();
-  return (
-    <div className="notes">
-      {app.notes.map(note => (
-        <Note key={note.id} note={note} />
-      ))}
-    </div>
-  );
-});
-
-const Note = memo(function Note(props: { note: t.Note }) {
-  let text = props.note.text;
-  // if (text && text.length > 1500) {
-  //   text = text.substring(0, 1500) + '\n..........';
-  // }
-  const lineLimit = 30;
-  if (text && countLines(text) > lineLimit) {
-    text = text.split(/\r?\n/).slice(0, lineLimit).join('\n') + '\n..........';
-  }
-  // const titleBodyMatch = text?.match(/^([^\r\n]+)\r?\n\r?\n(.+)$/s);
-  // let title = titleBodyMatch?.[1];
-  // let body = titleBodyMatch?.[2] ?? text ?? '';
-  const lines = cutil.parseLines(text ?? '');
-  const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
-
-  function clickCb(e: React.MouseEvent) {
-    history.pushState(null, '', `/n/${props.note.id}`);
-  }
-
-  const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
-
-  function inputChangeCb(e: React.ChangeEvent<HTMLInputElement>) {
-    const lineIndex = Number(e.target.dataset.lineIndex);
-    const line = lines[lineIndex];
-    const newLineText = cutil.setLineCheckbox(line, e.target.checked);
-    const newText = cutil.insertText(props.note.text!, newLineText, line.start, line.end);
-    const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
-    actions.saveNoteAndQuickUpdateNotes(newNote);
-  }
-
-  function inputClickCb(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  function renderLine(line: t.ParsedLine, i: number): React.ReactNode {
-    let res = [];
-
-    if (hasTitle && i === 0) {
-      // Render title.
-      res.push(<span className="title">{lines[0].wholeLine}</span>);
-    } else if (!hasTitle || i >= 2) {
-      // Render body line.
-
-      if (i > 0) res.push('\n');
-
-      if (!line.bullet) {
-        res.push(line.wholeLine);
-      } else {
-        res.push(' '.repeat(line.padding * 2));
-        if (line.checkbox) {
-          res.push(
-            <input
-              type="checkbox"
-              key={`input-${props.note.id}-${i}`}
-              onChange={inputChangeCb}
-              onClick={inputClickCb}
-              data-line-index={i}
-              checked={line.checked}
-            />,
-          );
-          res.push(' ');
-        } else {
-          res.push('• ');
-        }
-        res.push(line.body);
-      }
-    }
-
-    return res;
-  }
-
-  // const bodyLines = hasTitle ? lines.slice(2) : lines;
-
-  return (
-    <pre className="note" onMouseDown={onMouseDown} onClick={onClick}>
-      {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
-      {lines.map(renderLine)}
-    </pre>
-  );
+  return <Notes notes={app.notes} />;
 });
 
 function createNewNote(): t.Note {
@@ -325,12 +238,6 @@ export async function notesPageLoader(match: RouteMatch) {
 
   // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
   await actions.updateNotesIfDirty();
-}
-
-function countLines(text: string): number {
-  let count = 0;
-  for (let i = 0; i < text.length; i++) if (text[i] === '\n') count++;
-  return count;
 }
 
 function reduceNotePagesImmediately() {

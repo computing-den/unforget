@@ -1,0 +1,10 @@
+Optional one-click installation
+
+
+Continue using it directly in your browser or install:
+
+- Chrome / Edge: Install icon in the URL bar
+- iOS Safari: Share → Add to Home Screen
+- Android Browser: Menu → Add to Home Screen
+
+Note: Desktop Safari and Firefox do not support installing Progressive Web Apps.

@@ -52,6 +52,10 @@
     }
 
     & li {
+      &.has-top-separator {
+        border-top: 1px solid #cacfd5;
+      }
+
       & a {
         display: flex;
         align-items: center;
