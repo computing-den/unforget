@@ -87,6 +87,10 @@ export function getNotes(client: t.ServerUserClient): t.EncryptedNote[] {
   return dbNotes.map(dbNoteToNote);
 }
 
+export function getNoteHeads(client: t.ServerUserClient): t.NoteHead[] {
+  return db.prepare(`SELECT id, modification_date FROM notes WHERE username = ?`).all(client.username) as t.NoteHead[];
+}
+
 export function dbNoteToNote(dbNote: t.DBEncryptedNote): t.EncryptedNote {
   return _.omit(dbNote, 'username');
 }
@@ -161,6 +165,57 @@ export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncDat
     // Update sync number.
     const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
     updateSyncNumber.run({ token: client.token, sync_number: newSyncNumber });
+  })();
+}
+
+export function mergeSyncHeadsData(
+  client: t.ServerUserClient,
+  reqSyncHeadsData: t.SyncHeadsData,
+  resSyncHeadsData: t.SyncHeadsData,
+) {
+  // const isDebugNote = (note: t.EncryptedNote) => note.text?.includes('password protected notes');
+  // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
+
+  const deleteFromQueue = db.prepare<[{ token: string; id: string }]>(
+    `DELETE FROM notes_queue WHERE token = :token AND id = :id`,
+  );
+  const updateSyncNumber = db.prepare<[{ token: string; sync_number: number }]>(
+    `UPDATE clients SET sync_number = :sync_number WHERE token = :token`,
+  );
+  const insertIntoQueue = prepareInsertIntoQueue();
+
+  db.transaction(() => {
+    const sentNoteHeads = resSyncHeadsData.noteHeads;
+    const receivedNoteHeadsById = _.keyBy(reqSyncHeadsData.noteHeads, 'id');
+    let addedToQueueCount = 0;
+    let removedFromQueueCount = 0;
+
+    const latestQueueItems = getQueuedNoteHeads(client);
+    const latestQueueItemsById = _.keyBy(latestQueueItems, 'id');
+
+    // Put the sent note head in queue if necessary to be sent in full later, or delete it from queue.
+    for (const sentNoteHead of sentNoteHeads) {
+      const receivedNoteHead = receivedNoteHeadsById[sentNoteHead.id];
+      if (cutil.isNoteNewerThan(sentNoteHead, receivedNoteHead)) {
+        insertIntoQueue.run({
+          id: sentNoteHead.id,
+          modification_date: sentNoteHead.modification_date,
+          token: client.token,
+        });
+        addedToQueueCount++;
+      } else if (latestQueueItemsById[sentNoteHead.id]) {
+        deleteFromQueue.run({ token: client.token, id: sentNoteHead.id });
+        removedFromQueueCount++;
+      }
+    }
+
+    // Update sync number.
+    const newSyncNumber = Math.max(reqSyncHeadsData.syncNumber, resSyncHeadsData.syncNumber) + 1;
+    updateSyncNumber.run({ token: client.token, sync_number: newSyncNumber });
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`mergeSyncHeadsData added ${addedToQueueCount} to queue and removed ${removedFromQueueCount}`);
+    }
   })();
 }
 

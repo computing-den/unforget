@@ -66,6 +66,11 @@ export type SyncData = {
   syncNumber: number;
 };
 
+export type SyncHeadsData = {
+  noteHeads: NoteHead[];
+  syncNumber: number;
+};
+
 export type NoteHead = {
   id: string;
   modification_date: string;
@@ -87,9 +92,9 @@ export type PartialSyncResRequireFullSync = {
 
 export type PartialSyncRes = PartialSyncResNormal | PartialSyncResRequireFullSync;
 
-export type FullSyncReq = SyncData;
+export type QueueSyncReq = SyncHeadsData;
 
-export type FullSyncRes = SyncData;
+export type QueueSyncRes = SyncHeadsData;
 
 export type ServerConfig = {
   port: number;

@@ -235,7 +235,7 @@ export async function getPartialSyncData(): Promise<t.SyncData> {
   return { notes, syncNumber: res.syncNumberReq.result ?? 0 };
 }
 
-export async function getFullSyncData(): Promise<t.SyncData> {
+export async function getQueueSyncData(): Promise<t.SyncHeadsData> {
   const user = appStore.get().user;
   if (!user) throw new Error('Sign in to sync.');
 
@@ -244,8 +244,8 @@ export async function getFullSyncData(): Promise<t.SyncData> {
     const syncNumberReq = tx.objectStore(SETTINGS_STORE).get('syncNumber') as IDBRequest<number | undefined>;
     return { notesReqs, syncNumberReq };
   });
-  const notes = await util.encryptNotes(res.notesReqs.result, user.encryptionKey);
-  return { notes, syncNumber: res.syncNumberReq.result ?? 0 };
+  const noteHeads = res.notesReqs.result.map(note => ({ id: note.id, modification_date: note.modification_date }));
+  return { noteHeads, syncNumber: res.syncNumberReq.result ?? 0 };
 }
 
 export async function getSyncNumber(): Promise<number> {
@@ -298,9 +298,10 @@ export async function sync() {
 
     // Full sync.
     if (fullSyncRequired) {
-      const fullSyncReq: t.FullSyncReq = await getFullSyncData();
-      const fullSyncRes: t.FullSyncRes = await api.post('/api/full-sync', fullSyncReq);
-      mergeCount = await mergeSyncData(fullSyncReq, fullSyncRes);
+      const queueSyncReq: t.QueueSyncReq = await getQueueSyncData();
+      const queueSyncRes: t.QueueSyncRes = await api.post('/api/queue-sync', queueSyncReq);
+      await mergeSyncHeadsData(queueSyncReq, queueSyncRes);
+      shouldSyncAgain = true;
       fullSyncRequired = false;
     }
   } catch (err) {
@@ -313,7 +314,7 @@ export async function sync() {
   syncing = false;
   callSyncListeners({ done: true, error, mergeCount });
 
-  if (shouldSyncAgain) setTimeout(sync, 1000);
+  if (shouldSyncAgain) setTimeout(sync, 0);
 }
 
 export async function fullSync() {
@@ -422,7 +423,43 @@ async function mergeSyncData(reqSyncData: t.SyncData, resSyncData: t.SyncData): 
     const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
     tx.objectStore(SETTINGS_STORE).put(newSyncNumber, 'syncNumber');
 
+    log('mergeSyncData mergeCount:', mergeCount);
+
     return mergeCount;
+  });
+}
+
+async function mergeSyncHeadsData(reqSyncHeadsData: t.SyncHeadsData, resSyncHeadsData: t.SyncHeadsData): Promise<void> {
+  const user = appStore.get().user;
+  if (!user) throw new Error('Sign in to sync.');
+
+  return transaction([NOTES_QUEUE_STORE, SETTINGS_STORE], 'readwrite', async tx => {
+    const queueStore = tx.objectStore(NOTES_QUEUE_STORE);
+    const sentNoteHeads = reqSyncHeadsData.noteHeads;
+    const receivedNoteHeadsById = _.keyBy(resSyncHeadsData.noteHeads, 'id');
+    let addedToQueueCount = 0;
+    let removedFromQueueCount = 0;
+
+    const latestQueueItems = await waitForDBRequest<t.NoteHead[]>(queueStore.getAll());
+    const latestQueueItemsById = _.keyBy(latestQueueItems, 'id');
+
+    // Put the sent note head in queue if necessary to be sent in full later, or delete it from queue.
+    for (const sentNoteHead of sentNoteHeads) {
+      const receivedNoteHead = receivedNoteHeadsById[sentNoteHead.id];
+      if (cutil.isNoteNewerThan(sentNoteHead, receivedNoteHead)) {
+        queueStore.put(sentNoteHead);
+        addedToQueueCount++;
+      } else if (latestQueueItemsById[sentNoteHead.id]) {
+        queueStore.delete(sentNoteHead.id);
+        removedFromQueueCount++;
+      }
+    }
+
+    // Update sync number.
+    const newSyncNumber = Math.max(reqSyncHeadsData.syncNumber, resSyncHeadsData.syncNumber) + 1;
+    tx.objectStore(SETTINGS_STORE).put(newSyncNumber, 'syncNumber');
+
+    log(`mergeSyncHeadsData added ${addedToQueueCount} to queue and removed ${removedFromQueueCount}`);
   });
 }
 

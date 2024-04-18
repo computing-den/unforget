@@ -185,8 +185,8 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
 
   // Require full sync if syncNumber is 0 or syncNumber is out of sync
   if (syncNumber === 0 || syncNumber !== partialSyncReq.syncNumber) {
-    const fullSyncRes: t.PartialSyncRes = { type: 'require_full_sync' };
-    res.send(fullSyncRes);
+    const queueSyncRes: t.PartialSyncRes = { type: 'require_full_sync' };
+    res.send(queueSyncRes);
     return;
   }
 
@@ -197,23 +197,23 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
   res.send(partialSyncRes);
 });
 
-app.post('/api/full-sync', authenticate, (req, res) => {
+app.post('/api/full-sync', authenticate, (req, res, next) => {
+  next(new ServerError('App requires update', 400, 'app_requires_update'));
+});
+
+app.post('/api/queue-sync', authenticate, (req, res, next) => {
   const client = res.locals.client!;
-  const fullSyncReq: t.FullSyncReq = req.body;
+  const queueSyncReq: t.QueueSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
   if (process.env.NODE_ENV === 'development') {
-    // const fullSyncReq: t.FullSyncReq = req.body;
-    log(res, `showing 2 notes of ${fullSyncReq.notes.length}`);
-    log(res, { ...fullSyncReq, notes: fullSyncReq.notes.slice(0, 2) });
     log(res, 'sync number from db: ', syncNumber);
   }
 
-  const notes = db.getNotes(client);
-  const fullSyncRes: t.FullSyncRes = { notes, syncNumber };
+  const queueSyncRes: t.QueueSyncRes = { noteHeads: db.getNoteHeads(client), syncNumber };
 
-  db.mergeSyncData(client, fullSyncReq, fullSyncRes);
-  res.send(fullSyncRes);
+  db.mergeSyncHeadsData(client, queueSyncReq, queueSyncRes);
+  res.send(queueSyncRes);
 });
 
 app.post('/api/add-notes', authenticate, (req, res, next) => {
@@ -221,12 +221,12 @@ app.post('/api/add-notes', authenticate, (req, res, next) => {
     log(res, req.body);
   }
   const client = res.locals.client!;
-  const fullSyncReq: t.FullSyncReq = req.body;
+  const partialSyncReq: t.PartialSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
-  const fullSyncRes: t.FullSyncRes = { notes: [], syncNumber };
+  const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes: [], syncNumber };
 
-  db.mergeSyncData(client, fullSyncReq, fullSyncRes);
+  db.mergeSyncData(client, partialSyncReq, partialSyncRes);
   res.send({ ok: true });
 });
 
