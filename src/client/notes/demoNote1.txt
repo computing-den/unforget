@@ -14,6 +14,9 @@ Unforget is a minimalist note-taking app featuring:
 - [x] Public APIs, create your own clients
 - [x] Optional one-click installation
 
+Coming soon:
+- [ ] Import from Apple Notes
+
 See the GitHub page.
 
 Unforget is made by Computing Den, a software company specializing in web technologies.

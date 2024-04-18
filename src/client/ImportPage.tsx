@@ -152,63 +152,21 @@ async function importFromZipFile(zipFile: File) {
     });
   }
 
-  await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
+  if (notes.length) {
+    await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
+  } else {
+    actions.showMessage('No notes were found');
+  }
 }
 
 function validateGoogleKeepJson(json: any): string | undefined {
   if (!('createdTimestampUsec' in json)) return 'Missing createdTimestampUsec';
   if (!('userEditedTimestampUsec' in json)) return 'Missing userEditedTimestampUsec';
 
+  // NOTE: some notes have neither listContent nor textContent. So be more lenient.
   // if (!('isTrashed' in json)) return 'Missing isTrashed';
   // if (!('isPinned' in json)) return 'Missing isPinned';
   // if (!('isArchived' in json)) return 'Missing isArchived';
   // if (!('listContent' in json) && !('textContent' in json)) return 'Missing listContent and textContent';
   // if (!('title' in json) && !('title' in json)) return 'Missing title';
 }
-
-// // read an entry as an ArrayBuffer
-// const arrayBuffer = await entries['path/to/file'].arrayBuffer();
-
-// // read an entry as a blob and tag it with mime type 'image/png'
-// const blob = await entries['path/to/otherFile'].blob('image/png');
-
-//   const filenames = fs.readdirSync(googleKeepPath, { encoding: 'utf8' }).filter(x => x.endsWith('.json'));
-//   const notes: t.Note[] = [];
-//   for (const filename of filenames) {
-//     console.log(`Reading "${filename}" ...`);
-//     const content = JSON.parse(fs.readFileSync(path.join(googleKeepPath, filename), 'utf8'));
-//     if (content.isTrashed) continue;
-
-//     let text: string | null = null;
-//     const segments = [
-//       content.title,
-//       content.textContent,
-//       (content.listContent || [])
-//         .map((item: any) => (item.isChecked ? `- [x] ${item.text || ''}` : `- [ ] ${item.text || ''}`))
-//         .join('\n'),
-//     ];
-//     text = segments.filter(Boolean).join('\n\n');
-
-//     const note: t.Note = {
-//       id: uuid(),
-//       text,
-//       creation_date: new Date(Math.floor(content.createdTimestampUsec / 1000)).toISOString(),
-//       modification_date: new Date(Math.floor(content.userEditedTimestampUsec / 1000)).toISOString(),
-//       order: Math.floor(content.createdTimestampUsec / 1000),
-//       not_deleted: 1,
-//       not_archived: content.isArchived ? 0 : 1,
-//       pinned: content.isPinned ? 1 : 0,
-//     };
-//     notes.push(note);
-//   }
-
-//   notes.sort((a, b) => {
-//     if (a.creation_date > b.creation_date) return -1;
-//     if (a.creation_date < b.creation_date) return 1;
-//     return 0;
-//   });
-
-//   fs.writeFileSync(outputPath, JSON.stringify(notes, null, 2), 'utf8');
-
-//   console.log(`Converted ${notes.length} notes and wrote to ${outputPath}`);
-// }
