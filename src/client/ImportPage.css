@@ -21,6 +21,16 @@
     display: none;
   }
 
+  .note {
+    .desc {
+      margin-left: 1rem;
+    }
+  }
+
+  /* & button.import { */
+  /*   margin-left: 1rem; */
+  /* } */
+
   /* .page-content { */
   /* display: flex; */
   /* flex-direction: column; */

@@ -93,7 +93,7 @@ export const Note = memo(function Note(props: { note: t.Note }) {
   // const bodyLines = hasTitle ? lines.slice(2) : lines;
 
   return (
-    <pre className="note clickable" onMouseDown={onMouseDown} onClick={onClick}>
+    <pre className="note clickable prewrap" onMouseDown={onMouseDown} onClick={onClick}>
       {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
       {lines.map(renderLine)}
     </pre>

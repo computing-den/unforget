@@ -12,12 +12,15 @@
     padding: 1rem;
     transition: 0.2s background ease-in-out;
     font-family: inherit;
-    white-space: pre-wrap;
     word-break: break-word;
     word-wrap: break-word;
     line-height: 1.5;
     margin: 0;
     position: relative;
+
+    &.prewrap {
+      white-space: pre-wrap;
+    }
 
     &.clickable {
       cursor: pointer;

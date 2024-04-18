@@ -63,25 +63,45 @@ export function ImportPage() {
         <div className="import-page">
           {!importing && (
             <div className="notes">
-              <pre className="note">
+              <div className="note">
                 <b>Import from Google Keep</b>
                 <br />
                 <br />
-                1. Go to Google Takout
+                <p>1. Go to Google Takout</p>
+                <p>
+                  2. Select only Keep's data for export
+                  <br />
+                  <span className="desc">
+                    <i>It'll be ready for download in a few minutes</i>
+                  </span>
+                </p>
+                <p>
+                  3.{' '}
+                  <button className="import primary" onClick={triggerFileInput}>
+                    Import notes from the zip file
+                  </button>
+                </p>
                 <br />
-                2. Select only Keep's data for export
-                <br />
-                {'    '}
-                <i>It'll be ready for download in a few minutes</i>
-                <br />
-                3.{' '}
-                <button className="import primary" onClick={triggerFileInput}>
-                  Import notes from the zip file
-                </button>
+                <p>
+                  Note: The Unforget servers only see your <b>encrypted</b> data.
+                </p>
+              </div>
+              <div className="note">
+                <b>Import from Apple Notes</b>
                 <br />
                 <br />
-                Note: The Unforget servers only see your encrypted data.
-              </pre>
+                <p>
+                  <i>Coming soon ...</i>
+                </p>
+              </div>
+              <div className="note">
+                <b>Import APIs</b>
+                <br />
+                <br />
+                <p>
+                  <i>TODO</i>
+                </p>
+              </div>
             </div>
           )}
           {!importing && <input type="file" name="file" accept="application/zip" onChange={importCb} />}
