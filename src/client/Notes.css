@@ -58,7 +58,7 @@
       height: 20px;
       vertical-align: middle;
       margin: 0;
-      margin-right: 0.25rem;
+      /* margin-right: 0.25rem; */
       margin-top: -2px;
     }
   }

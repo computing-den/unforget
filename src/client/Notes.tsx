@@ -79,9 +79,9 @@ export const Note = memo(function Note(props: { note: t.Note }) {
               checked={line.checked}
             />,
           );
-          res.push(' ');
+          res.push('  ');
         } else {
-          res.push('• ');
+          res.push('●  ');
         }
         res.push(line.body);
       }

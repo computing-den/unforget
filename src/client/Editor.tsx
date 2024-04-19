@@ -152,6 +152,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
         e.preventDefault();
         document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding));
       }
+    } else if (e.key === 'Escape') {
+      textarea.blur();
     }
   }
 
