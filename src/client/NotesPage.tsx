@@ -22,6 +22,7 @@ export function NotesPage(props: NotesPageProps) {
   // const [newNoteText, setNewNoteText] = useState('');
   // const [newNotePinned, setNewNotePinned] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editorFocused, setEditorFocused] = useState(false);
   const [stickyEditor, setStickyEditor] = useState(false);
   const editorRef = useRef<EditorContext | null>(null);
   util.useStoreAndRestoreScrollY();
@@ -80,11 +81,21 @@ export function NotesPage(props: NotesPageProps) {
 
   function editorFocusCb() {
     setEditing(true);
+    setEditorFocused(true);
   }
 
   function editorBlurCb() {
-    // setEditing(false);
+    setEditorFocused(false);
   }
+
+  // Cancel new note if editor is empty and has lost focus.
+  useEffect(() => {
+    let timeout: any;
+    if (editing && !editorFocused && !newNote?.text) {
+      timeout = setTimeout(() => cancelNewNoteCb(), 300);
+    }
+    return () => clearTimeout(timeout);
+  }, [editing, newNote, editorFocused, cancelNewNoteCb]);
 
   function togglePinned() {
     editorRef.current!.focus();
@@ -126,7 +137,7 @@ export function NotesPage(props: NotesPageProps) {
     editorRef.current!.cycleListStyle();
   }
 
-  function editNoteCb() {
+  function startNewNoteCb() {
     setEditing(true);
     editorRef.current!.focus();
   }
@@ -152,7 +163,7 @@ export function NotesPage(props: NotesPageProps) {
         onClick={toggleHidePinnedNotes}
         title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
       />,
-      <PageAction icon={icons.addWhite} onClick={editNoteCb} title="New note" />,
+      <PageAction icon={icons.addWhite} onClick={startNewNoteCb} title="New note" />,
     );
   } else {
     pageActions.push(

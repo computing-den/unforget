@@ -10,36 +10,7 @@ import { CACHE_VERSION, ServerError } from '../common/util.js';
 const CACHE_NAME = `unforget-${CACHE_VERSION}`;
 
 // The static resources that the app needs to function.
-const APP_STATIC_RESOURCES = [
-  '/',
-  '/style.css',
-  '/index.js',
-  '/barefront.svg',
-  '/manifest.json',
-  '/icon-256x256.png',
-  // '/icons/archive-filled.svg',
-  // '/icons/archive-empty.svg',
-  // '/icons/archive-filled-white.svg',
-  // '/icons/archive-empty-white.svg',
-  // '/icons/check-white.svg',
-  // '/icons/log-out.svg',
-  // '/icons/menu-white.svg',
-  // '/icons/pin-empty.svg',
-  // '/icons/pin-empty-white.svg',
-  // '/icons/pin-filled.svg',
-  // '/icons/pin-filled-white.svg',
-  // '/icons/refresh-ccw.svg',
-  // '/icons/trash-white.svg',
-  // '/icons/user.svg',
-  // '/icons/search-white.svg',
-  // '/icons/show-pinned-white.svg',
-  // '/icons/hide-pinned-white.svg',
-  // '/icons/info.svg',
-  // '/icons/notes.svg',
-  // '/icons/add-white.svg',
-  // '/icons/checkbox-list.svg',
-  // '/icons/bulletpoint-white.svg',
-];
+const APP_STATIC_RESOURCES = ['/', '/style.css', '/index.js', '/barefront.svg', '/manifest.json', '/icon-256x256.png'];
 
 self.addEventListener('install', event => {
   // The promise that skipWaiting() returns can be safely ignored.

@@ -190,6 +190,10 @@ export async function getNotes(opts?: {
             // If archived notes were not requested and we hit an archive note, we're done.
             done = true;
             resolve();
+          } else if (!note.not_deleted) {
+            // If we hit a deleted note, we're done.
+            done = true;
+            resolve();
           } else if (note.not_archived && opts?.archive) {
             cursor.continue();
           } else if (note.pinned && opts?.hidePinnedNotes) {

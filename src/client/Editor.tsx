@@ -32,6 +32,7 @@ export type EditorContext = {
   // toggleBulletpointStyle: () => any;
   cycleListStyle: () => any;
   focus: () => any;
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
 };
 
 type Selection = { start: number; end: number; direction: 'forward' | 'backward' | 'none' };
@@ -118,7 +119,10 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     textareaRef.current!.focus();
   }
 
-  useImperativeHandle<EditorContext, EditorContext>(ref, () => ({ cycleListStyle, focus }), [cycleListStyle, focus]);
+  useImperativeHandle<
+    EditorContext,
+    EditorContext
+  >(ref, () => ({ cycleListStyle, focus, textareaRef }), [cycleListStyle, focus, textareaRef]);
 
   function changeCb() {
     props.onChange(textareaRef.current!.value);
