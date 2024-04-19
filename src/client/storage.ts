@@ -259,6 +259,9 @@ export async function sync() {
   // Skip if user not logged in.
   if (!appStore.get().user) return;
 
+  // Skip if user is offline
+  if (!appStore.get().online) return;
+
   // Skip if this is a demo.
   if (appStore.get().user?.username === 'demo') return;
 
