@@ -14,7 +14,7 @@
     font-family: inherit;
     word-break: break-word;
     word-wrap: break-word;
-    line-height: 1.5;
+    line-height: var(--note-line-height);
     margin: 0;
     position: relative;
 
@@ -53,14 +53,13 @@
       border: 1px solid #aadfef;
       border-radius: 5px;
       outline: none;
-      padding: 0.5rem 0.75rem;
-      /* outline: none; */
-      width: 16px;
-      height: 16px;
-      /* border-radius: 20px; */
-      vertical-align: text-bottom;
+      padding: 0.5rem 0rem;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
       margin: 0;
       margin-right: 0.25rem;
+      margin-top: -2px;
     }
   }
 }

@@ -11,6 +11,7 @@
   --page-max-width: 800px;
   --menu-z-index: 100;
   --sticky-z-index: 50;
+  --note-line-height: 1.6;
 }
 
 html,
