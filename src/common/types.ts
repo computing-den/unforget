@@ -140,7 +140,7 @@ export type ParsedLine = {
   checked: boolean;
   start: number;
   end: number;
-  body: string;
+  bodyText: string;
   bodyStart: number;
   contentStart: number;
   lastLine: boolean;

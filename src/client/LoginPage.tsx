@@ -5,7 +5,7 @@ import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
-import { PageLayout, PageHeaderCompact, PageBody } from './PageLayout.jsx';
+import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -38,7 +38,7 @@ function LoginPage(props: LoginPageProps) {
 
   return (
     <PageLayout>
-      <PageHeaderCompact />
+      <PageHeader compact />
       <PageBody>
         <div className="login-page">
           <div className="form-element">

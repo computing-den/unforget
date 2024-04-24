@@ -83,7 +83,7 @@ export const Note = memo(function Note(props: { note: t.Note }) {
         } else {
           res.push('●  ');
         }
-        res.push(line.body);
+        res.push(line.bodyText);
       }
     }
 

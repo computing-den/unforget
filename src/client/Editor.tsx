@@ -119,10 +119,11 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     textareaRef.current!.focus();
   }
 
-  useImperativeHandle<
-    EditorContext,
-    EditorContext
-  >(ref, () => ({ cycleListStyle, focus, textareaRef }), [cycleListStyle, focus, textareaRef]);
+  useImperativeHandle<EditorContext, EditorContext>(ref, () => ({ cycleListStyle, focus, textareaRef }), [
+    cycleListStyle,
+    focus,
+    textareaRef,
+  ]);
 
   function changeCb() {
     props.onChange(textareaRef.current!.value);
@@ -140,7 +141,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
       if (line.bullet) {
         e.preventDefault();
-        if (line.body === '') {
+        if (line.bodyText === '') {
           textarea.setSelectionRange(line.start, line.end);
           document.execCommand('delete');
         } else if (line.checkbox) {

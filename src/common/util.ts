@@ -43,11 +43,11 @@ export function parseLine(text: string, cur: number): t.ParsedLine {
   const checkbox = Boolean(bullet) && (checked || isLookingAt('[ ] '));
   if (checkbox) cur += 4;
 
-  const body = text.substring(cur, end);
+  const bodyText = text.substring(cur, end);
   const bodyStart = cur;
   const wholeLine = text.substring(start, end);
 
-  return { wholeLine, padding, bullet, checkbox, checked, start, end, body, bodyStart, contentStart, lastLine };
+  return { wholeLine, padding, bullet, checkbox, checked, start, end, bodyText, bodyStart, contentStart, lastLine };
 }
 
 export function parseLines(text: string): t.ParsedLine[] {
@@ -89,7 +89,7 @@ export function toggleLineCheckbox(line: t.ParsedLine): string {
 }
 
 export function setLineCheckbox(line: t.ParsedLine, checked: boolean): string {
-  return ' '.repeat(line.padding) + line.bullet + ' ' + (checked ? '[x] ' : '[ ] ') + line.body;
+  return ' '.repeat(line.padding) + line.bullet + ' ' + (checked ? '[x] ' : '[ ] ') + line.bodyText;
 }
 
 export function calcNewSelection(
@@ -122,7 +122,11 @@ export function hexStringToBytes(str: string): Uint8Array {
 }
 
 export class ServerError extends Error {
-  constructor(message: string, public code: number, public type: t.ServerErrorType = 'generic') {
+  constructor(
+    message: string,
+    public code: number,
+    public type: t.ServerErrorType = 'generic',
+  ) {
     super(message);
   }
 

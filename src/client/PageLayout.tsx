@@ -14,22 +14,54 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
 }
 
-export function PageHeaderCompact() {
-  return (
-    <div id="page-header" className="compact">
-      <h1 className="heading">Unforget</h1>
-    </div>
-  );
-}
+// export function PageHeaderCompact() {
+//   return (
+//     <div id="page-header" className="compact">
+//       <h1 className="heading">Unforget</h1>
+//     </div>
+//   );
+// }
 
-export function PageHeader(props: {
+type PageHeaderProps = {
   menu?: MenuItem[];
   actions?: React.ReactNode;
   title?: string;
   hasSticky?: boolean;
   hasSearch?: boolean;
-}) {
+  compact?: boolean;
+};
+
+export function PageHeader(props: PageHeaderProps) {
   const app = appStore.use();
+
+  return (
+    <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''} ${props.compact ? 'compact' : ''}`}>
+      {props.compact ? <PageHeaderContentCompact /> : <PageHeaderContent {...props} />}
+      {app.message && (
+        <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
+          <div className="msg-bar-inner-container">
+            <p>{app.message.text.substring(0, 100)}</p>
+          </div>
+        </div>
+      )}
+      {app.requirePageRefresh && (
+        <div className="update-app-container">
+          <button className="primary" onClick={actions.updateApp}>
+            Update app
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PageHeaderContentCompact() {
+  return <h1 className="heading">Unforget</h1>;
+}
+
+function PageHeaderContent(props: PageHeaderProps) {
+  const app = appStore.use();
+  if (!app.user) throw new Error('PageHeaderContent requires user');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = util.useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
@@ -77,71 +109,50 @@ export function PageHeader(props: {
   }, [router]);
 
   let menu: MenuItem[] | undefined;
-  if (app.user) {
-    menu = _.compact([
-      { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
-      app.user.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
-      ...(props.menu || []),
-      { label: 'Notes', icon: icons.notes, onClick: goToNotes },
-      { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
-      { label: 'Import', icon: icons.import, onClick: goToImport },
-      { label: 'Export', icon: icons.export, onClick: goToExport },
-      { label: 'About', icon: icons.info, onClick: about },
-      { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
-      { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
-      { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },
-    ]);
-  }
-
-  // const { isLoading } = useRouterLoading();
-  // log('PageLayout: isLoading: ', isLoading);
+  menu = _.compact([
+    { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
+    app.user.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
+    ...(props.menu || []),
+    { label: 'Notes', icon: icons.notes, onClick: goToNotes },
+    { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
+    { label: 'Import', icon: icons.import, onClick: goToImport },
+    { label: 'Export', icon: icons.export, onClick: goToExport },
+    { label: 'About', icon: icons.info, onClick: about },
+    { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
+    { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
+    { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },
+  ]);
 
   return (
-    <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''}`}>
-      <div className="content">
-        {!_.isEmpty(menu) && (
-          <div className="menu-button-container">
-            <div className="menu-button">
-              <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
-                <img src={icons.menuWhite} />
-              </a>
-              {menuOpen && <Menu menu={menu!} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
-            </div>
+    <div className="content">
+      {!_.isEmpty(menu) && (
+        <div className="menu-button-container">
+          <div className="menu-button">
+            <a href="#" onClick={toggleMenu} className="reset" id="page-header-menu-trigger">
+              <img src={icons.menuWhite} />
+            </a>
+            {menuOpen && <Menu menu={menu!} side="left" onClose={toggleMenu} trigger="#page-header-menu-trigger" />}
           </div>
-        )}
-        <div className="title">
-          {/*
+        </div>
+      )}
+      <div className="title">
+        {/*
           <div className="logo">
             <Link to="/">
               <img src="/barefront.svg" />
             </Link>
             </div>
             */}
-          <h1 className="heading">
-            <a href="/" className="reset" onClick={goToNotes}>
-              Unforget
-            </a>
-          </h1>
-          {props.title && <h2>{props.title}</h2>}
-          {app.user?.username !== 'demo' && app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
-          {/*app.online && <div className="online-indicator" />*/}
-        </div>
-        <div className="actions">{props.actions}</div>
+        <h1 className="heading">
+          <a href="/" className="reset" onClick={goToNotes}>
+            Unforget
+          </a>
+        </h1>
+        {props.title && <h2>{props.title}</h2>}
+        {app.user?.username !== 'demo' && app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
+        {/*app.online && <div className="online-indicator" />*/}
       </div>
-      {app.message && (
-        <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
-          <div className="msg-bar-inner-container">
-            <p>{app.message.text.substring(0, 100)}</p>
-          </div>
-        </div>
-      )}
-      {app.requirePageRefresh && (
-        <div className="update-app-container">
-          <button className="primary" onClick={actions.updateApp}>
-            Update app
-          </button>
-        </div>
-      )}
+      <div className="actions">{props.actions}</div>
     </div>
   );
 }
