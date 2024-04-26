@@ -177,35 +177,58 @@ export async function getNotes(opts?: {
         reject(orderCursorReq.error);
       };
       orderCursorReq.onsuccess = () => {
-        const start = Date.now();
         const cursor = orderCursorReq.result;
         if (!cursor) {
+          // Reached the end, we're done.
           done = true;
           resolve();
-        } else if (limit !== undefined && notes.length >= limit) {
-          resolve();
-        } else {
-          const note = cursor.value as t.Note;
-          if (!note.not_archived && !opts?.archive) {
-            // If archived notes were not requested and we hit an archive note, we're done.
-            done = true;
-            resolve();
-          } else if (!note.not_deleted) {
-            // If we hit a deleted note, we're done.
-            done = true;
-            resolve();
-          } else if (note.not_archived && opts?.archive) {
-            cursor.continue();
-          } else if (note.pinned && opts?.hidePinnedNotes) {
-            cursor.continue();
-          } else if (regexps && !regexps.every(regexp => regexp.test(note.text ?? ''))) {
-            log(`matched regexps in ${Date.now() - start}ms`);
-            cursor.continue();
-          } else {
-            notes.push(note);
-            cursor.continue();
-          }
+          return;
         }
+
+        if (limit !== undefined && notes.length >= limit) {
+          // Reached the limit, we're done.
+          resolve();
+          return;
+        }
+
+        // There is a note.
+        const note = cursor.value as t.Note;
+
+        if (opts?.archive) {
+          // If archived notes were requested, continue until we reach the first archived note.
+          if (note.not_archived) {
+            cursor.continue();
+            return;
+          }
+        } else if (!note.not_archived) {
+          // If archived notes were not requested and we reached an archived note, we're done.
+          done = true;
+          resolve();
+          return;
+        }
+
+        if (!note.not_deleted) {
+          // If we hit a deleted note, we're done.
+          done = true;
+          resolve();
+          return;
+        }
+
+        if (opts?.hidePinnedNotes && note.pinned) {
+          // If pinned notes must be skipped, continue until the first non-pinned note.
+          cursor.continue();
+          return;
+        }
+
+        if (regexps && !regexps.every(regexp => regexp.test(note.text ?? ''))) {
+          // If there's a search phrase and it doesn't match, skip.
+          cursor.continue();
+          return;
+        }
+
+        // Found a note.
+        notes.push(note);
+        cursor.continue();
       };
     });
   });
