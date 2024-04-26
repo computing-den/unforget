@@ -55,6 +55,9 @@ async function setup() {
   window.addEventListener('online', onlineChanged);
   window.addEventListener('offline', onlineChanged);
 
+  // Sync online status periodically.
+  setInterval(onlineChanged, 5000);
+
   // Sync with server when online.
   window.addEventListener('online', () => {
     storage.sync();

@@ -263,8 +263,9 @@ export async function sync() {
   // Skip if user not logged in.
   if (!appStore.get().user) return;
 
+  // NOTE: Was this causing sync to get stuck?
   // Skip if user is offline
-  if (!appStore.get().online) return;
+  // if (!appStore.get().online) return;
 
   // Skip if this is a demo.
   if (appStore.get().user?.username === 'demo') return;
