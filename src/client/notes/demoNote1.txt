@@ -4,24 +4,18 @@ Welcome!
 Unforget is a minimalist note-taking app featuring:
 
 - [x] Import from Google Keep
-- [x] Offline first, sync when online
-- [x] Priavcy first, on-device encryption
-- [x] Synchronization, end-to-end encryption
-- [x] Plain text, a small subset of markdown
-- [x] Desktop/Mobile/Web, progressive web app
-- [x] Open source, optional self hosting
-- [x] Export notes as JSON
-- [x] Public APIs, create your own clients
+- [x] Offline first
+- [x] Priavcy first
+- [x] End-to-end encrypted sync
+- [x] Desktop, Mobile, Web
+- [x] Progressive web app, no Electron.js
+- [x] Markdown support
+- [x] Self hosted and cloud options
+- [x] One-click data export as JSON
 - [x] Optional one-click installation
+- [x] Public APIs, create your own clients
+- [x] Open source
+- [ ] Import from Apple Notes, coming soon
 
-Coming soon:
-- [ ] Import from Apple Notes
 
-See the GitHub page.
-
-Unforget is made by Computing Den, a software company specializing in web technologies.
-Check us out at computing-den.com.
-
-Shahab "Sean" Shirazi
-sean@computing-den.com
-
+*Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*

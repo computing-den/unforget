@@ -11,7 +11,14 @@
   --page-max-width: 800px;
   --menu-z-index: 100;
   --sticky-z-index: 50;
-  --note-line-height: 1.6;
+  --line-height: 1.4;
+  --checkbox-size: 25px;
+  --single-space-size: 5px;
+  --checkbox-right-margin: 7px;
+  /* --checkbox-size-with-margin: calc( */
+  /*   var(--checkbox-size) + var(--checkbox-first-margin) + var(--checkbox-second-margin) */
+  /* ); */
+  --checkbox-accent: #197af8;
 }
 
 html,
@@ -19,6 +26,20 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+}
+
+html {
+  line-height: var(--line-height);
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  line-height: var(--line-height);
 }
 
 body {
@@ -31,6 +52,28 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol {
+  margin: 0.5rem 0;
+}
+
+ul ol,
+ol ul,
+ul ul,
+ol ol {
+  margin: 0.25rem 0;
+}
+li + li {
+  margin-top: 0.25rem;
 }
 
 button {

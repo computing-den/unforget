@@ -1,5 +1,5 @@
-@import './common.css';
 @import './normalize.css';
+@import './common.css';
 @import './PageLayout.css';
 @import './Editor.css';
 @import './Menu.css';

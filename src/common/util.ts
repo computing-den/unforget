@@ -1,6 +1,10 @@
 import type * as t from './types.js';
 
-export const CACHE_VERSION = 148;
+export const CACHE_VERSION = 149;
+
+export function assert(condition: boolean, message: string): asserts condition {
+  if (!condition) throw new Error(message);
+}
 
 export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
   return (
@@ -34,7 +38,7 @@ export function parseLine(text: string, cur: number): t.ParsedLine {
   const contentStart = cur;
 
   let bullet = '';
-  if (isLookingAt('- ') || isLookingAt('+ ')) {
+  if (isLookingAt('- ') || isLookingAt('+ ') || isLookingAt('* ')) {
     bullet = text[cur];
     cur += 2;
   }
@@ -122,11 +126,7 @@ export function hexStringToBytes(str: string): Uint8Array {
 }
 
 export class ServerError extends Error {
-  constructor(
-    message: string,
-    public code: number,
-    public type: t.ServerErrorType = 'generic',
-  ) {
+  constructor(message: string, public code: number, public type: t.ServerErrorType = 'generic') {
     super(message);
   }
 

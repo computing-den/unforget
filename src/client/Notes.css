@@ -9,14 +9,17 @@
   }
 
   .note {
-    padding: 0.5rem 1rem;
+    padding: 0.2rem 1rem; /* The vertical padding accounts for the line-height of paragraphs and headings */
     transition: 0.2s background ease-in-out;
     font-family: inherit;
-    word-break: break-word;
-    word-wrap: break-word;
-    line-height: var(--note-line-height);
-    margin: 0;
+    /* word-break: break-word; */
+    /* word-wrap: break-word; */
+    /* line-height: var(--note-line-height); */
+    /* margin: 0; */
     position: relative;
+    display: flex; /* This is to disable margin collapse */
+    flex-direction: column;
+    min-height: 2rem;
 
     &.prewrap {
       white-space: pre-wrap;
@@ -27,14 +30,6 @@
       &:hover {
         background: #d0ebf5;
       }
-    }
-
-    .title {
-      font-weight: bold;
-    }
-
-    & p {
-      margin: 0.5rem 0;
     }
 
     & + .note {
@@ -49,17 +44,127 @@
       opacity: 0.5;
     }
 
+    & .empty {
+      opacity: 0.5;
+      font-style: italic;
+    }
+
+    & h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      &:not(:first-child) {
+        margin-top: 1rem;
+      }
+    }
+
+    & h1 {
+      font-size: 1.1rem;
+    }
+
+    & h2 {
+      font-size: 1rem;
+    }
+
+    & h3,
+    h4,
+    h5,
+    h6 {
+      font-size: 1rem;
+    }
+
+    & ul {
+      padding-inline-start: calc(var(--checkbox-size) + var(--single-space-size) + var(--checkbox-right-margin));
+
+      & > li.task-list-item {
+        list-style-type: none;
+        /* &::marker { */
+        /*   content: ''; */
+        /* } */
+
+        > input[type='checkbox'] {
+          margin-left: calc(-1 * (var(--checkbox-size) + var(--single-space-size) + var(--checkbox-right-margin)));
+        }
+      }
+
+      & > li:not(.task-list-item) {
+        list-style-type: none;
+        /* &::marker { */
+        /*   content: ''; */
+        /* } */
+        &:before {
+          content: '';
+          float: left;
+          display: list-item;
+          list-style-type: circle;
+          list-style-position: inside;
+          /* width: 20px; */
+          font-size: 1.5rem;
+          line-height: 0.9;
+          vertical-align: middle;
+          width: 1px;
+          margin-left: calc(
+            -1 * (var(--checkbox-size) / 2 + var(--single-space-size) + var(--checkbox-right-margin) + 2px)
+          );
+        }
+      }
+    }
+
+    & ol {
+      padding-inline-start: calc(var(--checkbox-size) + var(--single-space-size));
+
+      & > li.task-list-item {
+        padding-left: calc(var(--checkbox-size) + var(--single-space-size) + var(--checkbox-right-margin) + 6px);
+
+        > input[type='checkbox'] {
+          margin-left: calc(
+            var(--single-space-size) + 2px - var(--checkbox-size) - var(--single-space-size) -
+              var(--checkbox-right-margin) - 6px
+          );
+        }
+      }
+    }
+
+    /* & ol { */
+    /*   padding-inline-start: calc(var(--checkbox-size) + var(--checkbox-first-margin)); */
+    /* } */
+
+    /*
+    & ul {
+      padding-inline-start: var(--checkbox-size-with-margin);
+    }
+
+    & ol {
+      padding-inline-start: calc(var(--checkbox-size) + var(--checkbox-first-margin));
+    }
+
+    & ul > li.task-list-item {
+      text-indent: calc(-1 * var(--checkbox-size-with-margin));
+
+      &::marker {
+        content: '';
+      }
+    }
+
+    & ol > li.task-list-item > input[type='checkbox'] {
+      margin-left: var(--checkbox-second-margin);
+    }
+    */
+
     & input[type='checkbox'] {
       border: 1px solid #aadfef;
       border-radius: 5px;
       outline: none;
       padding: 0.5rem 0rem;
-      width: 20px;
-      height: 20px;
+      width: var(--checkbox-size);
+      height: var(--checkbox-size);
       vertical-align: middle;
       margin: 0;
-      /* margin-right: 0.25rem; */
       margin-top: -2px;
+      accent-color: var(--checkbox-accent);
+      margin-right: var(--checkbox-right-margin);
     }
   }
 }

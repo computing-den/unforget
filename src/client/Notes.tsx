@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useRef } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
 import * as util from './util.jsx';
@@ -6,6 +6,14 @@ import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
+import { toHtml } from 'hast-util-to-html';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toHast } from 'mdast-util-to-hast';
+import { gfm } from 'micromark-extension-gfm';
+import { gfmFromMarkdown, gfmToMarkdown } from 'mdast-util-gfm';
+import { visit } from 'unist-util-visit';
+import { visitParents } from 'unist-util-visit-parents';
+import { newlineToBreak } from 'mdast-util-newline-to-break';
 
 export function Notes(props: { notes: t.Note[] }) {
   // const app = appStore.use();
@@ -19,89 +27,111 @@ export function Notes(props: { notes: t.Note[] }) {
 }
 
 export const Note = memo(function Note(props: { note: t.Note }) {
-  let text = props.note.text;
-  // if (text && text.length > 1500) {
-  //   text = text.substring(0, 1500) + '\n..........';
-  // }
-  const lineLimit = 30;
-  if (text && countLines(text) > lineLimit) {
-    text = text.split(/\r?\n/).slice(0, lineLimit).join('\n') + '\n..........';
-  }
-  // const titleBodyMatch = text?.match(/^([^\r\n]+)\r?\n\r?\n(.+)$/s);
-  // let title = titleBodyMatch?.[1];
-  // let body = titleBodyMatch?.[2] ?? text ?? '';
-  const lines = cutil.parseLines(text ?? '');
-  const hasTitle = lines.length > 2 && !lines[0].bullet && lines[1].wholeLine === '';
+  // Do not modify the text here because we want the position of each element in mdast and hast to match
+  // exactly the original text.
+  const text = props.note.text;
 
   function clickCb(e: React.MouseEvent) {
-    history.pushState(null, '', `/n/${props.note.id}`);
+    // history.pushState(null, '', `/n/${props.note.id}`);
+    const elem = e.target as HTMLElement;
+    const link = elem.closest('a');
+    const input = elem.closest('input');
+    const li = elem.closest('li');
+    if (input && li) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const [start, end] = [Number(li.dataset.posStart), Number(li.dataset.posEnd)];
+      if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        console.error(`Got unknown start or end position for li: ${start}, ${end}`);
+        return;
+      }
+
+      // console.log('checkbox at li:', start, end);
+      // console.log('text:', `<START>${text!.substring(start, end)}<END>`);
+
+      const liText = text!.substring(start, end);
+      const ulCheckboxRegExp = /^(\s*[\*+-]\s*\[)([xX ])(\].*)$/m;
+      const olCheckboxRegExp = /^(\s*\d+[\.\)]\s*\[)([xX ])(\].*)$/m;
+      const match = liText.match(ulCheckboxRegExp) ?? liText.match(olCheckboxRegExp);
+      if (!match) {
+        console.error(`LiText did not match checkbox regexp: `, liText);
+        return;
+      }
+      const newLi = match[1] + (match[2] === ' ' ? 'x' : ' ') + match[3];
+
+      const newText = cutil.insertText(text!, newLi, start, start + match[0].length);
+      const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
+      actions.saveNoteAndQuickUpdateNotes(newNote);
+    } else if (link) {
+      const isRelative = new URL(document.baseURI).origin === new URL(link.href, document.baseURI).origin;
+      if (isRelative) {
+        e.preventDefault();
+        e.stopPropagation();
+        history.pushState(null, '', link.href);
+      } else {
+        e.stopPropagation();
+      }
+    } else {
+      history.pushState(null, '', `/n/${props.note.id}`);
+    }
   }
 
   const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
-
-  function inputChangeCb(e: React.ChangeEvent<HTMLInputElement>) {
-    const lineIndex = Number(e.target.dataset.lineIndex);
-    const line = lines[lineIndex];
-    const newLineText = cutil.setLineCheckbox(line, e.target.checked);
-    const newText = cutil.insertText(props.note.text!, newLineText, line.start, line.end);
-    const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
-    actions.saveNoteAndQuickUpdateNotes(newNote);
-  }
 
   function inputClickCb(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
   }
 
-  function renderLine(line: t.ParsedLine, i: number): React.ReactNode {
-    let res = [];
+  const mdast = fromMarkdown(text ?? '', {
+    extensions: [gfm()],
+    mdastExtensions: [gfmFromMarkdown()],
+  });
+  newlineToBreak(mdast);
+  console.log('mdast', mdast);
+  cutil.assert(mdast.type === 'root', 'hast does not have root');
+  const noteIsEmpty = mdast.children.length === 0;
 
-    if (hasTitle && i === 0) {
-      // Render title.
-      res.push(<span className="title">{lines[0].wholeLine}</span>);
-    } else if (!hasTitle || i >= 2) {
-      // Render body line.
-
-      if (i > 0) res.push('\n');
-
-      if (!line.bullet) {
-        res.push(line.wholeLine);
-      } else {
-        res.push(' '.repeat(line.padding * 2));
-        if (line.checkbox) {
-          res.push(
-            <input
-              type="checkbox"
-              key={`input-${props.note.id}-${i}`}
-              onChange={inputChangeCb}
-              onClick={inputClickCb}
-              data-line-index={i}
-              checked={line.checked}
-            />,
-          );
-          res.push('  ');
-        } else {
-          res.push('●  ');
-        }
-        res.push(line.bodyText);
-      }
+  // Turn the first line into a heading if it's not already a heading and it is followed by two new lines
+  {
+    const first = mdast.children[0];
+    if (first?.type === 'paragraph' && text?.match(/^[^\r\n]+\r?\n\r?\n/g)) {
+      mdast.children[0] = { type: 'heading', depth: 1, position: first.position, children: first.children };
     }
-
-    return res;
   }
 
-  // const bodyLines = hasTitle ? lines.slice(2) : lines;
+  // Remove everything after thematicBreak
+  {
+    const i = mdast.children.findIndex(node => node.type === 'thematicBreak');
+    if (i !== -1) {
+      mdast.children.splice(i);
+    }
+  }
+
+  const hast = toHast(mdast);
+  console.log(hast);
+
+  visit(hast, 'element', function (node) {
+    if (node.tagName === 'input') {
+      node.properties['disabled'] = false;
+    }
+    node.properties['data-pos-start'] = node.position?.start.offset;
+    node.properties['data-pos-end'] = node?.position?.end.offset;
+  });
+
+  const html = toHtml(hast);
 
   return (
-    <pre className="note clickable prewrap" onMouseDown={onMouseDown} onClick={onClick}>
+    <div className="note clickable" onMouseDown={onMouseDown} onClick={onClick}>
       {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
-      {lines.map(renderLine)}
-    </pre>
+      {noteIsEmpty ? (
+        <div>
+          <h2 className="empty">Empty note</h2>
+        </div>
+      ) : (
+        <div dangerouslySetInnerHTML={{ __html: html }} />
+      )}
+    </div>
   );
 });
-
-function countLines(text: string): number {
-  let count = 0;
-  for (let i = 0; i < text.length; i++) if (text[i] === '\n') count++;
-  return count;
-}
