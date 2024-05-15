@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
+import * as md from '../common/mdFns.js';
 import { MenuItem } from './Menu.js';
 import * as util from './util.jsx';
 import _ from 'lodash';
@@ -28,8 +29,6 @@ type EditorProps = {
 };
 
 export type EditorContext = {
-  // toggleCheckboxStyle: () => any;
-  // toggleBulletpointStyle: () => any;
   cycleListStyle: () => any;
   focus: () => any;
   textareaRef: React.RefObject<HTMLTextAreaElement>;
@@ -95,23 +94,30 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   //   }
   // }
 
+  function replaceListItemPrefix(listItem: md.ListItem, newListItem: md.ListItem, lineRange: md.Range) {
+    const linePrefix = md.stringifyListItemPrefix(listItem);
+    const newLinePrefix = md.stringifyListItemPrefix(newListItem);
+    replaceText(lineRange.start, lineRange.start + linePrefix.length, newLinePrefix);
+  }
+
   function cycleListStyle() {
     const textarea = textareaRef.current!;
     let text = textarea.value;
-    let cur = textarea.selectionStart;
-    const line = cutil.parseLine(text, cur);
+    let i = textarea.selectionStart;
+    const lineRange = md.getLineRangeAt(text, i);
+    const line = md.getLine(text, lineRange);
+    const listItem = md.parseListItem(line);
 
     // unstyled -> checkbox -> bulletpoint ...
-
-    if (line.checkbox) {
-      replaceText(line.contentStart + 2, line.contentStart + 6);
-    } else if (line.bullet) {
-      replaceText(line.start + line.padding, line.bodyStart);
+    if (listItem.checkbox) {
+      replaceListItemPrefix(listItem, md.removeListItemCheckbox(listItem), lineRange);
+    } else if (listItem.type) {
+      replaceListItemPrefix(listItem, md.removeListItemType(listItem), lineRange);
     } else if (!lastSelection) {
       replaceText(text.length, text.length, text.length > 0 ? '\n- [ ] ' : '- [ ] ');
       textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     } else {
-      replaceText(line.contentStart, line.contentStart, '- [ ] ');
+      replaceListItemPrefix(listItem, md.addListItemCheckbox(listItem), lineRange);
     }
   }
 
@@ -130,32 +136,30 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   }
 
   function keyDownCb(e: React.KeyboardEvent) {
-    const textarea = textareaRef.current!;
-    let text = textarea.value;
-    let cur = textarea.selectionStart;
-    if (e.key === 'Enter' && !e.shiftKey) {
-      // textarea.focus();
-
-      const line = cutil.parseLine(text, cur);
-      if (cur < line.bodyStart) return;
-
-      if (line.bullet) {
-        e.preventDefault();
-        if (line.bodyText === '') {
-          textarea.setSelectionRange(line.start, line.end);
-          document.execCommand('delete');
-        } else if (line.checkbox) {
-          document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' [ ] ');
-        } else {
-          document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' ');
-        }
-      } else if (line.padding) {
-        e.preventDefault();
-        document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding));
-      }
-    } else if (e.key === 'Escape') {
-      textarea.blur();
-    }
+    // const textarea = textareaRef.current!;
+    // let text = textarea.value;
+    // let cur = textarea.selectionStart;
+    // if (e.key === 'Enter' && !e.shiftKey) {
+    //   // textarea.focus();
+    //   const line = cutil.parseLine(text, cur);
+    //   if (cur < line.bodyStart) return;
+    //   if (line.bullet) {
+    //     e.preventDefault();
+    //     if (line.bodyText === '') {
+    //       textarea.setSelectionRange(line.start, line.end);
+    //       document.execCommand('delete');
+    //     } else if (line.checkbox) {
+    //       document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' [ ] ');
+    //     } else {
+    //       document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' ');
+    //     }
+    //   } else if (line.padding) {
+    //     e.preventDefault();
+    //     document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding));
+    //   }
+    // } else if (e.key === 'Escape') {
+    //   textarea.blur();
+    // }
   }
 
   function selectCb() {
@@ -171,13 +175,19 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   function clickCb(e: React.MouseEvent) {
     const textarea = textareaRef.current!;
     let text = textarea.value;
-    let cur = textarea.selectionDirection === 'forward' ? textarea.selectionEnd : textarea.selectionStart;
-    const line = cutil.parseLine(text, cur);
+    let i = textarea.selectionDirection === 'forward' ? textarea.selectionEnd : textarea.selectionStart;
 
-    if (line.checkbox && cur >= line.contentStart + 2 && cur < line.bodyStart) {
-      textarea.setSelectionRange(line.contentStart, line.bodyStart);
-      document.execCommand('insertText', false, line.bullet + ' ' + (line.checked ? '[ ] ' : '[x] '));
-      textarea.setSelectionRange(lastSelection!.start, lastSelection!.end, lastSelection!.direction);
+    const lineRange = md.getLineRangeAt(text, i);
+    const line = md.getLine(text, lineRange);
+    let listItem = md.parseListItem(line);
+    if (md.isCursorOnCheckbox(listItem, i - lineRange.start)) {
+      const newListItem = md.toggleListItemCheckbox(listItem);
+      const checkboxRange = md.getListItemCheckboxRange(listItem);
+      textarea.setSelectionRange(checkboxRange.start + lineRange.start, checkboxRange.end + lineRange.start);
+      document.execCommand('insertText', false, newListItem.checkbox);
+      if (lastSelection) {
+        textarea.setSelectionRange(lastSelection.start, lastSelection.end, lastSelection.direction);
+      }
     }
   }
 

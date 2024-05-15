@@ -1,6 +1,7 @@
 import React, { memo, useRef } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
+import * as md from '../common/mdFns.js';
 import * as util from './util.jsx';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
@@ -60,7 +61,7 @@ export const Note = memo(function Note(props: { note: t.Note }) {
       }
       const newLi = match[1] + (match[2] === ' ' ? 'x' : ' ') + match[3];
 
-      const newText = cutil.insertText(text!, newLi, start, start + match[0].length);
+      const newText = md.insertText(text!, newLi, { start, end: start + match[0].length });
       const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
       actions.saveNoteAndQuickUpdateNotes(newNote);
     } else if (link) {

@@ -49,6 +49,24 @@
       font-style: italic;
     }
 
+    & th,
+    td {
+      padding: 0.25rem 0.5rem;
+    }
+
+    & pre {
+      background: #00000005;
+      padding: 0.5rem;
+    }
+    & blockquote {
+      background: #00000005;
+      padding: 0 0.5rem;
+    }
+
+    & table {
+      background: #00000005;
+    }
+
     & h1,
     h2,
     h3,
@@ -84,30 +102,39 @@
         /*   content: ''; */
         /* } */
 
-        > input[type='checkbox'] {
+        & > input[type='checkbox'],
+        & > p > input[type='checkbox'] {
           margin-left: calc(-1 * (var(--checkbox-size) + var(--single-space-size) + var(--checkbox-right-margin)));
         }
       }
 
       & > li:not(.task-list-item) {
+        position: relative;
         list-style-type: none;
         /* &::marker { */
         /*   content: ''; */
         /* } */
         &:before {
           content: '';
-          float: left;
-          display: list-item;
-          list-style-type: circle;
-          list-style-position: inside;
+          /* float: left; */
+          /* display: list-item; */
+          /* list-style-type: circle; */
+          /* list-style-position: inside; */
           /* width: 20px; */
-          font-size: 1.5rem;
-          line-height: 0.8;
-          vertical-align: middle;
-          width: 1px;
-          margin-left: calc(
-            -1 * (var(--checkbox-size) / 2 + var(--single-space-size) + var(--checkbox-right-margin) + 2px)
+          /* font-size: 1.5rem; */
+          /* line-height: 0.8; */
+          /* vertical-align: middle; */
+          /* width: 1px; */
+          left: calc(
+            -1 * (var(--checkbox-size) / 2 + var(--single-space-size) + var(--checkbox-right-margin) +
+                  var(--bulletpoint-size) / 2 + 1px)
           );
+          width: var(--bulletpoint-size);
+          height: var(--bulletpoint-size);
+          border-radius: 50%;
+          border: 2px solid #444;
+          position: absolute;
+          top: 6px;
         }
       }
     }
@@ -118,7 +145,8 @@
       & > li.task-list-item {
         padding-left: calc(var(--checkbox-size) + var(--single-space-size) + var(--checkbox-right-margin) + 6px);
 
-        > input[type='checkbox'] {
+        & > input[type='checkbox'],
+        & > p > input[type='checkbox'] {
           margin-left: calc(
             var(--single-space-size) + 2px - var(--checkbox-size) - var(--single-space-size) -
               var(--checkbox-right-margin) - 6px

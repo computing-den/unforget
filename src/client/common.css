@@ -15,6 +15,7 @@
   --checkbox-size: 25px;
   --single-space-size: 5px;
   --checkbox-right-margin: 7px;
+  --bulletpoint-size: 6px;
   /* --checkbox-size-with-margin: calc( */
   /*   var(--checkbox-size) + var(--checkbox-first-margin) + var(--checkbox-second-margin) */
   /* ); */
@@ -30,8 +31,17 @@ body {
 
 html {
   line-height: var(--line-height);
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji,
-    Segoe UI Emoji, Segoe UI Symbol;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    Apple Color Emoji,
+    Segoe UI Emoji,
+    Segoe UI Symbol;
 }
 
 button,
@@ -62,8 +72,15 @@ h5,
 h6,
 p,
 ul,
-ol {
+ol,
+pre,
+blockquote,
+table {
   margin: 0.5rem 0;
+}
+
+blockquote {
+  margin-left: 2rem;
 }
 
 ul ol,

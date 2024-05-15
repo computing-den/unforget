@@ -1,6 +1,6 @@
 import type * as t from './types.js';
 
-export const CACHE_VERSION = 149;
+export const CACHE_VERSION = 150;
 
 export function assert(condition: boolean, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -17,53 +17,43 @@ export function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
 
-export function findBeginningOfLine(text: string, cur: number): number {
-  while (cur > 0 && text[cur - 1] !== '\n') cur--;
-  return cur;
-}
+// export function parseLine(text: string, cur: number): t.ParsedLine {
+//   const isLookingAt = (sub: string) => text.startsWith(sub, cur);
+//   const start = findBeginningOfLine(text, cur);
+//   const end = findEndOfLine(text, cur);
+//   const lastLine = !text[end];
 
-export function findEndOfLine(text: string, cur: number): number {
-  while (cur < text.length && text[cur] !== '\r' && text[cur] !== '\n') cur++;
-  return cur;
-}
+//   cur = skipWhitespaceSameLine(text, start);
+//   const padding = cur - start;
+//   const contentStart = cur;
 
-export function parseLine(text: string, cur: number): t.ParsedLine {
-  const isLookingAt = (sub: string) => text.startsWith(sub, cur);
-  const start = findBeginningOfLine(text, cur);
-  const end = findEndOfLine(text, cur);
-  const lastLine = !text[end];
+//   let bullet = '';
+//   if (isLookingAt('- ') || isLookingAt('+ ') || isLookingAt('* ')) {
+//     bullet = text[cur];
+//     cur += 2;
+//   }
 
-  cur = skipWhitespaceSameLine(text, start);
-  const padding = cur - start;
-  const contentStart = cur;
+//   const checked = Boolean(bullet) && (isLookingAt('[x] ') || isLookingAt('[X] '));
+//   const checkbox = Boolean(bullet) && (checked || isLookingAt('[ ] '));
+//   if (checkbox) cur += 4;
 
-  let bullet = '';
-  if (isLookingAt('- ') || isLookingAt('+ ') || isLookingAt('* ')) {
-    bullet = text[cur];
-    cur += 2;
-  }
+//   const bodyText = text.substring(cur, end);
+//   const bodyStart = cur;
+//   const wholeLine = text.substring(start, end);
 
-  const checked = Boolean(bullet) && (isLookingAt('[x] ') || isLookingAt('[X] '));
-  const checkbox = Boolean(bullet) && (checked || isLookingAt('[ ] '));
-  if (checkbox) cur += 4;
+//   return { wholeLine, padding, bullet, checkbox, checked, start, end, bodyText, bodyStart, contentStart, lastLine };
+// }
 
-  const bodyText = text.substring(cur, end);
-  const bodyStart = cur;
-  const wholeLine = text.substring(start, end);
-
-  return { wholeLine, padding, bullet, checkbox, checked, start, end, bodyText, bodyStart, contentStart, lastLine };
-}
-
-export function parseLines(text: string): t.ParsedLine[] {
-  const lines: t.ParsedLine[] = [];
-  let cur = 0;
-  while (cur < text.length) {
-    const line = parseLine(text, cur);
-    lines.push(line);
-    cur = line.end + 1;
-  }
-  return lines;
-}
+// export function parseLines(text: string): t.ParsedLine[] {
+//   const lines: t.ParsedLine[] = [];
+//   let cur = 0;
+//   while (cur < text.length) {
+//     const line = parseLine(text, cur);
+//     lines.push(line);
+//     cur = line.end + 1;
+//   }
+//   return lines;
+// }
 
 // function isLookingAtCheckbox(text: string, cur: number): boolean {
 //   return isLookingAtBullet(text, cur)
@@ -79,22 +69,22 @@ export function parseLines(text: string): t.ParsedLine[] {
 //   return text.substring(startOfCheckbox + '- [ ] '.length, findEndOfLine(text, startOfCheckbox));
 // }
 
-export function skipWhitespaceSameLine(text: string, cur: number): number {
-  while ((cur < text.length && text[cur] === ' ') || text[cur] === '\t') cur++;
-  return cur;
-}
+// export function skipWhitespaceSameLine(text: string, cur: number): number {
+//   while ((cur < text.length && text[cur] === ' ') || text[cur] === '\t') cur++;
+//   return cur;
+// }
 
-export function insertText(text: string, segment: string, start: number, end?: number): string {
-  return text.substring(0, start) + segment + text.substring(end ?? start);
-}
+// export function insertText(text: string, segment: string, start: number, end?: number): string {
+//   return text.substring(0, start) + segment + text.substring(end ?? start);
+// }
 
-export function toggleLineCheckbox(line: t.ParsedLine): string {
-  return setLineCheckbox(line, !line.checked);
-}
+// export function toggleLineCheckbox(line: t.ParsedLine): string {
+//   return setLineCheckbox(line, !line.checked);
+// }
 
-export function setLineCheckbox(line: t.ParsedLine, checked: boolean): string {
-  return ' '.repeat(line.padding) + line.bullet + ' ' + (checked ? '[x] ' : '[ ] ') + line.bodyText;
-}
+// export function setLineCheckbox(line: t.ParsedLine, checked: boolean): string {
+//   return ' '.repeat(line.padding) + line.bullet + ' ' + (checked ? '[x] ' : '[ ] ') + line.bodyText;
+// }
 
 export function calcNewSelection(
   origSelection: number,
@@ -126,7 +116,11 @@ export function hexStringToBytes(str: string): Uint8Array {
 }
 
 export class ServerError extends Error {
-  constructor(message: string, public code: number, public type: t.ServerErrorType = 'generic') {
+  constructor(
+    message: string,
+    public code: number,
+    public type: t.ServerErrorType = 'generic',
+  ) {
     super(message);
   }
 
