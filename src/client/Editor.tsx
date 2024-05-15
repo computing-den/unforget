@@ -44,7 +44,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   function replaceText(deleteStart: number, deleteEnd: number, text?: string) {
     const textarea = textareaRef.current!;
     textarea.focus();
-    let cur = textarea.selectionStart;
+    let i = textarea.selectionStart;
     textarea.setSelectionRange(deleteStart, deleteEnd);
 
     if (deleteStart < deleteEnd) {
@@ -54,45 +54,9 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
       document.execCommand('insertText', false, text);
     }
 
-    const newSelection = cutil.calcNewSelection(cur, deleteStart, deleteEnd, text?.length ?? 0);
+    const newSelection = cutil.calcNewSelection(i, deleteStart, deleteEnd, text?.length ?? 0);
     textarea.setSelectionRange(newSelection, newSelection);
   }
-
-  // function toggleCheckboxStyle() {
-  //   const textarea = textareaRef.current!;
-  //   let text = textarea.value;
-  //   let cur = textarea.selectionStart;
-  //   const line = cutil.parseLine(text, cur);
-  //   textarea.focus();
-
-  //   if (line.checkbox) {
-  //     replaceText(line.start + line.padding, line.bodyStart);
-  //   } else if (line.bullet) {
-  //     replaceText(line.contentStart + 2, line.contentStart + 2, '[ ] ');
-  //   } else if (!lastSelection) {
-  //     replaceText(text.length, text.length, text.length > 0 ? '\n- [ ] ' : '- [ ] ');
-  //     textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-  //   } else {
-  //     replaceText(line.contentStart, line.contentStart, '- [ ] ');
-  //   }
-  // }
-
-  // function toggleBulletpointStyle() {
-  //   const textarea = textareaRef.current!;
-  //   let text = textarea.value;
-  //   let cur = textarea.selectionStart;
-  //   const line = cutil.parseLine(text, cur);
-  //   textarea.focus();
-  //   if (line.checkbox) {
-  //     replaceText(line.contentStart + 2, line.contentStart + 6);
-  //   } else if (line.bullet) {
-  //     replaceText(line.start + line.padding, line.bodyStart);
-  //   } else if (cur === 0) {
-  //     replaceText(text.length, text.length, text.length > 0 ? '\n- ' : '- ');
-  //   } else {
-  //     replaceText(line.contentStart, line.contentStart, '- ');
-  //   }
-  // }
 
   function replaceListItemPrefix(listItem: md.ListItem, newListItem: md.ListItem, lineRange: md.Range) {
     const linePrefix = md.stringifyListItemPrefix(listItem);
@@ -102,8 +66,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
   function cycleListStyle() {
     const textarea = textareaRef.current!;
-    let text = textarea.value;
-    let i = textarea.selectionStart;
+    const text = textarea.value;
+    const i = textarea.selectionStart;
     const lineRange = md.getLineRangeAt(text, i);
     const line = md.getLine(text, lineRange);
     const listItem = md.parseListItem(line);
@@ -136,30 +100,41 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   }
 
   function keyDownCb(e: React.KeyboardEvent) {
-    // const textarea = textareaRef.current!;
-    // let text = textarea.value;
-    // let cur = textarea.selectionStart;
-    // if (e.key === 'Enter' && !e.shiftKey) {
-    //   // textarea.focus();
-    //   const line = cutil.parseLine(text, cur);
-    //   if (cur < line.bodyStart) return;
-    //   if (line.bullet) {
-    //     e.preventDefault();
-    //     if (line.bodyText === '') {
-    //       textarea.setSelectionRange(line.start, line.end);
-    //       document.execCommand('delete');
-    //     } else if (line.checkbox) {
-    //       document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' [ ] ');
-    //     } else {
-    //       document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding) + line.bullet + ' ');
-    //     }
-    //   } else if (line.padding) {
-    //     e.preventDefault();
-    //     document.execCommand('insertText', false, '\n' + ' '.repeat(line.padding));
-    //   }
-    // } else if (e.key === 'Escape') {
-    //   textarea.blur();
-    // }
+    const textarea = textareaRef.current!;
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // textarea.focus();
+      const text = textarea.value;
+      const i = textarea.selectionStart;
+      const lineRange = md.getLineRangeAt(text, i);
+      const line = md.getLine(text, lineRange);
+      const listItem = md.parseListItem(line);
+      const listItemPrefix = md.stringifyListItemPrefix(listItem);
+
+      // Ignore if cursor is before the line prefix
+      if (i < lineRange.start + listItemPrefix.length) return;
+
+      if (listItemPrefix) {
+        e.preventDefault();
+        if (!listItem.content) {
+          // Pressing enter on a line with prefix and empty content will clear the prefix.
+          textarea.setSelectionRange(lineRange.start, lineRange.end);
+          document.execCommand('delete');
+        } else {
+          // Increment list item number and set empty checkbox.
+          let newListItem = md.incrementListItemNumber(listItem);
+          if (listItem.checkbox) {
+            newListItem = md.setListItemCheckbox(newListItem, false);
+          }
+
+          // Delete whitespace and insert the prefix.
+          const afterWhitespace = md.skipWhitespaceSameLine(text, i);
+          textarea.setSelectionRange(i, afterWhitespace);
+          document.execCommand('insertText', false, '\n' + md.stringifyListItemPrefix(newListItem));
+        }
+      }
+    } else if (e.key === 'Escape') {
+      textarea.blur();
+    }
   }
 
   function selectCb() {
@@ -174,9 +149,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
   function clickCb(e: React.MouseEvent) {
     const textarea = textareaRef.current!;
-    let text = textarea.value;
-    let i = textarea.selectionDirection === 'forward' ? textarea.selectionEnd : textarea.selectionStart;
-
+    const text = textarea.value;
+    const i = textarea.selectionDirection === 'forward' ? textarea.selectionEnd : textarea.selectionStart;
     const lineRange = md.getLineRangeAt(text, i);
     const line = md.getLine(text, lineRange);
     let listItem = md.parseListItem(line);

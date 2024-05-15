@@ -6,6 +6,7 @@ const ulRegExp =
 const olRegExp =
   /^(?<space1>\ *)((?<type>\d+[\.\)])(?<space2>\ +)((?<checkbox>\[[xX ]\])(?<space3>\ +))?)(?<content>.*)$/m;
 const lineRegExp = /^(?<space1>\ *)(?<content>.*)$/m;
+const olNumberRegExp = /^(\d+)([\.\)])$/;
 
 export type Range = { start: number; end: number };
 export type ListItem = {
@@ -38,7 +39,11 @@ export function isCursorOnCheckbox(l: ListItem, i: number) {
 }
 
 export function toggleListItemCheckbox(l: ListItem): ListItem {
-  return { ...l, checkbox: l.checkbox === '[ ]' ? '[x]' : '[ ]' };
+  return setListItemCheckbox(l, l.checkbox === '[ ]');
+}
+
+export function setListItemCheckbox(l: ListItem, checked: boolean): ListItem {
+  return { ...l, checkbox: checked ? '[x]' : '[ ]' };
 }
 
 export function removeListItemCheckbox(l: ListItem): ListItem {
@@ -58,16 +63,14 @@ export function removeListItemType(l: ListItem): ListItem {
   return { space1: l.space1, type: '', space2: '', checkbox: '', space3: '', content: l.content };
 }
 
-// /**
-//  * unstyled -> checkbox -> bulletpoint ...
-//  */
-// export function cycleListItem(l: ListItem): ListItem {
-//   if (l.checkbox) {
-//   } else if (l.type) {
-//   } else {
-//   }
-//   return { ...l, checkbox: l.checkbox === '[ ]' ? '[x]' : '[ ]' };
-// }
+export function incrementListItemNumber(l: ListItem): ListItem {
+  // '1.  task' -> '2. task'
+  // '1)  [ ] task' -> '2) [ ] task'
+  const match = l.type.match(olNumberRegExp);
+  if (!match) return l;
+  const type = String(Number(match[1]) + 1) + match[2];
+  return { space1: l.space1, type, space2: l.space2, checkbox: l.checkbox, space3: l.space3, content: l.content };
+}
 
 export function parseListItem(line: string): ListItem {
   let match = line.match(ulRegExp) ?? line.match(olRegExp) ?? line.match(lineRegExp);
@@ -110,5 +113,10 @@ function getLineStart(text: string, i: number): number {
 
 function getLineEnd(text: string, i: number): number {
   while (i < text.length && text[i] !== '\r' && text[i] !== '\n') i++;
+  return i;
+}
+
+export function skipWhitespaceSameLine(text: string, i: number): number {
+  while ((i < text.length && text[i] === ' ') || text[i] === '\t') i++;
   return i;
 }
