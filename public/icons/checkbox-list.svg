@@ -1,25 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="si-glyph si-glyph-bullet-checked-list">
-<title>112</title>
-<defs>
-</defs>
-<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-<g transform="translate(0.000000, 2.000000)" fill="#434343">
-<g transform="translate(0.000000, 1.000000)">
-<path d="M3.016,6 L0.0159999999,6 L0.0159999999,3 L3.016,3 L3.016,6 L3.016,6 Z M0.953,5 L1.953,5 L1.953,3.969 L0.953,3.969 L0.953,5 L0.953,5 Z" class="si-glyph-fill">
-</path>
-<path d="M2.969,9.986 L0.0159999999,9.986 L0.0159999999,7 L2.969,7 L2.969,9.986 L2.969,9.986 Z M0.954,9 L1.954,9 L1.954,8 L0.954,8 L0.954,9 L0.954,9 Z" class="si-glyph-fill">
-</path>
-<rect x="5" y="0" width="10.977" height="0.976" class="si-glyph-fill">
-</rect>
-<rect x="5" y="4" width="10.977" height="0.96" class="si-glyph-fill">
-</rect>
-<rect x="5" y="8" width="10.977" height="0.914" class="si-glyph-fill">
-</rect>
-</g>
-<path d="M1.366,3.295 L0.0209999999,1.939 L0.656,1.304 L1.366,2 L3.402,0 L4.025,0.636 L1.366,3.295 Z" class="si-glyph-fill">
-</path>
-</g>
-</g>
-</svg>

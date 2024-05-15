@@ -67,21 +67,29 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
   function cycleListStyle() {
     const textarea = textareaRef.current!;
     const text = textarea.value;
-    const i = textarea.selectionStart;
+    // If there's not lastSelection, assume end of text
+    const i = lastSelection ? textarea.selectionStart : text.length;
     const lineRange = md.getLineRangeAt(text, i);
     const line = md.getLine(text, lineRange);
     const listItem = md.parseListItem(line);
+
+    console.log('lastSelection', lastSelection);
 
     // unstyled -> checkbox -> bulletpoint ...
     if (listItem.checkbox) {
       replaceListItemPrefix(listItem, md.removeListItemCheckbox(listItem), lineRange);
     } else if (listItem.type) {
       replaceListItemPrefix(listItem, md.removeListItemType(listItem), lineRange);
-    } else if (!lastSelection) {
-      replaceText(text.length, text.length, text.length > 0 ? '\n- [ ] ' : '- [ ] ');
-      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      // } else if (!lastSelection) {
+      //   replaceText(text.length, text.length, text.length > 0 ? '\n- [ ] ' : '- [ ] ');
+      //   textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     } else {
       replaceListItemPrefix(listItem, md.addListItemCheckbox(listItem), lineRange);
+    }
+
+    // If there were no lastSelection, move cursor to the end.
+    if (!lastSelection) {
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
   }
 

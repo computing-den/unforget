@@ -145,7 +145,7 @@ export function NotesPage(props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
+      <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
 
       <PageAction
         icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
@@ -159,7 +159,7 @@ export function NotesPage(props: NotesPageProps) {
     pageActions.push(
       <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} title="Search" />,
       <PageAction
-        icon={app.hidePinnedNotes ? icons.hidePinnedWhite : icons.showPinnedWhite}
+        icon={app.hidePinnedNotes ? icons.hidePinnedWhite2 : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
         title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
       />,
@@ -173,6 +173,11 @@ export function NotesPage(props: NotesPageProps) {
         value={app.search}
         onChange={searchChangeCb}
         autoFocus
+      />,
+      <PageAction
+        icon={app.hidePinnedNotes ? icons.hidePinnedWhite2 : icons.showPinnedWhite}
+        onClick={toggleHidePinnedNotes}
+        title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
       />,
       <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} title="Close search" />,
     );
