@@ -16,18 +16,22 @@ import { visit } from 'unist-util-visit';
 import { visitParents } from 'unist-util-visit-parents';
 import { newlineToBreak } from 'mdast-util-newline-to-break';
 
-export function Notes(props: { notes: t.Note[] }) {
+export function Notes(props: { notes: t.Note[]; readonly?: boolean; onHashLinkClick?: (hash: string) => any }) {
   // const app = appStore.use();
   return (
     <div className="notes">
       {props.notes.map(note => (
-        <Note key={note.id} note={note} />
+        <Note key={note.id} note={note} readonly={props.readonly} onHashLinkClick={props.onHashLinkClick} />
       ))}
     </div>
   );
 }
 
-export const Note = memo(function Note(props: { note: t.Note }) {
+export const Note = memo(function Note(props: {
+  note: t.Note;
+  readonly?: boolean;
+  onHashLinkClick?: (hash: string) => any;
+}) {
   // Do not modify the text here because we want the position of each element in mdast and hast to match
   // exactly the original text.
   const text = props.note.text;
@@ -38,7 +42,7 @@ export const Note = memo(function Note(props: { note: t.Note }) {
     const link = elem.closest('a');
     const input = elem.closest('input');
     const li = elem.closest('li');
-    if (input && li) {
+    if (input && li && !props.readonly) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -65,15 +69,22 @@ export const Note = memo(function Note(props: { note: t.Note }) {
       const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
       actions.saveNoteAndQuickUpdateNotes(newNote);
     } else if (link) {
-      const isRelative = new URL(document.baseURI).origin === new URL(link.href, document.baseURI).origin;
-      if (isRelative) {
+      const baseURL = new URL(document.baseURI);
+      const targetURL = new URL(link.href, document.baseURI);
+      const isRelative = baseURL.origin === targetURL.origin;
+
+      if (baseURL.hash !== targetURL.hash) {
+        e.preventDefault();
+        e.stopPropagation();
+        props.onHashLinkClick?.(targetURL.hash);
+      } else if (isRelative) {
         e.preventDefault();
         e.stopPropagation();
         history.pushState(null, '', link.href);
       } else {
         e.stopPropagation();
       }
-    } else {
+    } else if (!props.readonly) {
       history.pushState(null, '', `/n/${props.note.id}`);
     }
   }
@@ -124,7 +135,7 @@ export const Note = memo(function Note(props: { note: t.Note }) {
   const html = toHtml(hast);
 
   return (
-    <div className="note clickable" onMouseDown={onMouseDown} onClick={onClick}>
+    <div className={`note ${!props.readonly && 'clickable'}`} onMouseDown={onMouseDown} onClick={onClick}>
       {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
       {noteIsEmpty ? (
         <div>

@@ -1,4 +1,5 @@
 import type * as t from './types.js';
+import { v4 as uuid } from 'uuid';
 
 export const CACHE_VERSION = 150;
 
@@ -127,4 +128,18 @@ export class ServerError extends Error {
   static fromJSON(json: any): ServerError {
     return new ServerError(json.message, json.code, json.type);
   }
+}
+
+export function createNewNote(text: string): t.Note {
+  const now = Date.now();
+  return {
+    id: uuid(),
+    text,
+    creation_date: new Date(now).toISOString(),
+    modification_date: new Date(now).toISOString(),
+    order: now,
+    not_deleted: 1,
+    not_archived: 1,
+    pinned: 0,
+  };
 }

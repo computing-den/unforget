@@ -29,7 +29,7 @@ export function NotesPage(props: NotesPageProps) {
 
   function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
     let savedNote = {
-      ...(newNote ?? createNewNote()),
+      ...(newNote ?? cutil.createNewNote('')),
       ...changes,
       modification_date: new Date().toISOString(),
     };
@@ -228,19 +228,6 @@ const NotesFromApp = memo(function NotesFromApp() {
   const app = appStore.use();
   return <Notes notes={app.notes} />;
 });
-
-function createNewNote(): t.Note {
-  return {
-    id: uuid(),
-    text: '',
-    creation_date: new Date().toISOString(),
-    modification_date: new Date().toISOString(),
-    order: Date.now(),
-    not_deleted: 1,
-    not_archived: 1,
-    pinned: 0,
-  };
-}
 
 export async function notesPageLoader(match: RouteMatch) {
   // When transitioning to / or /archive, we only want to update the notes if necessary.

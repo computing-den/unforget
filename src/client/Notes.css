@@ -21,10 +21,6 @@
     flex-direction: column;
     min-height: 2rem;
 
-    &.prewrap {
-      white-space: pre-wrap;
-    }
-
     &.clickable {
       cursor: pointer;
       &:hover {

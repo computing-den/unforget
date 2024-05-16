@@ -1,4 +1,4 @@
-Welcome!
+# Welcome!
 
 
 Unforget is a minimalist note-taking app featuring:
@@ -19,3 +19,14 @@ Unforget is a minimalist note-taking app featuring:
 
 
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*
+
+
+# Optional one-click installation
+
+Continue using it directly in your browser or install:
+
+- Chrome / Edge: Install icon in the URL bar
+- iOS Safari: Share → Add to Home Screen
+- Android Browser: Menu → Add to Home Screen
+
+*Note: Desktop Safari and Firefox do not support installing Progressive Web Apps.*

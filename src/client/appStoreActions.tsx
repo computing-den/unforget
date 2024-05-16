@@ -5,11 +5,10 @@ import * as actions from './appStoreActions.js';
 import * as util from './util.jsx';
 import log from './logger.js';
 import * as api from './api.js';
-import { bytesToHexString, CACHE_VERSION } from '../common/util.jsx';
+import { bytesToHexString, createNewNote } from '../common/util.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
-import demoNote1 from './notes/demoNote1.txt';
-import demoNote2 from './notes/demoNote2.txt';
+import welcome1 from './notes/welcome1.md';
 
 export async function initAppStore() {
   // let showArchive = false;
@@ -47,32 +46,8 @@ export async function setUpDemo() {
   const encryption_salt = bytesToHexString(util.generateEncryptionSalt());
   await loggedIn({ username: 'demo', password: 'demo' }, { username: 'demo', token: 'demo', encryption_salt });
 
-  const order = Date.now();
-  const notes: t.Note[] = [
-    {
-      id: uuid(),
-      text: demoNote1,
-      creation_date: new Date().toISOString(),
-      modification_date: new Date().toISOString(),
-      not_deleted: 1,
-      not_archived: 1,
-      pinned: 0,
-      order,
-    },
-    {
-      id: uuid(),
-      text: demoNote2,
-      creation_date: new Date().toISOString(),
-      modification_date: new Date().toISOString(),
-      not_deleted: 1,
-      not_archived: 1,
-      pinned: 0,
-      order: order - 1,
-    },
-  ];
-  for (const note of notes) {
-    await saveNote(note);
-  }
+  const notes: t.Note[] = [createNewNote(welcome1)];
+  for (const note of notes) await saveNote(note);
 }
 
 export async function updateNotes() {

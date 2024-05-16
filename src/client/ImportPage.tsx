@@ -1,7 +1,7 @@
 import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import type * as t from '../common/types.js';
-// import { isNoteNewerThan } from '../common/util.js';
+import { createNewNote } from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
@@ -12,6 +12,9 @@ import * as icons from './icons.js';
 import log from './logger.js';
 import { unzip } from 'unzipit';
 import { v4 as uuid } from 'uuid';
+import importMd from './notes/import.md';
+
+const importNote = createNewNote(importMd);
 
 export function ImportPage() {
   // const app = appStore.use();
@@ -56,54 +59,16 @@ export function ImportPage() {
   //   },
   // ];
 
+  function hashLinkClicked(hash: string) {
+    triggerFileInput();
+  }
+
   return (
     <PageLayout>
       <PageHeader actions={pageActions} title="import" />
       <PageBody>
         <div className="import-page">
-          {!importing && (
-            <div className="notes">
-              <div className="note">
-                <b>Import from Google Keep</b>
-                <br />
-                <br />
-                <p>1. Go to Google Takout</p>
-                <p>
-                  2. Select only Keep's data for export
-                  <br />
-                  <span className="desc">
-                    <i>It'll be ready for download in a few minutes</i>
-                  </span>
-                </p>
-                <p>
-                  3.{' '}
-                  <button className="import primary" onClick={triggerFileInput}>
-                    Import notes from the zip file
-                  </button>
-                </p>
-                <br />
-                <p>
-                  Note: The Unforget servers only see your <b>encrypted</b> data.
-                </p>
-              </div>
-              <div className="note">
-                <b>Import from Apple Notes</b>
-                <br />
-                <br />
-                <p>
-                  <i>Coming soon ...</i>
-                </p>
-              </div>
-              <div className="note">
-                <b>Import APIs</b>
-                <br />
-                <br />
-                <p>
-                  <i>TODO</i>
-                </p>
-              </div>
-            </div>
-          )}
+          {!importing && <Notes notes={[importNote]} readonly onHashLinkClick={hashLinkClicked} />}
           {!importing && <input type="file" name="file" accept="application/zip" onChange={importCb} />}
           {importing && <h2 className="page-message">Please wait ...</h2>}
           {/*
