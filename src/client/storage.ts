@@ -22,7 +22,7 @@ export type SyncListener = (args: SyncListenerArgs) => any;
 type SaveNoteQueueItem = { note: t.Note; resolve: () => void; reject: (error: Error) => any };
 
 const syncListeners: SyncListener[] = [];
-export let syncing = false;
+let syncing = false;
 let shouldSyncAgain = false;
 let fullSyncRequired = false;
 let saveNoteQueue: SaveNoteQueueItem[] = [];
