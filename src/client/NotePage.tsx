@@ -101,7 +101,6 @@ export function NotePage() {
   }, []);
 
   const pageActions = note && [
-    <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
     <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete" />,
     <PageAction
       icon={note.not_archived ? icons.archiveEmptyWhite : icons.archiveFilledWhite}
@@ -113,6 +112,7 @@ export function NotePage() {
       onClick={pinCb}
       title={note.pinned ? 'Unpin' : 'Pin'}
     />,
+    <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
     <PageAction icon={icons.checkWhite} onClick={goHome} title="Done" />,
   ];
 

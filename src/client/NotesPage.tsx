@@ -150,14 +150,14 @@ export function NotesPage(props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
-
+      <PageAction icon={icons.trashWhite} onClick={cancelNewNoteCb} title="Delete" />,
+      // <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} title="Cancel" />,
       <PageAction
         icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
         onClick={togglePinned}
         title={newNote?.pinned ? 'Unpin' : 'Pin'}
       />,
-      <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} title="Cancel" />,
+      <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
       <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} title="Done" />,
     );
   } else if (app.search === undefined) {
