@@ -1,14 +1,10 @@
-import { useRouter, RouteMatch } from './router.jsx';
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import type * as t from '../common/types.js';
 import { createNewNote } from '../common/util.js';
-import * as storage from './storage.js';
-import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
-import { Notes, Note } from './Notes.jsx';
+import { Notes } from './Notes.jsx';
 import _ from 'lodash';
-import * as icons from './icons.js';
 import log from './logger.js';
 import { unzip } from 'unzipit';
 import { v4 as uuid } from 'uuid';
@@ -19,13 +15,13 @@ const importNote = createNewNote(importMd);
 export function ImportPage() {
   // const app = appStore.use();
 
-  const [file, setFile] = useState<File>();
+  // const [file, setFile] = useState<File>();
   const [importing, setImporting] = useState(false);
 
   async function importCb(e: React.ChangeEvent<HTMLInputElement>) {
     try {
       const newFile = e.target.files?.[0];
-      setFile(newFile);
+      // setFile(newFile);
       if (!newFile) return;
 
       setImporting(true);
@@ -41,10 +37,6 @@ export function ImportPage() {
   function triggerFileInput() {
     (document.querySelector('input[type="file"]') as HTMLInputElement).click();
   }
-
-  const pageActions: React.ReactNode[] = [
-    // <PageAction icon={icons.bulletpointWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
-  ];
 
   // const notes: t.Note[] = [
   //   {
@@ -65,11 +57,13 @@ export function ImportPage() {
 
   return (
     <PageLayout>
-      <PageHeader actions={pageActions} title="import" />
+      <PageHeader title="/ import" />
       <PageBody>
-        <div className="import-page">
+        <div className="page">
           {!importing && <Notes notes={[importNote]} readonly onHashLinkClick={hashLinkClicked} />}
-          {!importing && <input type="file" name="file" accept="application/zip" onChange={importCb} />}
+          {!importing && (
+            <input type="file" name="file" accept="application/zip" onChange={importCb} style={{ display: 'none' }} />
+          )}
           {importing && <h2 className="page-message">Please wait ...</h2>}
           {/*
           <div className="-content">

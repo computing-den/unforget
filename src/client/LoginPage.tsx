@@ -36,7 +36,7 @@ function LoginPage(props: LoginPageProps) {
     <PageLayout>
       <PageHeader compact />
       <PageBody>
-        <div className="login-page">
+        <div className="page login-page">
           <div className="form-element">
             <label htmlFor="username">Username</label>
             <input

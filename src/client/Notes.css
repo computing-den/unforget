@@ -54,6 +54,7 @@
     & pre {
       background: #00000005;
       padding: 0.5rem;
+      white-space: pre-wrap;
     }
     & blockquote {
       background: #00000005;

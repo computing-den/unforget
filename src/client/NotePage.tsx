@@ -120,7 +120,7 @@ export function NotePage() {
     <PageLayout>
       <PageHeader actions={pageActions} />
       <PageBody>
-        <div className="note-page">
+        <div className="page note-page">
           {!note && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
           {!note && !(app.syncing || app.updatingNotes) && <h2 className="page-message">Not found</h2>}
           {note && (

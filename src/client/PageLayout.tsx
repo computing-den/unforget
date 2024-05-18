@@ -76,10 +76,8 @@ function PageHeaderContent(props: PageHeaderProps) {
     actions.showMessage('Checking for updates ...');
   }, []);
 
-  const about = useCallback(() => {
-    alert(
-      `\nUnforget\n\nMade by Computing Den.\n\nsean@computing-den.com\n\n\n[cache version ${cutil.CACHE_VERSION}]\n`,
-    );
+  const goToAbout = useCallback(() => {
+    if (router.pathname !== '/about') history.pushState(null, '', '/about');
   }, []);
 
   const router = useRouter();
@@ -117,7 +115,7 @@ function PageHeaderContent(props: PageHeaderProps) {
     { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
     { label: 'Import', icon: icons.import, onClick: goToImport },
     { label: 'Export', icon: icons.export, onClick: goToExport },
-    { label: 'About', icon: icons.info, onClick: about },
+    { label: 'About', icon: icons.info, onClick: goToAbout },
     { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
     { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
     { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },

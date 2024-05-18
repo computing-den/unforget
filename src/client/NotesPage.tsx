@@ -197,7 +197,7 @@ export function NotesPage(props: NotesPageProps) {
         hasSearch={app.search !== undefined}
       />
       <PageBody>
-        <div className="notes-page">
+        <div className="page notes-page">
           <div
             className={`new-note-container ${stickyEditor ? 'sticky' : ''} ${
               stickyEditor && !editing ? 'invisible' : ''

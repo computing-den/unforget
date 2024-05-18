@@ -2,10 +2,12 @@ import { Router, Route, useRouter } from './router.jsx';
 import React from 'react';
 import * as appStore from './appStore.js';
 import LoginPage from './LoginPage.jsx';
+import AboutPage from './AboutPage.jsx';
 import DemoPage from './DemoPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 import { ImportPage } from './ImportPage.jsx';
+import { ExportPage } from './ExportPage.jsx';
 import _ from 'lodash';
 
 export default function App() {
@@ -17,6 +19,10 @@ export default function App() {
     {
       path: '/login',
       element: <LoginPage />,
+    },
+    {
+      path: '/about',
+      element: <AboutPage />,
     },
     {
       path: '/demo',
@@ -36,6 +42,14 @@ export default function App() {
       element: (
         <Auth>
           <ImportPage key="/import" />
+        </Auth>
+      ),
+    },
+    {
+      path: '/export',
+      element: (
+        <Auth>
+          <ExportPage key="/export" />
         </Auth>
       ),
     },

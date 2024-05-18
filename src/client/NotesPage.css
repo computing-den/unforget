@@ -1,12 +1,4 @@
 .notes-page {
-  flex: 1;
-  margin: var(--page-content-margin-top) auto;
-  max-width: var(--page-max-width);
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-
   .new-note-container {
     display: flex;
     flex-direction: column;

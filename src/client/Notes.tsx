@@ -2,7 +2,6 @@ import React, { memo, useRef } from 'react';
 import type * as t from '../common/types.js';
 import { assert } from '../common/util.js';
 import * as md from '../common/mdFns.js';
-import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
 import { useClickWithoutDrag } from './hooks.jsx';
 import _ from 'lodash';

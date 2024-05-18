@@ -132,14 +132,14 @@ export function isSavingNote(): boolean {
   return saveNoteQueueActive;
 }
 
-// export async function getAllNotes(): Promise<t.Note[]> {
-//   const req = await transaction(
-//     NOTES_STORE,
-//     'readonly',
-//     tx => tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX).getAll() as IDBRequest<t.Note[]>,
-//   );
-//   return req.result;
-// }
+export async function getAllNotes(): Promise<t.Note[]> {
+  const req = await transaction(
+    NOTES_STORE,
+    'readonly',
+    tx => tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX).getAll() as IDBRequest<t.Note[]>,
+  );
+  return req.result;
+}
 
 export async function getNotes(opts?: {
   limit?: number;
