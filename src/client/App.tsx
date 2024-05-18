@@ -2,6 +2,7 @@ import { Router, Route, useRouter } from './router.jsx';
 import React from 'react';
 import * as appStore from './appStore.js';
 import LoginPage from './LoginPage.jsx';
+import DemoPage from './DemoPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 import { ImportPage } from './ImportPage.jsx';
@@ -16,6 +17,10 @@ export default function App() {
     {
       path: '/login',
       element: <LoginPage />,
+    },
+    {
+      path: '/demo',
+      element: <DemoPage />,
     },
     {
       path: '/n/:noteId',

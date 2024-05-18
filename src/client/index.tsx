@@ -32,10 +32,10 @@ async function setup() {
   await actions.initAppStore();
   await actions.makeSureConsistentUserAndCookie();
 
-  // Set up a demo user.
-  if (!appStore.get().user) {
-    await actions.setUpDemo();
-  }
+  // // Set up a demo user.
+  // if (!appStore.get().user) {
+  //   await actions.setUpDemo();
+  // }
 
   // Sync online status.
   function onlineChanged() {
