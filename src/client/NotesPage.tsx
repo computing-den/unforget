@@ -1,15 +1,14 @@
 import { RouteMatch } from './router.jsx';
-import React, { useCallback, useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import { useStoreAndRestoreScrollY } from './hooks.js';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
-import * as util from './util.jsx';
 import * as actions from './appStoreActions.jsx';
 import { Editor, EditorContext } from './Editor.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
 import * as icons from './icons.js';
 import { Notes } from './Notes.jsx';
 import log from './logger.js';
@@ -25,7 +24,13 @@ export function NotesPage(props: NotesPageProps) {
   const [editorFocused, setEditorFocused] = useState(false);
   const [stickyEditor, setStickyEditor] = useState(false);
   const editorRef = useRef<EditorContext | null>(null);
-  util.useStoreAndRestoreScrollY();
+  useStoreAndRestoreScrollY();
+
+  // Check for changes in storage and update the notes.
+  useEffect(() => {
+    window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
+    return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
+  }, []);
 
   function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
     let savedNote = {
@@ -211,8 +216,8 @@ export function NotesPage(props: NotesPageProps) {
             />
           </div>
           {app.notes.length > 0 && <NotesFromApp />}
-          {!app.notes.length && app.syncing && <h2 className="page-message">Loading...</h2>}
-          {!app.notes.length && !app.syncing && <h2 className="page-message">No notes found</h2>}
+          {!app.notes.length && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
+          {!app.notes.length && !(app.syncing || app.updatingNotes) && <h2 className="page-message">No notes found</h2>}
           {!app.allNotePagesLoaded && (
             <button className="load-more primary button-row" onClick={loadMore}>
               Load more

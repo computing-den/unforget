@@ -1,7 +1,7 @@
 import type * as t from './types.js';
 import { v4 as uuid } from 'uuid';
 
-export const CACHE_VERSION = 150;
+export const CACHE_VERSION = 151;
 
 export function assert(condition: boolean, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -127,6 +127,10 @@ export class ServerError extends Error {
 
   static fromJSON(json: any): ServerError {
     return new ServerError(json.message, json.code, json.type);
+  }
+
+  toJSON() {
+    return { message: this.message, code: this.code, type: this.type };
   }
 }
 

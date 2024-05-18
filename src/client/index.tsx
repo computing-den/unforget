@@ -2,7 +2,6 @@ import type * as t from '../common/types.js';
 import { createRoot } from 'react-dom/client';
 import * as storage from './storage.js';
 import { setUpManualScrollRestoration, patchHistory } from './router.jsx';
-import * as util from './util.jsx';
 import React from 'react';
 import App from './App.jsx';
 import * as appStore from './appStore.jsx';
@@ -22,16 +21,8 @@ async function setup() {
     );
 
     navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data.command === 'serviceWorkerActivated') {
-        log(
-          `window: received serviceWorkerActivated from service worker with cache version ${event.data.cacheVersion}`,
-        );
-
-        if (event.data.cacheVersion > CACHE_VERSION) {
-          log(`window: require a page refresh to upgrade from ${CACHE_VERSION} to ${event.data.cacheVersion}`);
-          actions.requireAppUpdate();
-        }
-      }
+      log(`window: received message from service worker`, event.data);
+      handleServiceWorkerMessage(event.data);
     });
   } else {
     log.error('window: service workers are not supported.');
@@ -57,36 +48,6 @@ async function setup() {
 
   // Sync online status periodically.
   setInterval(onlineChanged, 5000);
-
-  // Sync with server when online.
-  window.addEventListener('online', () => {
-    storage.sync();
-  });
-
-  // Sync with server periodically.
-  setInterval(storage.sync, 5000);
-
-  // Initial sync with server.
-  storage.sync();
-
-  // Listen to server sync events and update notes if there are any changes from the server.
-  storage.addSyncListener(async function syncListener(args: storage.SyncListenerArgs) {
-    appStore.update(app => {
-      app.syncing = !args.done;
-    });
-    if (args.done && args.error) {
-      if (args.error instanceof TypeError) {
-        // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
-        // Should be ignored.
-      } else if (args.error instanceof ServerError && args.error.code === 401) {
-        await actions.resetUser();
-      } else {
-        actions.showMessage(`Sync failed: ${args.error.message}`, { type: 'error' });
-      }
-    }
-
-    if (args.done && args.mergeCount > 0) actions.updateNotes();
-  });
 
   // Check for app updates when page becomes visible.
   window.addEventListener('visibilitychange', function visibilityChanged() {
@@ -118,6 +79,46 @@ async function setup() {
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);
+}
+
+async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessage) {
+  switch (message.command) {
+    case 'serviceWorkerActivated': {
+      if (message.cacheVersion > CACHE_VERSION) {
+        log(`window: require a page refresh to upgrade from ${CACHE_VERSION} to ${message.cacheVersion}`);
+        actions.requireAppUpdate();
+      }
+
+      break;
+    }
+    case 'synced': {
+      if (message.error) actions.showMessage(message.error, { type: 'error' });
+
+      appStore.update(app => {
+        app.syncing = false;
+      });
+
+      break;
+    }
+    case 'syncing': {
+      appStore.update(app => {
+        app.syncing = true;
+      });
+      break;
+    }
+    case 'refreshPage': {
+      window.location.reload();
+      break;
+    }
+
+    case 'notesInStorageChangedExternally': {
+      window.dispatchEvent(new CustomEvent('notesInStorageChangedExternally'));
+      break;
+    }
+
+    default:
+      console.log('Unknown message', message);
+  }
 }
 
 window.onload = setup;

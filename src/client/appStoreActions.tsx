@@ -2,12 +2,13 @@ import type * as t from '../common/types.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.js';
-import * as util from './util.jsx';
 import log from './logger.js';
+import { generateEncryptionSalt, calcClientPasswordHash, makeEncryptionKey } from './crypto.js';
+import { getUserTokenFromCookie, setUserCookies } from './cookies.js';
+import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as api from './api.js';
 import { bytesToHexString, createNewNote } from '../common/util.jsx';
 import _ from 'lodash';
-import { v4 as uuid } from 'uuid';
 import welcome1 from './notes/welcome1.md';
 
 export async function initAppStore() {
@@ -35,6 +36,7 @@ export async function initAppStore() {
     online: navigator.onLine,
     queueCount: 0,
     syncing: false,
+    updatingNotes: false,
     user,
     requirePageRefresh: false,
   });
@@ -43,7 +45,7 @@ export async function initAppStore() {
 }
 
 export async function setUpDemo() {
-  const encryption_salt = bytesToHexString(util.generateEncryptionSalt());
+  const encryption_salt = bytesToHexString(generateEncryptionSalt());
   await loggedIn({ username: 'demo', password: 'demo' }, { username: 'demo', token: 'demo', encryption_salt });
 
   const notes: t.Note[] = [createNewNote(welcome1)];
@@ -56,6 +58,9 @@ export async function updateNotes() {
     log('updateNotes started');
     const { notePages, notePageSize, hidePinnedNotes, search, showArchive } = appStore.get();
     const notesUpdateTimestamp = Date.now();
+    appStore.update(app => {
+      app.updatingNotes = true;
+    });
     const { done, notes } = await storage.getNotes({
       limit: notePageSize * notePages,
       hidePinnedNotes,
@@ -70,6 +75,10 @@ export async function updateNotes() {
     log(`updateNotes done in ${Date.now() - start}ms`);
   } catch (error) {
     gotError(error as Error);
+  } finally {
+    appStore.update(app => {
+      app.updatingNotes = false;
+    });
   }
 }
 
@@ -110,7 +119,7 @@ export async function login(credentials: t.UsernamePassword, opts?: { importDemo
   try {
     const loginData: t.LoginData = {
       username: credentials.username,
-      password_client_hash: await util.calcClientPasswordHash(credentials),
+      password_client_hash: await calcClientPasswordHash(credentials),
     };
     const loginResponse: t.LoginResponse = await api.post('/api/login', loginData);
     await loggedIn(credentials, loginResponse, opts);
@@ -123,8 +132,8 @@ export async function signup(credentials: t.UsernamePassword, opts?: { importDem
   try {
     const signupData: t.SignupData = {
       username: credentials.username,
-      password_client_hash: await util.calcClientPasswordHash(credentials),
-      encryption_salt: bytesToHexString(util.generateEncryptionSalt()),
+      password_client_hash: await calcClientPasswordHash(credentials),
+      encryption_salt: bytesToHexString(generateEncryptionSalt()),
     };
     const loginResponse: t.LoginResponse = await api.post('/api/signup', signupData);
 
@@ -152,6 +161,9 @@ export async function logout() {
     await resetUser();
     await storage.clearAll();
     await initAppStore();
+
+    // Tell other tabs/windows that we just logged out.
+    postToServiceWorker({ command: 'tellOthersToRefreshPage' });
 
     // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
     api.post('/api/logout', { token: user.token }).catch(log.error);
@@ -201,11 +213,8 @@ export async function saveNotes(notes: t.Note[], opts?: { message?: string; imme
     appStore.update(app => {
       app.notesUpdateRequestTimestamp = Date.now();
     });
-    if (opts?.immediateSync) {
-      storage.sync();
-    } else {
-      storage.syncDebounced();
-    }
+    postToServiceWorker({ command: 'sync', debounced: !opts?.immediateSync });
+    postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
   } catch (error) {
     gotError(error as Error);
   }
@@ -226,7 +235,8 @@ export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
       const i = app.notes.findIndex(x => x.id === note.id);
       if (i !== -1) app.notes[i] = note;
     });
-    storage.sync();
+    postToServiceWorker({ command: 'sync' });
+    postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
   } catch (error) {
     gotError(error as Error);
   }
@@ -239,7 +249,7 @@ async function makeClientLocalUserFromServer(
   return {
     username: loginResponse.username,
     token: loginResponse.token,
-    encryptionKey: await util.makeEncryptionKey(credentials.password, loginResponse.encryption_salt),
+    encryptionKey: await makeEncryptionKey(credentials.password, loginResponse.encryption_salt),
   };
 }
 
@@ -248,14 +258,14 @@ async function makeClientLocalUserFromServer(
  * Just in case make sure that the token and the user in appStore are in sync.
  */
 export async function makeSureConsistentUserAndCookie() {
-  const tokenFromCookie = util.getUserTokenFromCookie();
+  const tokenFromCookie = getUserTokenFromCookie();
   const { user } = appStore.get();
   const consistent = Boolean(user && tokenFromCookie && user.token === tokenFromCookie);
   if (!consistent) await actions.resetUser();
 }
 
 export async function resetUser() {
-  util.setUserCookies('');
+  setUserCookies('');
   await storage.setSetting(undefined, 'user');
   appStore.update(app => {
     app.user = undefined;
@@ -271,12 +281,13 @@ async function loggedIn(
   if (!opts?.importDemoNotes) {
     await clearStorage();
   }
-  util.setUserCookies(loginResponse.token); // Needed for the demo user.
+  setUserCookies(loginResponse.token); // Needed for the demo user.
   await storage.setSetting(user, 'user');
   appStore.update(app => {
     app.user = user;
   });
-  storage.sync();
+  postToServiceWorker({ command: 'sync' });
+  postToServiceWorker({ command: 'tellOthersToRefreshPage' });
 }
 
 export async function checkAppUpdate() {
@@ -302,7 +313,7 @@ export async function forceCheckAppUpdate() {
 }
 
 async function checkAppUpdateHelper() {
-  api.postMessageToServiceWorker({ command: 'update' });
+  postToServiceWorker({ command: 'update' });
   await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
 }
 

@@ -1,10 +1,10 @@
 import React, { memo, useRef } from 'react';
 import type * as t from '../common/types.js';
-import * as cutil from '../common/util.js';
+import { assert } from '../common/util.js';
 import * as md from '../common/mdFns.js';
-import * as util from './util.jsx';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
+import { useClickWithoutDrag } from './hooks.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
 import { toHtml } from 'hast-util-to-html';
@@ -89,20 +89,20 @@ export const Note = memo(function Note(props: {
     }
   }
 
-  const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
+  const { onClick, onMouseDown } = useClickWithoutDrag(clickCb);
 
-  function inputClickCb(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
+  // function inputClickCb(e: React.MouseEvent) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  // }
 
   const mdast = fromMarkdown(text ?? '', {
     extensions: [gfm()],
     mdastExtensions: [gfmFromMarkdown()],
   });
   newlineToBreak(mdast);
-  console.log('mdast', mdast);
-  cutil.assert(mdast.type === 'root', 'hast does not have root');
+  // console.log('mdast', mdast);
+  assert(mdast.type === 'root', 'hast does not have root');
   const noteIsEmpty = mdast.children.length === 0;
 
   // Turn the first line into a heading if it's not already a heading and it is followed by two new lines
@@ -122,7 +122,7 @@ export const Note = memo(function Note(props: {
   }
 
   const hast = toHast(mdast);
-  console.log(hast);
+  // console.log(hast);
 
   visit(hast, 'element', function (node) {
     if (node.tagName === 'input') {

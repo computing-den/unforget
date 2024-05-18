@@ -1,17 +1,9 @@
-import React, {
-  useCallback,
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-} from 'react';
+import React, { useState, useLayoutEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.js';
 import * as md from '../common/mdFns.js';
 import { MenuItem } from './Menu.js';
-import * as util from './util.jsx';
+import { useClickWithoutDrag } from './hooks.jsx';
 import _ from 'lodash';
 import { v4 as uuid } from 'uuid';
 
@@ -173,7 +165,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     }
   }
 
-  const { onClick, onMouseDown } = util.useClickWithoutDrag(clickCb);
+  const { onClick, onMouseDown } = useClickWithoutDrag(clickCb);
 
   useLayoutEffect(() => {
     if (props.autoExpand) {

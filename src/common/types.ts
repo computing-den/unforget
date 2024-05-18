@@ -124,6 +124,7 @@ export type AppStore = {
   user?: ClientLocalUser;
   message?: { text: string; type: 'info' | 'error'; timestamp: number };
   syncing: boolean;
+  updatingNotes: boolean;
   queueCount: number;
   online: boolean;
   requirePageRefresh: boolean;
@@ -146,8 +147,9 @@ export type ParsedLine = {
   lastLine: boolean;
 };
 
-export type ServerErrorResponse = {
+export type ServerErrorJSON = {
   message: string;
+  code: number;
   type: ServerErrorType;
 };
 
@@ -156,3 +158,17 @@ export type ServerErrorType = 'app_requires_update' | 'generic';
 export type HistoryState = {
   // fromNotesPage?: boolean;
 };
+
+export type ClientToServiceWorkerMessage =
+  | { command: 'update' }
+  | { command: 'sync'; full?: boolean; debounced?: boolean }
+  | { command: 'tellOthersToRefreshPage' }
+  | { command: 'tellOthersNotesInStorageChanged' };
+
+export type ServiceWorkerToClientMessage =
+  | { command: 'serviceWorkerActivated'; cacheVersion: number }
+  | { command: 'synced'; error?: string }
+  | { command: 'syncing' }
+  | { command: 'notesInStorageChangedExternally' }
+  | { command: 'refreshPage' };
+// | { command: 'resetUser' };

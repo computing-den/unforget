@@ -268,11 +268,11 @@ app.use((req, res, next) => {
 });
 
 app.use(((error, req, res, next) => {
+  if (!(error instanceof ServerError)) {
+    error = new ServerError(error.message, 500, 'generic');
+  }
   logError(res, error);
-  const code = error instanceof ServerError ? error.code : 500;
-  const type = error instanceof ServerError ? error.type : 'generic';
-  const errorResponse: t.ServerErrorResponse = { message: error.message, type };
-  res.status(code).send(errorResponse);
+  res.status(error.code).send(error.toJSON());
 }) as express.ErrorRequestHandler);
 
 app.listen(Number(process.env.PORT), () => {

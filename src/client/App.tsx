@@ -1,16 +1,11 @@
-import { Router, Route, Params, RouteMatch, Loader, useRouter } from './router.jsx';
-import React, { useCallback, useState, useEffect, memo } from 'react';
-import type * as t from '../common/types.js';
-import * as storage from './storage.js';
+import { Router, Route, useRouter } from './router.jsx';
+import React from 'react';
 import * as appStore from './appStore.js';
-import * as util from './util.jsx';
-import * as actions from './appStoreActions.jsx';
 import LoginPage from './LoginPage.jsx';
 import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 import { ImportPage } from './ImportPage.jsx';
 import _ from 'lodash';
-import { ServerError } from '../common/util.js';
 
 export default function App() {
   // const app = appStore.use();

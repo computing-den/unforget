@@ -1,6 +1,7 @@
 .notes {
   border: 1px solid var(--box-border-color);
   border-radius: var(--box-border-radius);
+  overflow: hidden;
 
   @media (max-width: 800px) {
     border-radius: 0;

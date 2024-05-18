@@ -1,9 +1,9 @@
 import { useRouter } from './router.jsx';
 import React, { useCallback, useState } from 'react';
+import { useCallbackCancelEvent } from './hooks.js';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
-import * as storage from './storage.js';
-import * as util from './util.js';
+import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as cutil from '../common/util.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
@@ -64,10 +64,10 @@ function PageHeaderContent(props: PageHeaderProps) {
   if (!app.user) throw new Error('PageHeaderContent requires user');
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const toggleMenu = util.useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
+  const toggleMenu = useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
 
   const fullSync = useCallback(() => {
-    storage.fullSync();
+    postToServiceWorker({ command: 'sync', full: true });
     actions.showMessage('Syncing ...');
   }, []);
 
@@ -84,7 +84,7 @@ function PageHeaderContent(props: PageHeaderProps) {
 
   const router = useRouter();
 
-  const goToNotes = util.useCallbackCancelEvent(() => {
+  const goToNotes = useCallbackCancelEvent(() => {
     if (router.pathname === '/') {
       window.scrollTo(0, 0);
     } else {
@@ -171,8 +171,8 @@ export function PageAction(props: {
   title: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const toggleMenu = util.useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
-  const clicked = util.useCallbackCancelEvent(() => {
+  const toggleMenu = useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
+  const clicked = useCallbackCancelEvent(() => {
     if (props.menu) toggleMenu();
     props.onClick?.();
   }, [props.menu, props.onClick]);

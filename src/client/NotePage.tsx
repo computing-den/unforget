@@ -13,26 +13,20 @@ import log from './logger.js';
 
 export function NotePage() {
   const app = appStore.use();
-
   const { match, loaderData, state: historyState } = useRouter();
-  log('NotePage: params', match!.params);
-
   const [note, setNote] = useState(loaderData!.read() as t.Note | undefined);
+  const editorRef = useRef<EditorContext | null>(null);
 
-  // Check for changes from the server and possibly replace it.
+  // Check for changes in storage possibly replace it.
   useEffect(() => {
-    async function callback(args: storage.SyncListenerArgs) {
-      if (args.done && args.mergeCount > 0) {
-        const newNote = await storage.getNote(match!.params.noteId as string);
-        if (newNote && isNoteNewerThan(newNote, note)) setNote(newNote);
-      }
+    async function callback() {
+      const newNote = await storage.getNote(match!.params.noteId as string);
+      if (newNote && isNoteNewerThan(newNote, note)) setNote(newNote);
     }
 
-    storage.addSyncListener(callback);
-    return () => storage.removeSyncListener(callback);
-  }, [note]);
-
-  const editorRef = useRef<EditorContext | null>(null);
+    window.addEventListener('notesInStorageChangedExternally', callback);
+    return () => window.removeEventListener('notesInStorageChangedExternally', callback);
+  }, [note, match!.params.noteId]);
 
   const goHome = useCallback(() => {
     if (historyState.index > 0) {
@@ -127,8 +121,8 @@ export function NotePage() {
       <PageHeader actions={pageActions} />
       <PageBody>
         <div className="note-page">
-          {!note && app.syncing && <h2 className="page-message">Loading...</h2>}
-          {!note && !app.syncing && <h2 className="page-message">Not found</h2>}
+          {!note && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
+          {!note && !(app.syncing || app.updatingNotes) && <h2 className="page-message">Not found</h2>}
           {note && (
             <div className="note-container">
               <Editor
