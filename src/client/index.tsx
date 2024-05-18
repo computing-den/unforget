@@ -4,6 +4,7 @@ import * as storage from './storage.js';
 import { setUpManualScrollRestoration, patchHistory } from './router.jsx';
 import React from 'react';
 import App from './App.jsx';
+import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
 import { ServerError, CACHE_VERSION } from '../common/util.js';
@@ -32,10 +33,8 @@ async function setup() {
   await actions.initAppStore();
   await actions.makeSureConsistentUserAndCookie();
 
-  // // Set up a demo user.
-  // if (!appStore.get().user) {
-  //   await actions.setUpDemo();
-  // }
+  // Request sync status from service worker.
+  await postToServiceWorker({ command: 'sendSyncStatus' });
 
   // Sync online status.
   function onlineChanged() {
@@ -91,19 +90,11 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
 
       break;
     }
-    case 'synced': {
-      if (message.error) actions.showMessage(message.error, { type: 'error' });
-
+    case 'syncStatus': {
       appStore.update(app => {
-        app.syncing = false;
+        app.syncing = message.syncing;
       });
 
-      break;
-    }
-    case 'syncing': {
-      appStore.update(app => {
-        app.syncing = true;
-      });
       break;
     }
     case 'refreshPage': {
@@ -113,6 +104,11 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
 
     case 'notesInStorageChangedExternally': {
       window.dispatchEvent(new CustomEvent('notesInStorageChangedExternally'));
+      break;
+    }
+
+    case 'error': {
+      actions.showMessage(message.error, { type: 'error' });
       break;
     }
 

@@ -39,7 +39,7 @@ export async function sync() {
   shouldSyncAgain = false;
   syncing = true;
 
-  postToClients({ command: 'syncing' });
+  postToClients({ command: 'syncStatus', syncing: true });
   // callSyncListeners({ done: false });
 
   let error: Error | undefined;
@@ -80,22 +80,34 @@ export async function sync() {
 
   syncing = false;
 
-  // Handle errors and tell clients.
-  if (error instanceof TypeError) {
-    // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
-    // Should be ignored.
-  } else if (error instanceof ServerError && error.code === 401) {
-    setUserCookies('');
-    await storage.setSetting(undefined, 'user');
-    postToClients({ command: 'refreshPage' });
-  } else {
-    if (mergeCount > 0) {
-      postToClients({ command: 'notesInStorageChangedExternally' });
+  // Handle errors.
+  if (error) {
+    if (error instanceof TypeError) {
+      // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
+      // Should be ignored.
+    } else if (error instanceof ServerError && error.code === 401) {
+      setUserCookies('');
+      await storage.setSetting(undefined, 'user');
+      postToClients({ command: 'refreshPage' });
     }
-    postToClients({ command: 'synced', error: error?.message });
+    postToClients({ command: 'error', error: error.message });
   }
 
-  if (shouldSyncAgain) setTimeout(sync, 0);
+  // Tell clients about changes.
+  if (mergeCount > 0) {
+    postToClients({ command: 'notesInStorageChangedExternally' });
+  }
+
+  // Schedule another sync or tell client that sync is done.
+  if (shouldSyncAgain) {
+    setTimeout(sync, 0);
+  } else {
+    postToClients({ command: 'syncStatus', syncing: false });
+  }
+}
+
+export function isSyncing(): boolean {
+  return syncing;
 }
 
 async function getPartialSyncData(user: t.ClientLocalUser): Promise<t.SyncData> {

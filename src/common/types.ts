@@ -163,12 +163,13 @@ export type ClientToServiceWorkerMessage =
   | { command: 'update' }
   | { command: 'sync'; full?: boolean; debounced?: boolean }
   | { command: 'tellOthersToRefreshPage' }
-  | { command: 'tellOthersNotesInStorageChanged' };
+  | { command: 'tellOthersNotesInStorageChanged' }
+  | { command: 'sendSyncStatus' };
 
 export type ServiceWorkerToClientMessage =
   | { command: 'serviceWorkerActivated'; cacheVersion: number }
-  | { command: 'synced'; error?: string }
-  | { command: 'syncing' }
+  | { command: 'syncStatus'; syncing: boolean }
   | { command: 'notesInStorageChangedExternally' }
-  | { command: 'refreshPage' };
+  | { command: 'refreshPage' }
+  | { command: 'error'; error: string };
 // | { command: 'resetUser' };

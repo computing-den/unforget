@@ -3,8 +3,8 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import { sync, requireAFullSync, syncDebounced } from './serviceWorkerSync.js';
-import { postToClients } from './serviceWorkerToClientApi.js';
+import { sync, requireAFullSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
+import { postToClient, postToClients } from './serviceWorkerToClientApi.js';
 import type { ClientToServiceWorkerMessage } from '../common/types.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
 
@@ -76,7 +76,7 @@ async function activateServiceWorker() {
   // First sync.
   sync();
   // Sync on interval.
-  setInterval(sync, 5000);
+  // setInterval(sync, 5000);
 
   console.log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
@@ -139,6 +139,10 @@ async function handleClientMessage(client: Client, message: ClientToServiceWorke
     }
     case 'tellOthersNotesInStorageChanged': {
       postToClients({ command: 'notesInStorageChangedExternally' }, { except: [client] });
+      break;
+    }
+    case 'sendSyncStatus': {
+      postToClient(client, { command: 'syncStatus', syncing: isSyncing() });
       break;
     }
     default:

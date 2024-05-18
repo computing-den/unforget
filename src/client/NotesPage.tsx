@@ -217,7 +217,7 @@ export function NotesPage(props: NotesPageProps) {
           </div>
           {app.notes.length > 0 && <NotesFromApp />}
           {!app.notes.length && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
-          {!app.notes.length && !(app.syncing || app.updatingNotes) && <h2 className="page-message">No notes found</h2>}
+          {/*!app.notes.length && !(app.syncing || app.updatingNotes) && <h2 className="page-message">No notes found</h2>*/}
           {!app.allNotePagesLoaded && (
             <button className="load-more primary button-row" onClick={loadMore}>
               Load more
