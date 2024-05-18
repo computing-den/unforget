@@ -26,11 +26,11 @@ export function NotesPage(props: NotesPageProps) {
   const editorRef = useRef<EditorContext | null>(null);
   useStoreAndRestoreScrollY();
 
-  // Check for changes in storage and update the notes.
-  useEffect(() => {
-    window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
-    return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
-  }, []);
+  // // Check for changes in storage and update the notes.
+  // useEffect(() => {
+  //   window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
+  //   return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
+  // }, []);
 
   function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
     let savedNote = {

@@ -1,3 +1,5 @@
+declare var self: ServiceWorkerGlobalScope;
+
 import { setUserCookies } from './cookies.js';
 import type * as t from '../common/types.js';
 import { ServerError, isNoteNewerThan } from '../common/util.jsx';
@@ -89,8 +91,11 @@ export async function sync() {
       setUserCookies('');
       await storage.setSetting(undefined, 'user');
       postToClients({ command: 'refreshPage' });
+    } else if (error instanceof ServerError && error.type === 'app_requires_update') {
+      await self.registration.update();
+    } else {
+      postToClients({ command: 'error', error: error.message });
     }
-    postToClients({ command: 'error', error: error.message });
   }
 
   // Tell clients about changes.

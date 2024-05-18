@@ -60,7 +60,7 @@
         display: flex;
         align-items: center;
         white-space: nowrap;
-        padding: 1rem 1rem;
+        padding: 0.5rem 1rem;
         transition: 0.2s background ease-in-out;
         /* font-weight: bold; */
         /* font-size: 1.1em; */

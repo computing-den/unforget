@@ -48,6 +48,11 @@ async function setup() {
   // Sync online status periodically.
   setInterval(onlineChanged, 5000);
 
+  // Sync when online.
+  window.addEventListener('online', () => {
+    postToServiceWorker({ command: 'sync' });
+  });
+
   // Check for app updates when page becomes visible.
   window.addEventListener('visibilitychange', function visibilityChanged() {
     if (document.visibilityState === 'visible') {
@@ -104,6 +109,7 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
 
     case 'notesInStorageChangedExternally': {
       window.dispatchEvent(new CustomEvent('notesInStorageChangedExternally'));
+      actions.updateNotes();
       break;
     }
 
