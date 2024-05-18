@@ -16,11 +16,16 @@ import { visit } from 'unist-util-visit';
 import { visitParents } from 'unist-util-visit-parents';
 import { newlineToBreak } from 'mdast-util-newline-to-break';
 
-export function Notes(props: { notes: t.Note[]; readonly?: boolean; onHashLinkClick?: (hash: string) => any }) {
-  // const app = appStore.use();
+export function Notes(props: {
+  notes: t.Note[];
+  readonly?: boolean;
+  onHashLinkClick?: (hash: string) => any;
+  hiddenNoteId?: string;
+}) {
+  const notes = props.notes.filter(n => n.id !== props.hiddenNoteId);
   return (
     <div className="notes">
-      {props.notes.map(note => (
+      {notes.map(note => (
         <Note key={note.id} note={note} readonly={props.readonly} onHashLinkClick={props.onHashLinkClick} />
       ))}
     </div>

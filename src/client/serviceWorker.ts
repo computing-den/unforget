@@ -76,7 +76,7 @@ async function activateServiceWorker() {
   // First sync.
   sync();
   // Sync on interval.
-  // setInterval(sync, 5000);
+  setInterval(sync, 5000);
 
   console.log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });

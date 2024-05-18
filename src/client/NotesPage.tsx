@@ -215,7 +215,7 @@ export function NotesPage(props: NotesPageProps) {
               onBlur={editorBlurCb}
             />
           </div>
-          {app.notes.length > 0 && <NotesFromApp />}
+          {app.notes.length > 0 && <NotesFromApp hiddenNoteId={newNote?.id} />}
           {!app.notes.length && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
           {/*!app.notes.length && !(app.syncing || app.updatingNotes) && <h2 className="page-message">No notes found</h2>*/}
           {!app.allNotePagesLoaded && (
@@ -229,9 +229,9 @@ export function NotesPage(props: NotesPageProps) {
   );
 }
 
-const NotesFromApp = memo(function NotesFromApp() {
+const NotesFromApp = memo(function NotesFromApp(props: { hiddenNoteId?: string }) {
   const app = appStore.use();
-  return <Notes notes={app.notes} />;
+  return <Notes notes={app.notes} hiddenNoteId={props.hiddenNoteId} />;
 });
 
 export async function notesPageLoader(match: RouteMatch) {
