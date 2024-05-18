@@ -50,7 +50,7 @@ export function NotesPage(props: NotesPageProps) {
       setEditing(false);
     }
     setNewNote(undefined);
-    actions.updateNotesIfDirty();
+    actions.updateNotes();
   }
 
   async function cancelNewNoteCb() {
@@ -65,7 +65,7 @@ export function NotesPage(props: NotesPageProps) {
     }
     setNewNote(undefined);
     setEditing(false);
-    actions.updateNotesIfDirty();
+    actions.updateNotes();
   }
 
   function newNoteTextChanged(text: string) {
@@ -240,12 +240,12 @@ export async function notesPageLoader(match: RouteMatch) {
     const showArchive = match.pathname === '/archive';
     if (showArchive !== app.showArchive) {
       app.showArchive = showArchive;
-      app.notesUpdateRequestTimestamp = Date.now();
+      // app.notesUpdateRequestTimestamp = Date.now();
     }
   });
 
   // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
-  await actions.updateNotesIfDirty();
+  await actions.updateNotes();
 }
 
 function reduceNotePagesImmediately() {

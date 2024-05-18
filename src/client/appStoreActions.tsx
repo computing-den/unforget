@@ -28,8 +28,8 @@ export async function initAppStore() {
     showArchive,
     hidePinnedNotes,
     notes: [],
-    notesUpdateRequestTimestamp: 0,
-    notesUpdateTimestamp: -1,
+    // notesUpdateRequestTimestamp: 0,
+    // notesUpdateTimestamp: -1,
     notePages: 1,
     notePageSize: 50,
     allNotePagesLoaded: false,
@@ -57,7 +57,7 @@ export async function updateNotes() {
     const start = Date.now();
     log('updateNotes started');
     const { notePages, notePageSize, hidePinnedNotes, search, showArchive } = appStore.get();
-    const notesUpdateTimestamp = Date.now();
+    // const notesUpdateTimestamp = Date.now();
     appStore.update(app => {
       app.updatingNotes = true;
     });
@@ -70,7 +70,7 @@ export async function updateNotes() {
     appStore.update(app => {
       app.notes = notes;
       app.allNotePagesLoaded = done;
-      app.notesUpdateTimestamp = notesUpdateTimestamp;
+      // app.notesUpdateTimestamp = notesUpdateTimestamp;
     });
     log(`updateNotes done in ${Date.now() - start}ms`);
   } catch (error) {
@@ -95,12 +95,12 @@ export function reduceNotePages(lastItemIndex: number) {
   }
 }
 
-export async function updateNotesIfDirty() {
-  const { notesUpdateTimestamp, notesUpdateRequestTimestamp } = appStore.get();
-  if (notesUpdateTimestamp < notesUpdateRequestTimestamp) {
-    await updateNotes();
-  }
-}
+// export async function updateNotesIfDirty() {
+//   const { notesUpdateTimestamp, notesUpdateRequestTimestamp } = appStore.get();
+//   if (notesUpdateTimestamp < notesUpdateRequestTimestamp) {
+//     await updateNotes();
+//   }
+// }
 
 export const updateNotesDebounced = _.debounce(updateNotes, 300, { leading: false, trailing: true, maxWait: 1000 });
 
@@ -210,9 +210,9 @@ export async function saveNotes(notes: t.Note[], opts?: { message?: string; imme
     if (opts?.message) {
       showMessage(opts.message, { type: 'info' });
     }
-    appStore.update(app => {
-      app.notesUpdateRequestTimestamp = Date.now();
-    });
+    // appStore.update(app => {
+    //   app.notesUpdateRequestTimestamp = Date.now();
+    // });
     postToServiceWorker({ command: 'sync', debounced: !opts?.immediateSync });
     postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
   } catch (error) {
