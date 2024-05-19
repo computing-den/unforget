@@ -302,16 +302,16 @@ export async function setSetting(value: any, key: string) {
  */
 export async function setUser(user: t.ClientLocalUser) {
   const u = { ...user, encryptionKey: await exportEncryptionKey(user.encryptionKey) };
-  await setSetting(u, 'user');
+  await setSetting(u, 'userJson');
 }
 
 export async function getUser(): Promise<t.ClientLocalUser | undefined> {
-  const u = (await getSetting('user')) as any;
+  const u = (await getSetting('userJson')) as any;
   if (u) {
     return { ...u, encryptionKey: await importEncryptionKey(u.encryptionKey) };
   }
 }
 
 export async function clearUser() {
-  await setSetting(undefined, 'user');
+  await setSetting(undefined, 'userJson');
 }
