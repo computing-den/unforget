@@ -5,7 +5,6 @@
 
     &.sticky {
       position: sticky;
-
       top: var(--page-header-height);
       z-index: var(--sticky-z-index);
       overflow: visible;

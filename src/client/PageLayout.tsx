@@ -36,21 +36,23 @@ export function PageHeader(props: PageHeaderProps) {
 
   return (
     <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''} ${props.compact ? 'compact' : ''}`}>
-      {props.compact ? <PageHeaderContentCompact /> : <PageHeaderContent {...props} />}
-      {app.message && (
-        <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
-          <div className="msg-bar-inner-container">
-            <p>{app.message.text.substring(0, 100)}</p>
+      <div id="page-header-inner-wrapper">
+        {props.compact ? <PageHeaderContentCompact /> : <PageHeaderContent {...props} />}
+        {app.message && (
+          <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
+            <div className="msg-bar-inner-container">
+              <p>{app.message.text.substring(0, 100)}</p>
+            </div>
           </div>
-        </div>
-      )}
-      {app.requirePageRefresh && (
-        <div className="update-app-container">
-          <button className="primary" onClick={actions.updateApp}>
-            Update app
-          </button>
-        </div>
-      )}
+        )}
+        {app.requirePageRefresh && (
+          <div className="update-app-container">
+            <button className="primary" onClick={actions.updateApp}>
+              Update app
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

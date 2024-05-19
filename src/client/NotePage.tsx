@@ -17,6 +17,38 @@ export function NotePage() {
   const [note, setNote] = useState(loaderData!.read() as t.Note | undefined);
   const editorRef = useRef<EditorContext | null>(null);
 
+  // Here's a shit show to fix safari hiding the fixed toolbar when we focus on the text editor.
+  // Inspired by https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix
+  useEffect(() => {
+    function setTop() {
+      console.log('setTop');
+      // log(
+      //   'window.pageYOffset',
+      //   window.pageYOffset,
+      //   'window.scrollY',
+      //   window.scrollY,
+      //   'window.innerHeight',
+      //   window.innerHeight,
+      //   'document.body.offsetHeight',
+      //   document.body.offsetHeight,
+      // );
+      const h = document.getElementById('page-header-inner-wrapper')!;
+      let top = Math.max(0, window.scrollY - 2); // -2 instead of 0, otherwise a little gap appears.
+      if (window.innerHeight === document.body.offsetHeight) {
+        top = 0;
+      }
+      h.style.paddingTop = `${top}px`;
+
+      // Could also fix it by scrolling to top, but then the cursor might go behind the soft keyboard.
+      // window.scrollTo(0, 0);
+
+      req = requestAnimationFrame(setTop);
+    }
+
+    let req = requestAnimationFrame(setTop);
+    return () => cancelAnimationFrame(req);
+  }, []);
+
   // Check for changes in storage possibly replace it.
   useEffect(() => {
     async function callback() {

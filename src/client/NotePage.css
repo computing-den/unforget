@@ -1,4 +1,5 @@
 .note-page {
+  margin-bottom: 0;
   .note-container {
     flex: 1;
     display: flex;
