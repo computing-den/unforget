@@ -1,4 +1,6 @@
 .login-page {
+  max-width: 300px;
+
   .form-element {
     display: flex;
     flex-direction: column;
