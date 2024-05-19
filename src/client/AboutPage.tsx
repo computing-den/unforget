@@ -1,11 +1,12 @@
 import React from 'react';
-import { createNewNote } from '../common/util.js';
+import { createNewNote, CACHE_VERSION } from '../common/util.js';
 import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
 import { Notes } from './Notes.jsx';
 import _ from 'lodash';
 import aboutMd from './notes/about.md';
 
-const aboutNote = createNewNote(aboutMd);
+const technicalDetails = `\n\n### Techinal details\n\nCache version: ${CACHE_VERSION}`;
+const aboutNote = createNewNote(aboutMd + technicalDetails);
 
 function AboutPage() {
   return (
