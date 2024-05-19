@@ -69,6 +69,14 @@ export async function makeEncryptionKey(password: string, salt: string): Promise
   );
 }
 
+export async function exportEncryptionKey(key: CryptoKey): Promise<JsonWebKey> {
+  return crypto.subtle.exportKey('jwk', key);
+}
+
+export async function importEncryptionKey(key: JsonWebKey): Promise<CryptoKey> {
+  return crypto.subtle.importKey('jwk', key, 'AES-GCM', true, ['encrypt', 'decrypt']);
+}
+
 export async function encrypt(data: BufferSource, key: CryptoKey): Promise<t.EncryptedData> {
   const iv = generateIV();
   const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, data);

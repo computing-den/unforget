@@ -7,6 +7,7 @@ import { sync, requireAFullSync, syncDebounced, isSyncing } from './serviceWorke
 import { postToClient, postToClients } from './serviceWorkerToClientApi.js';
 import type { ClientToServiceWorkerMessage } from '../common/types.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
+import log from './logger.js';
 
 const CACHE_NAME = `unforget-${CACHE_VERSION}`;
 const APP_STATIC_RESOURCES = ['/', '/style.css', '/index.js', '/barefront.svg', '/manifest.json', '/icon-256x256.png'];
@@ -33,27 +34,27 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', async event => {
   try {
     const message = event.data as ClientToServiceWorkerMessage;
-    console.log('service worker: received message: ', message);
+    log('service worker: received message: ', message);
     if (event.source instanceof Client) {
       await handleClientMessage(event.source, message);
     }
   } catch (error) {
-    console.error(error);
+    log.error(error);
   }
 });
 
 async function installServiceWorker() {
-  console.log('service worker: installing...');
+  log('service worker: installing...');
 
   // Cache the static resources.
   const cache = await caches.open(CACHE_NAME);
   cache.addAll(APP_STATIC_RESOURCES);
 
-  console.log('service worker: install done.');
+  log('service worker: install done.');
 }
 
 async function activateServiceWorker() {
-  console.log('service worker: activating...');
+  log('service worker: activating...');
 
   // Delete old caches.
   const names = await caches.keys();
@@ -71,21 +72,21 @@ async function activateServiceWorker() {
   // Take control of the clients and refresh them.
   // The refresh is necessary if the activate event was triggered by updateApp().
   await self.clients.claim();
-  console.log('service worker: activated.');
+  log('service worker: activated.');
 
   // First sync.
   sync();
   // Sync on interval.
   setInterval(sync, 5000);
 
-  console.log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
+  log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
 }
 
 async function handleFetch(event: FetchEvent): Promise<Response> {
   const url = new URL(event.request.url);
   const { mode, method } = event.request;
-  console.log('service worker fetch: ', mode, method, url.pathname);
+  log('service worker fetch: ', mode, method, url.pathname);
 
   let response: Response | undefined;
 
@@ -115,7 +116,7 @@ async function handleFetch(event: FetchEvent): Promise<Response> {
         await self.registration.update();
       }
     } catch (error) {
-      console.error(error);
+      log.error(error);
     }
   }
 
@@ -146,6 +147,6 @@ async function handleClientMessage(client: Client, message: ClientToServiceWorke
       break;
     }
     default:
-      console.log('Unknown message: ', message);
+      log('Unknown message: ', message);
   }
 }

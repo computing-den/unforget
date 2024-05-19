@@ -11,22 +11,27 @@ import { ServerError, CACHE_VERSION } from '../common/util.js';
 import log from './logger.js';
 
 async function setup() {
+  // Set up storage before registering the service worker.
+  // Because the service worker itself will try to set up the storage too.
+  await storage.getStorage();
+
+  // Register the service worker.
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/serviceWorker.js').then(
-      registration => {
-        log('window: service worker registration successful:', registration);
-      },
-      error => {
-        log.error(`window: service worker registration failed: ${error}`);
-      },
-    );
+    const reg = await navigator.serviceWorker.register('/serviceWorker.js');
+    log('window: service worker registration successful:', reg);
+    // log.error(`window: service worker registration failed: ${error}`);
 
     navigator.serviceWorker.addEventListener('message', event => {
       log(`window: received message from service worker`, event.data);
       handleServiceWorkerMessage(event.data);
     });
+
+    // log(`unregister result: `, await reg.unregister());
+    // return;
   } else {
     log.error('window: service workers are not supported.');
+    alert('Your browser does not support service workers. Please use another browser.');
+    return;
   }
 
   // Initialize app store.

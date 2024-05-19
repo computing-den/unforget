@@ -20,7 +20,7 @@ export async function initAppStore() {
   const [showArchive, hidePinnedNotes, user] = await Promise.all([
     storage.getSetting('showArchive').then(Boolean),
     storage.getSetting('hidePinnedNotes').then(Boolean),
-    storage.getSetting<t.ClientLocalUser>('user'),
+    storage.getUser(),
   ]);
   // }
 
@@ -266,7 +266,7 @@ export async function makeSureConsistentUserAndCookie() {
 
 export async function resetUser() {
   setUserCookies('');
-  await storage.setSetting(undefined, 'user');
+  await storage.clearUser();
   appStore.update(app => {
     app.user = undefined;
   });
@@ -282,7 +282,7 @@ async function loggedIn(
     await clearStorage();
   }
   setUserCookies(loginResponse.token); // Needed for the demo user.
-  await storage.setSetting(user, 'user');
+  await storage.setUser(user);
   appStore.update(app => {
     app.user = user;
   });

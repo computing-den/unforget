@@ -1,5 +1,6 @@
 import type * as t from '../common/types.js';
 import * as cutil from '../common/util.jsx';
+import { exportEncryptionKey, importEncryptionKey } from './crypto.js';
 import _ from 'lodash';
 import log from './logger.js';
 
@@ -291,4 +292,26 @@ export async function setSetting(value: any, key: string) {
   await transaction([SETTINGS_STORE], 'readwrite', async tx => {
     tx.objectStore(SETTINGS_STORE).put(value, key);
   });
+}
+
+/**
+ * Safari (at least on iOS) has trouble serializing and deserializing CryptoKey.
+ * It sets any value object that has a CryptoKey inside to null when we set it
+ * in one context (window) and try to read it in another (service worker).
+ * So, we export and import manually.
+ */
+export async function setUser(user: t.ClientLocalUser) {
+  const u = { ...user, encryptionKey: await exportEncryptionKey(user.encryptionKey) };
+  await setSetting(u, 'user');
+}
+
+export async function getUser(): Promise<t.ClientLocalUser | undefined> {
+  const u = (await getSetting('user')) as any;
+  if (u) {
+    return { ...u, encryptionKey: await importEncryptionKey(u.encryptionKey) };
+  }
+}
+
+export async function clearUser() {
+  await setSetting(undefined, 'user');
 }

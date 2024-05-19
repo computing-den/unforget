@@ -27,7 +27,7 @@ export async function sync() {
   }
 
   // Skip if user not logged in.
-  const user = await storage.getSetting<t.ClientLocalUser>('user');
+  const user = await storage.getUser();
   if (!user) return;
 
   // Skip if this is a demo.
@@ -89,7 +89,7 @@ export async function sync() {
       // Should be ignored.
     } else if (error instanceof ServerError && error.code === 401) {
       setUserCookies('');
-      await storage.setSetting(undefined, 'user');
+      await storage.clearUser();
       postToClients({ command: 'refreshPage' });
     } else if (error instanceof ServerError && error.type === 'app_requires_update') {
       await self.registration.update();
