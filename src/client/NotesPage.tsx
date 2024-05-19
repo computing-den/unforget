@@ -42,13 +42,22 @@ export function NotesPage(props: NotesPageProps) {
     actions.saveNote(savedNote);
   }
 
-  function confirmNewNoteCb() {
-    if (newNote?.text?.trim()) {
-      actions.showMessage('Note added', { type: 'info' });
-      editorRef.current!.focus();
-    } else {
-      setEditing(false);
+  function deleteNewNote() {
+    if (newNote) {
+      appStore.update(app => {
+        app.notes = app.notes.filter(n => n.id !== newNote.id);
+      });
+      saveNewNote({ text: null, not_deleted: 0 });
     }
+  }
+
+  function confirmNewNoteCb() {
+    if (!newNote?.text?.trim()) {
+      cancelNewNoteCb();
+      return;
+    }
+    actions.showMessage('Note added', { type: 'info' });
+    editorRef.current!.focus();
     setNewNote(undefined);
     actions.updateNotes();
   }
@@ -60,7 +69,7 @@ export function NotesPage(props: NotesPageProps) {
       // to delete the note.
       const noteInStorage = await storage.getNote(newNote.id);
       if (!noteInStorage || !cutil.isNoteNewerThan(noteInStorage, newNote)) {
-        saveNewNote({ text: null, not_deleted: 0 });
+        deleteNewNote();
       }
     }
     setNewNote(undefined);
