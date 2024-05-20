@@ -20,12 +20,19 @@ export function Notes(props: {
   readonly?: boolean;
   onHashLinkClick?: (hash: string) => any;
   hiddenNoteId?: string;
+  hideContentAfterBreak?: boolean;
 }) {
   const notes = props.notes.filter(n => n.id !== props.hiddenNoteId);
   return (
     <div className="notes">
       {notes.map(note => (
-        <Note key={note.id} note={note} readonly={props.readonly} onHashLinkClick={props.onHashLinkClick} />
+        <Note
+          key={note.id}
+          note={note}
+          readonly={props.readonly}
+          onHashLinkClick={props.onHashLinkClick}
+          hideContentAfterBreak={props.hideContentAfterBreak}
+        />
       ))}
     </div>
   );
@@ -35,6 +42,7 @@ export const Note = memo(function Note(props: {
   note: t.Note;
   readonly?: boolean;
   onHashLinkClick?: (hash: string) => any;
+  hideContentAfterBreak?: boolean;
 }) {
   // Do not modify the text here because we want the position of each element in mdast and hast to match
   // exactly the original text.
@@ -133,7 +141,7 @@ export const Note = memo(function Note(props: {
 
   // Remove everything after thematicBreak
   const breakMdNodeIndex = mdast.children.findIndex(node => node.type === 'thematicBreak');
-  if (!expanded && breakMdNodeIndex !== -1) {
+  if (props.hideContentAfterBreak && !expanded && breakMdNodeIndex !== -1) {
     mdast.children.splice(breakMdNodeIndex);
   }
 
@@ -165,7 +173,7 @@ export const Note = memo(function Note(props: {
       ) : (
         <div dangerouslySetInnerHTML={{ __html: html }} />
       )}
-      {breakMdNodeIndex >= 0 && (
+      {props.hideContentAfterBreak && breakMdNodeIndex >= 0 && (
         <p>
           <a href="#toggle-expand" onClick={toggleExpanded}>
             {expanded ? 'show less' : 'show more'}

@@ -283,9 +283,6 @@ export function NotesPage(props: NotesPageProps) {
               autoExpand
               onFocus={editorFocusCb}
               onBlur={editorBlurCb}
-              onConfirm={confirmNewNoteCb}
-              onDelete={cancelNewNoteCb}
-              onTogglePinned={togglePinned}
             />
           </div>
           {app.notes.length > 0 && <NotesFromApp hiddenNoteId={newNote?.id} />}
@@ -304,7 +301,7 @@ export function NotesPage(props: NotesPageProps) {
 
 const NotesFromApp = memo(function NotesFromApp(props: { hiddenNoteId?: string }) {
   const app = appStore.use();
-  return <Notes notes={app.notes} hiddenNoteId={props.hiddenNoteId} />;
+  return <Notes notes={app.notes} hiddenNoteId={props.hiddenNoteId} hideContentAfterBreak />;
 });
 
 export async function notesPageLoader(match: RouteMatch) {

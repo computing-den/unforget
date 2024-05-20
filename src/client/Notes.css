@@ -47,8 +47,9 @@
     }
 
     & hr {
-      margin: 1rem 2.4rem;
+      margin: 1rem 0;
       border-color: var(--box-border-color);
+      border-style: dashed;
       opacity: 0.5;
     }
 

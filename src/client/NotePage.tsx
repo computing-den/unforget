@@ -186,10 +186,6 @@ export function NotePage() {
                 placeholder="What's on you mind?"
                 value={note.text ?? ''}
                 onChange={textChangeCb}
-                onConfirm={goHome}
-                onDelete={deleteCb}
-                onTogglePinned={togglePinned}
-                // autoFocus
               />
             </div>
           )}
