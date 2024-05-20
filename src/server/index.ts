@@ -150,7 +150,7 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
       `,
     )
     .run(dbClient);
-  const maxAge = 10 * 365 * 24 * 3600 * 1000;
+  const maxAge = 10 * 365 * 24 * 3600 * 1000; // 10 years in milliseconds
   res.cookie('unforget_token', token, { maxAge, path: '/' });
   // res.cookie('unforget_username', user.username, { maxAge, path: '/' });
   const loginResponse: t.LoginResponse = { username: user.username, token, encryption_salt: user.encryption_salt };
