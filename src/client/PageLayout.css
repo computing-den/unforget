@@ -53,6 +53,7 @@
 
       &.has-sticky {
         /* justify-content: flex-end; */
+        font-size: 0.7em;
 
         &.error .msg-bar-inner-container {
           background: none;
