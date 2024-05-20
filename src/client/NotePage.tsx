@@ -60,6 +60,37 @@ export function NotePage() {
     return () => window.removeEventListener('notesInStorageChangedExternally', callback);
   }, [note, match!.params.noteId]);
 
+  // Keyboard shortcuts.
+  useEffect(() => {
+    function callback(e: KeyboardEvent) {
+      function handle(handler: () => any) {
+        e.preventDefault();
+        e.stopPropagation();
+        handler();
+      }
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+      if (e.key === 'Enter' && ctrlOrMeta) {
+        handle(goHome);
+      } else if (e.key === 'Escape') {
+        if (ctrlOrMeta) {
+          handle(toggleArchiveCb);
+        } else {
+          handle(goHome);
+        }
+      } else if (e.key === 'Delete' && ctrlOrMeta) {
+        handle(deleteCb);
+      } else if (e.key === '.' && ctrlOrMeta) {
+        handle(cycleListStyleCb);
+      } else if (e.key === 'p' && ctrlOrMeta) {
+        handle(togglePinned);
+      }
+    }
+
+    window.addEventListener('keydown', callback);
+    return () => window.removeEventListener('keydown', callback);
+  });
+
   const goHome = useCallback(() => {
     if (historyState.index > 0) {
       history.back();
@@ -101,7 +132,7 @@ export function NotePage() {
     }
   }, [goHome, note]);
 
-  const pinCb = useCallback(() => {
+  const togglePinned = useCallback(() => {
     const newNote = { ...note!, modification_date: new Date().toISOString(), pinned: note!.pinned ? 0 : 1 };
     actions
       .saveNote(newNote, { message: note!.pinned ? 'Unpinned' : 'Pinned', immediateSync: true })
@@ -117,15 +148,6 @@ export function NotePage() {
     return () => window.removeEventListener('beforeunload', callback);
   }, []);
 
-  // Go home on Escape key.
-  useEffect(() => {
-    function callback(e: KeyboardEvent) {
-      if (e.key === 'Escape') goHome();
-    }
-    window.addEventListener('keydown', callback);
-    return () => window.removeEventListener('keydown', callback);
-  }, []);
-
   // const insertMenu = createInsertMenu(() => editorRef.current!);
 
   const cycleListStyleCb = useCallback(() => {
@@ -133,19 +155,19 @@ export function NotePage() {
   }, []);
 
   const pageActions = note && [
-    <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete" />,
+    <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete (Ctrl+Delete or Cmd+Delete)" />,
     <PageAction
       icon={note.not_archived ? icons.archiveEmptyWhite : icons.archiveFilledWhite}
       onClick={toggleArchiveCb}
-      title="Archive"
+      title="Archive (Ctrl+Esc or Cmd+Esc)"
     />,
     <PageAction
       icon={note.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
-      onClick={pinCb}
-      title={note.pinned ? 'Unpin' : 'Pin'}
+      onClick={togglePinned}
+      title={note.pinned ? 'Unpin (Ctrl+p or Cmd+p)' : 'Pin (Ctrl+p or Cmd+p)'}
     />,
-    <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
-    <PageAction icon={icons.checkWhite} onClick={goHome} title="Done" />,
+    <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style (Ctrl+. or Cmd+.)" />,
+    <PageAction icon={icons.checkWhite} onClick={goHome} title="Done (Esc or Ctrl+Enter or Cmd+Enter)" />,
   ];
 
   return (
@@ -164,6 +186,9 @@ export function NotePage() {
                 placeholder="What's on you mind?"
                 value={note.text ?? ''}
                 onChange={textChangeCb}
+                onConfirm={goHome}
+                onDelete={deleteCb}
+                onTogglePinned={togglePinned}
                 // autoFocus
               />
             </div>

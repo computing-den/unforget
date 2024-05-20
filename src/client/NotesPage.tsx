@@ -32,6 +32,51 @@ export function NotesPage(props: NotesPageProps) {
   //   return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
   // }, []);
 
+  // Keyboard shortcuts.
+  useEffect(() => {
+    function callback(e: KeyboardEvent) {
+      function handle(handler: () => any) {
+        e.preventDefault();
+        e.stopPropagation();
+        handler();
+      }
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+      if (e.key === 'Enter' && ctrlOrMeta) {
+        handle(confirmNewNoteCb);
+      } else if (e.key === 'Escape') {
+        handle(confirmNewNoteCb);
+      } else if (e.key === 'Delete' && ctrlOrMeta) {
+        handle(cancelNewNoteCb);
+      } else if (e.key === '.' && ctrlOrMeta) {
+        handle(cycleListStyleCb);
+      } else if (e.key === 'p' && ctrlOrMeta) {
+        handle(togglePinned);
+      }
+
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? '')) return;
+
+      if (e.key === '/') {
+        if (app.search) {
+          handle(() => document.getElementById('search-input')?.focus());
+        } else {
+          handle(toggleSearchCb);
+        }
+      } else if (e.key === 'p') {
+        handle(toggleHidePinnedNotes);
+      } else if (e.key === 'n') {
+        if (editing) {
+          handle(() => editorRef.current?.textareaRef.current?.focus());
+        } else {
+          handle(startNewNoteCb);
+        }
+      }
+    }
+
+    window.addEventListener('keydown', callback);
+    return () => window.removeEventListener('keydown', callback);
+  });
+
   function saveNewNote(changes: { text?: string | null; pinned?: number; not_deleted?: number }) {
     let savedNote = {
       ...(newNote ?? cutil.createNewNote('')),
@@ -75,7 +120,14 @@ export function NotesPage(props: NotesPageProps) {
     setNewNote(undefined);
     setEditing(false);
     actions.updateNotes();
+    (document.activeElement as HTMLElement | undefined)?.blur();
   }
+
+  // async function askUserToCancelNewNoteCb() {
+  //   if (!newNote?.text?.trim() || confirm('Are you sure you want to delete the new note?')) {
+  //     cancelNewNoteCb();
+  //   }
+  // }
 
   function newNoteTextChanged(text: string) {
     saveNewNote({ text });
@@ -147,6 +199,14 @@ export function NotesPage(props: NotesPageProps) {
     actions.updateNotesDebounced();
   }
 
+  function searchKeyDownCb(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSearchCb();
+    }
+  }
+
   function cycleListStyleCb() {
     editorRef.current!.cycleListStyle();
   }
@@ -159,41 +219,42 @@ export function NotesPage(props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon={icons.trashWhite} onClick={cancelNewNoteCb} title="Delete" />,
-      // <PageAction icon={icons.xWhite} onClick={cancelNewNoteCb} title="Cancel" />,
+      <PageAction icon={icons.trashWhite} onClick={cancelNewNoteCb} title="Delete (Ctrl+Delete or Cmd+Delete)" />,
       <PageAction
         icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
         onClick={togglePinned}
-        title={newNote?.pinned ? 'Unpin' : 'Pin'}
+        title={newNote?.pinned ? 'Unpin (Ctrl+p or Cmd+p)' : 'Pin (Ctrl+p or Cmd+p)'}
       />,
-      <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style" />,
-      <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} title="Done" />,
+      <PageAction icon={icons.cycleListWhite} onClick={cycleListStyleCb} title="Cycle list style (Ctrl+. or Cmd+.)" />,
+      <PageAction icon={icons.checkWhite} onClick={confirmNewNoteCb} title="Done (Esc or Ctrl+Enter or Cmd+Enter)" />,
     );
   } else if (app.search === undefined) {
     pageActions.push(
-      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} title="Search" />,
+      <PageAction icon={icons.searchWhite} onClick={toggleSearchCb} title="Search (/)" />,
       <PageAction
         icon={app.hidePinnedNotes ? icons.hidePinnedWhite2 : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
-        title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
+        title={app.hidePinnedNotes ? 'Show pinned notes (p)' : 'Hide pinned notes (p)'}
       />,
-      <PageAction icon={icons.addWhite} onClick={startNewNoteCb} title="New note" />,
+      <PageAction icon={icons.addWhite} onClick={startNewNoteCb} title="New note (n)" />,
     );
   } else {
     pageActions.push(
       <input
+        id="search-input"
         placeholder={app.showArchive ? 'Search archive ...' : 'Search ...'}
         className="search action"
         value={app.search}
         onChange={searchChangeCb}
+        onKeyDown={searchKeyDownCb}
         autoFocus
       />,
       <PageAction
         icon={app.hidePinnedNotes ? icons.hidePinnedWhite2 : icons.showPinnedWhite}
         onClick={toggleHidePinnedNotes}
-        title={app.hidePinnedNotes ? 'Show pinned notes' : 'Hide pinned notes'}
+        title={app.hidePinnedNotes ? 'Show pinned notes (p)' : 'Hide pinned notes (p)'}
       />,
-      <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} title="Close search" />,
+      <PageAction className="close-search" icon={icons.xWhite} onClick={toggleSearchCb} title="Close search (Esc)" />,
     );
   }
 
@@ -222,6 +283,9 @@ export function NotesPage(props: NotesPageProps) {
               autoExpand
               onFocus={editorFocusCb}
               onBlur={editorBlurCb}
+              onConfirm={confirmNewNoteCb}
+              onDelete={cancelNewNoteCb}
+              onTogglePinned={togglePinned}
             />
           </div>
           {app.notes.length > 0 && <NotesFromApp hiddenNoteId={newNote?.id} />}

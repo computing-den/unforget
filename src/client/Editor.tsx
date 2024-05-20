@@ -18,6 +18,9 @@ type EditorProps = {
   onFocus?: React.FocusEventHandler<HTMLTextAreaElement>;
   onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
   autoExpand?: boolean;
+  // onConfirm: () => any;
+  // onDelete: () => any;
+  // onTogglePinned: () => any;
 };
 
 export type EditorContext = {
@@ -81,6 +84,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
     // If there were no lastSelection, move cursor to the end.
     if (!lastSelection) {
+      textarea.focus();
       textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
   }
@@ -89,11 +93,10 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     textareaRef.current!.focus();
   }
 
-  useImperativeHandle<EditorContext, EditorContext>(ref, () => ({ cycleListStyle, focus, textareaRef }), [
-    cycleListStyle,
-    focus,
-    textareaRef,
-  ]);
+  useImperativeHandle<
+    EditorContext,
+    EditorContext
+  >(ref, () => ({ cycleListStyle, focus, textareaRef }), [cycleListStyle, focus, textareaRef]);
 
   function changeCb() {
     props.onChange(textareaRef.current!.value);
@@ -101,7 +104,8 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
   function keyDownCb(e: React.KeyboardEvent) {
     const textarea = textareaRef.current!;
-    if (e.key === 'Enter' && !e.shiftKey) {
+
+    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       // textarea.focus();
       const text = textarea.value;
       const i = textarea.selectionStart;
@@ -132,9 +136,30 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
           document.execCommand('insertText', false, '\n' + md.stringifyListItemPrefix(newListItem));
         }
       }
-    } else if (e.key === 'Escape') {
-      textarea.blur();
     }
+    // } else if (e.key === '.') {
+    //   if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //     cycleListStyle();
+    //   }
+    // } else if (e.key === 'p') {
+    //   if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //     props.onTogglePinned?.();
+    //   }
+    // } else if (e.key === 'Delete') {
+    //   if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //     props.onDelete?.();
+    //   }
+    // } else if (e.key === 'Escape') {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //   props.onConfirm?.();
+    // }
   }
 
   function selectCb() {
