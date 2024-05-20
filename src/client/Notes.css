@@ -112,6 +112,11 @@
         /* &::marker { */
         /*   content: ''; */
         /* } */
+
+        &:empty {
+          height: 1.5rem;
+        }
+
         &:before {
           content: '';
           /* float: left; */
