@@ -1,4 +1,4 @@
-import React, { memo, useRef } from 'react';
+import React, { memo, useState } from 'react';
 import type * as t from '../common/types.js';
 import { assert } from '../common/util.js';
 import * as md from '../common/mdFns.js';
@@ -39,6 +39,20 @@ export const Note = memo(function Note(props: {
   // Do not modify the text here because we want the position of each element in mdast and hast to match
   // exactly the original text.
   const text = props.note.text;
+
+  const [expanded, setExpanded] = useState(false);
+
+  function toggleExpanded(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setExpanded(!expanded);
+    if (expanded) {
+      setTimeout(() => {
+        const elem = document.getElementById(props.note.id);
+        if (elem) window.scrollTo({ top: elem.getBoundingClientRect().top + window.scrollY - 50, behavior: 'smooth' });
+      }, 0);
+    }
+  }
 
   function clickCb(e: React.MouseEvent) {
     // history.pushState(null, '', `/n/${props.note.id}`);
@@ -118,11 +132,9 @@ export const Note = memo(function Note(props: {
   }
 
   // Remove everything after thematicBreak
-  {
-    const i = mdast.children.findIndex(node => node.type === 'thematicBreak');
-    if (i !== -1) {
-      mdast.children.splice(i);
-    }
+  const breakMdNodeIndex = mdast.children.findIndex(node => node.type === 'thematicBreak');
+  if (!expanded && breakMdNodeIndex !== -1) {
+    mdast.children.splice(breakMdNodeIndex);
   }
 
   const hast = toHast(mdast);
@@ -139,7 +151,12 @@ export const Note = memo(function Note(props: {
   const html = toHtml(hast);
 
   return (
-    <div className={`note ${!props.readonly && 'clickable'}`} onMouseDown={onMouseDown} onClick={onClick}>
+    <div
+      id={props.note.id}
+      className={`note ${!props.readonly && 'clickable'}`}
+      onMouseDown={onMouseDown}
+      onClick={onClick}
+    >
       {Boolean(props.note.pinned) && <img className="pin" src={icons.pinFilled} />}
       {noteIsEmpty ? (
         <div>
@@ -147,6 +164,13 @@ export const Note = memo(function Note(props: {
         </div>
       ) : (
         <div dangerouslySetInnerHTML={{ __html: html }} />
+      )}
+      {breakMdNodeIndex >= 0 && (
+        <p>
+          <a href="#toggle-expand" onClick={toggleExpanded}>
+            {expanded ? 'show less' : 'show more'}
+          </a>
+        </p>
       )}
     </div>
   );

@@ -46,6 +46,12 @@
       font-style: italic;
     }
 
+    & hr {
+      margin: 1rem 2.4rem;
+      border-color: var(--box-border-color);
+      opacity: 0.5;
+    }
+
     & th,
     td {
       padding: 0.25rem 0.5rem;
