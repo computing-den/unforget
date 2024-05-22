@@ -48,10 +48,10 @@ export async function sync() {
   let mergeCount = 0;
   const start = Date.now();
   try {
-    // Do a full sync when syncNumber is 0 (first sync).
-    if (!fullSyncRequired && (await getSyncNumber()) === 0) {
-      fullSyncRequired = true;
-    }
+    // // Do a full sync when syncNumber is 0 (first sync).
+    // if (!fullSyncRequired && (await getSyncNumber()) === 0) {
+    //   fullSyncRequired = true;
+    // }
 
     // Partial sync. Server will either send partial sync data or request a full sync.
     if (!fullSyncRequired) {

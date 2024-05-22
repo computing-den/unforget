@@ -82,8 +82,16 @@ export function getQueuedNoteHeads(client: t.ServerUserClient): t.NoteHead[] {
   return db.prepare(`SELECT id, modification_date FROM notes_queue WHERE token = ?`).all(client.token) as t.NoteHead[];
 }
 
-export function getNotes(client: t.ServerUserClient): t.EncryptedNote[] {
-  const dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(client.username) as t.DBEncryptedNote[];
+export function getNotes(client: t.ServerUserClient, ids?: string[]): t.EncryptedNote[] {
+  let dbNotes: t.DBEncryptedNote[];
+  if (ids && ids?.length > 0) {
+    const placeholders = _.map(ids, () => '?').join(',');
+    dbNotes = db
+      .prepare(`SELECT * FROM notes WHERE username = ? AND id IN (${placeholders})`)
+      .all(client.username, ...ids) as any;
+  } else {
+    dbNotes = db.prepare(`SELECT * FROM notes WHERE username = ?`).all(client.username) as any;
+  }
   return dbNotes.map(dbNoteToNote);
 }
 
@@ -105,7 +113,12 @@ export function logout(token: string) {
   })();
 }
 
-export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncData, resSyncData: t.SyncData) {
+export function mergeSyncData(
+  client: t.ServerUserClient,
+  reqSyncData: t.SyncData,
+  resSyncData: t.SyncData,
+  shouldUpdateSyncNumber: boolean,
+) {
   // const isDebugNote = (note: t.EncryptedNote) => note.text?.includes('password protected notes');
   // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
 
@@ -163,8 +176,10 @@ export function mergeSyncData(client: t.ServerUserClient, reqSyncData: t.SyncDat
     }
 
     // Update sync number.
-    const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
-    updateSyncNumber.run({ token: client.token, sync_number: newSyncNumber });
+    if (shouldUpdateSyncNumber) {
+      const newSyncNumber = Math.max(reqSyncData.syncNumber, resSyncData.syncNumber) + 1;
+      updateSyncNumber.run({ token: client.token, sync_number: newSyncNumber });
+    }
   })();
 }
 

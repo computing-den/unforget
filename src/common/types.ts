@@ -1,13 +1,29 @@
 import type { Draft } from 'immer';
 
 export type Note = {
+  // UUID version 4
   id: string;
+
+  // Deleted notes have null text
   text: string | null;
+
+  // ISO 8601 format
   creation_date: string;
+
+  // ISO 8601 format
   modification_date: string;
-  not_deleted: number; // 0 or 1
-  not_archived: number; // 0 or 1
-  pinned: number; // 0 or 1
+
+  // 0 means deleted, 1 means not deleted
+  not_deleted: number;
+
+  // 0 means archived, 1 means not archived
+  not_archived: number;
+
+  // 0 means not pinned, 1 means pinned
+  pinned: number;
+
+  // A higher number means higher on the list
+  // Usually, by default it's milliseconds since the epoch
   order: number;
 };
 
@@ -17,7 +33,10 @@ export type EncryptedNote = EncryptedData & {
 };
 
 export type EncryptedData = {
+  // The encrypted Note in base64 format
   encrypted_base64: string;
+
+  // Initial vector, a random number, that was used for encrypting this specific note
   iv: string;
 };
 

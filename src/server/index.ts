@@ -39,7 +39,7 @@ app.use('/', express.static(DIST_PUBLIC));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-  const token = req.cookies.unforget_token as string | undefined;
+  const token = (req.params['token'] || req.cookies.unforget_token) as string | undefined;
   let client: t.ServerUserClient | undefined;
   if (token) {
     client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
@@ -56,7 +56,7 @@ app.use((req, res, next) => {
   res.locals = { client };
   log(
     res,
-    `${req.method} ${req.url} X-Service-Worker-Cache-Version: ${
+    `${req.method} ${req.path} X-Service-Worker-Cache-Version: ${
       req.header('X-Service-Worker-Cache-Version') || 'unknown'
     }, X-Client-Cache-Version: ${req.header('X-Client-Cache-Version') || 'unknown'}`,
   );
@@ -64,13 +64,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api', (req, res, next) => {
-  if (req.query.apiProtocol === '2') {
-    next();
-  } else {
-    next(new ServerError('App requires update', 400, 'app_requires_update'));
-  }
-});
+// app.use('/api', (req, res, next) => {
+//   if (req.query.apiProtocol === '2') {
+//     next();
+//   } else {
+//     next(new ServerError('App requires update', 400, 'app_requires_update'));
+//   }
+// });
 
 app.post('/api/login', async (req, res, next) => {
   try {
@@ -157,12 +157,6 @@ function loginAndRespond(user: t.DBUser, res: express.Response) {
   res.send(loginResponse);
 }
 
-app.get('/api/notes', authenticate, (req, res) => {
-  const client = res.locals.client!;
-  const notes = db.getNotes(client);
-  res.set('Cache-Control', 'no-cache').send(notes);
-});
-
 app.post('/api/error', (req, res) => {
   const { message } = req.body as { message: string };
   logError(res, 'client error: ' + message);
@@ -183,17 +177,18 @@ app.post('/api/partial-sync', authenticate, (req, res) => {
   const partialSyncReq: t.PartialSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
-  // Require full sync if syncNumber is 0 or syncNumber is out of sync
-  if (syncNumber === 0 || syncNumber !== partialSyncReq.syncNumber) {
+  // Require full sync if the sync numbers differ.
+  if (syncNumber !== partialSyncReq.syncNumber) {
     const queueSyncRes: t.PartialSyncRes = { type: 'require_full_sync' };
     res.send(queueSyncRes);
     return;
   }
 
-  const notes = db.getQueuedNotes(client);
+  // When the sync number is 0, send all the notes, otherwise only the queued notes.
+  const notes = syncNumber === 0 ? db.getNotes(client) : db.getQueuedNotes(client);
   const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes, syncNumber };
 
-  db.mergeSyncData(client, partialSyncReq, partialSyncRes);
+  db.mergeSyncData(client, partialSyncReq, partialSyncRes, true);
   res.send(partialSyncRes);
 });
 
@@ -216,26 +211,34 @@ app.post('/api/queue-sync', authenticate, (req, res, next) => {
   res.send(queueSyncRes);
 });
 
+app.post('/api/get-notes', authenticate, (req, res) => {
+  const ids = req.body?.ids as string[] | undefined;
+  const client = res.locals.client!;
+  const notes = db.getNotes(client, ids);
+  res.set('Cache-Control', 'no-cache').send(notes);
+});
+
 app.post('/api/add-notes', authenticate, (req, res, next) => {
   if (process.env.NODE_ENV === 'development') {
     log(res, req.body);
   }
   const client = res.locals.client!;
-  const partialSyncReq: t.PartialSyncReq = req.body;
-  const syncNumber = db.getSyncNumber(client);
+  const { notes } = req.body as { notes: t.EncryptedNote[] };
 
+  const syncNumber = 0;
+  const partialSyncReq: t.PartialSyncReq = { notes, syncNumber };
   const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes: [], syncNumber };
 
-  db.mergeSyncData(client, partialSyncReq, partialSyncRes);
+  db.mergeSyncData(client, partialSyncReq, partialSyncRes, false);
   res.send({ ok: true });
 });
 
 app.post('/api/logout', (req, res, next) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(req.body);
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log(req.body);
+  // }
 
-  const token = res.locals.client?.token ?? (req.body?.token as string | undefined);
+  const token = res.locals.client?.token;
   if (!token) return next(new Error('Missing token'));
   db.logout(token);
   res.send({ ok: true });

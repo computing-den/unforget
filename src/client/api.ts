@@ -1,8 +1,8 @@
 import { ServerError, CACHE_VERSION } from '../common/util.js';
 
-export async function post<T>(pathname: string, json?: any): Promise<T> {
-  const params = new URLSearchParams({ apiProtocol: '2' }).toString();
-  const res = await fetch(`${pathname}?${params}`, {
+export async function post<T>(pathname: string, json?: any, params?: Record<string, string>): Promise<T> {
+  const paramsStr = new URLSearchParams(params).toString();
+  const res = await fetch(`${pathname}?${paramsStr}`, {
     // const res = await fetch(pathname, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-Client-Cache-Version': String(CACHE_VERSION) },

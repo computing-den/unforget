@@ -165,8 +165,9 @@ export async function logout() {
     // Tell other tabs/windows that we just logged out.
     postToServiceWorker({ command: 'tellOthersToRefreshPage' });
 
-    // Send user instead of using cookies because by the time the request is sent, the cookie has already been cleared.
-    api.post('/api/logout', { token: user.token }).catch(log.error);
+    // Send token as param instead of relying on cookies because by the time the request is sent,
+    // the cookie has already been cleared.
+    api.post('/api/logout', null, { token: user.token }).catch(log.error);
   } catch (error) {
     gotError(error as Error);
   }

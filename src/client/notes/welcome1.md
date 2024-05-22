@@ -1,6 +1,5 @@
 # Welcome!
 
-
 Unforget is a minimalist note-taking app featuring:
 
 - [x] Import from Google Keep
@@ -21,9 +20,9 @@ Unforget is a minimalist note-taking app featuring:
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*
 
 
-# Optional one-click installation
+# Optional installation
 
-Continue using it directly in your browser or install:
+Use it directly in your browser or install:
 
 - Chrome / Edge: Install icon in the URL bar
 - iOS Safari: Share → Add to Home Screen
