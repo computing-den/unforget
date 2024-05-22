@@ -8,9 +8,8 @@ export function assert(condition: boolean, message: string): asserts condition {
 }
 
 export function isNoteNewerThan(a: t.NoteHead, b?: t.NoteHead): boolean {
-  return (
-    !b || a.modification_date > b.modification_date || (a.modification_date === b.modification_date && a.id > b.id)
-  );
+  assert(!b || a.id === b.id, 'Cannot compare notes with different IDs');
+  return !b || a.modification_date > b.modification_date;
 }
 
 export function escapeRegExp(str: string): string {
