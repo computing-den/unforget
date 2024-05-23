@@ -1,7 +1,9 @@
 import * as api from './api.js';
 
 function log(...args: any[]) {
-  console.log(...args);
+  if (Number(process.env.LOG_TO_CONSOLE)) {
+    console.log(...args);
+  }
   if (Number(process.env.FORWARD_LOGS_TO_SERVER)) {
     api.post('/api/log', { message: stringify(...args) });
   }

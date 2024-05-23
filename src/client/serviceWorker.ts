@@ -55,6 +55,8 @@ async function installServiceWorker() {
 }
 
 // NOTE: The activate event is triggered only once after the install event.
+// That's why we don't run syncInInterval() here. Instead we wait for a
+// client to connect and inform us first.
 async function activateServiceWorker() {
   log('service worker: activating...');
 

@@ -21,7 +21,7 @@ export function NotePage() {
   // Inspired by https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix
   useEffect(() => {
     function setTop() {
-      console.log('setTop');
+      // console.log('setTop');
       // log(
       //   'window.pageYOffset',
       //   window.pageYOffset,
