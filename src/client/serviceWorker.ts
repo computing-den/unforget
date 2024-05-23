@@ -3,7 +3,7 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import { sync, requireAFullSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
+import { sync, syncInInterval, requireAFullSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
 import { postToClient, postToClients } from './serviceWorkerToClientApi.js';
 import type { ClientToServiceWorkerMessage } from '../common/types.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
@@ -20,6 +20,7 @@ self.addEventListener('install', event => {
   event.waitUntil(installServiceWorker());
 });
 
+// NOTE: The activate event is triggered only once after the install event.
 self.addEventListener('activate', event => {
   event.waitUntil(activateServiceWorker());
 });
@@ -53,6 +54,7 @@ async function installServiceWorker() {
   log('service worker: install done.');
 }
 
+// NOTE: The activate event is triggered only once after the install event.
 async function activateServiceWorker() {
   log('service worker: activating...');
 
@@ -73,11 +75,6 @@ async function activateServiceWorker() {
   // The refresh is necessary if the activate event was triggered by updateApp().
   await self.clients.claim();
   log('service worker: activated.');
-
-  // First sync.
-  sync();
-  // Sync on interval.
-  setInterval(sync, 5000);
 
   log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
@@ -144,6 +141,10 @@ async function handleClientMessage(client: Client, message: ClientToServiceWorke
     }
     case 'sendSyncStatus': {
       postToClient(client, { command: 'syncStatus', syncing: isSyncing() });
+      break;
+    }
+    case 'newClient': {
+      syncInInterval();
       break;
     }
     default:

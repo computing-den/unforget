@@ -183,7 +183,8 @@ export type ClientToServiceWorkerMessage =
   | { command: 'sync'; full?: boolean; debounced?: boolean }
   | { command: 'tellOthersToRefreshPage' }
   | { command: 'tellOthersNotesInStorageChanged' }
-  | { command: 'sendSyncStatus' };
+  | { command: 'sendSyncStatus' }
+  | { command: 'newClient' };
 
 export type ServiceWorkerToClientMessage =
   | { command: 'serviceWorkerActivated'; cacheVersion: number }

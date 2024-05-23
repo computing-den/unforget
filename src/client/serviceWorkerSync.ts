@@ -17,6 +17,12 @@ import _ from 'lodash';
 let syncing = false;
 let shouldSyncAgain = false;
 let fullSyncRequired = false;
+let interval: any;
+
+export function syncInInterval() {
+  sync();
+  interval ??= setInterval(sync, 5000);
+}
 
 export async function sync() {
   // Prevent running until the last run is done.
@@ -145,12 +151,12 @@ async function getQueueSyncData(): Promise<t.SyncHeadsData> {
   return { noteHeads, syncNumber: res.syncNumberReq.result ?? 0 };
 }
 
-async function getSyncNumber(): Promise<number> {
-  const res = await storage.transaction([storage.SETTINGS_STORE], 'readonly', async tx => {
-    return tx.objectStore(storage.SETTINGS_STORE).get('syncNumber') as IDBRequest<number | undefined>;
-  });
-  return res.result ?? 0;
-}
+// async function getSyncNumber(): Promise<number> {
+//   const res = await storage.transaction([storage.SETTINGS_STORE], 'readonly', async tx => {
+//     return tx.objectStore(storage.SETTINGS_STORE).get('syncNumber') as IDBRequest<number | undefined>;
+//   });
+//   return res.result ?? 0;
+// }
 
 async function mergeSyncData(
   reqSyncData: t.SyncData,

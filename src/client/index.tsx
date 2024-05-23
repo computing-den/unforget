@@ -7,7 +7,7 @@ import App from './App.jsx';
 import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
-import { ServerError, CACHE_VERSION } from '../common/util.js';
+import { CACHE_VERSION } from '../common/util.js';
 import log from './logger.js';
 
 async function setup() {
@@ -33,6 +33,9 @@ async function setup() {
     alert('Your browser does not support service workers. Please use another browser.');
     return;
   }
+
+  // Tell the service worker there's a new window.
+  await postToServiceWorker({ command: 'newClient' });
 
   // Initialize app store.
   await actions.initAppStore();
