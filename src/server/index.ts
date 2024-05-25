@@ -39,7 +39,7 @@ app.use('/', express.static(DIST_PUBLIC));
 app.use(cookieParser());
 
 app.use((req, res, next) => {
-  const token = (req.params['token'] || req.cookies.unforget_token) as string | undefined;
+  const token = (req.query['token'] || req.cookies.unforget_token) as string | undefined;
   let client: t.ServerUserClient | undefined;
   if (token) {
     client = db.get().prepare(`SELECT username, token FROM clients WHERE token = ?`).get(token) as
@@ -212,7 +212,9 @@ app.post('/api/queue-sync', authenticate, (req, res, next) => {
 });
 
 app.post('/api/get-notes', authenticate, (req, res) => {
-  const ids = req.body?.ids as string[] | undefined;
+  let ids: string[] | undefined;
+  if (req.body?.ids) ids = req.body.ids;
+
   const client = res.locals.client!;
   const notes = db.getNotes(client, ids);
   res.set('Cache-Control', 'no-cache').send(notes);

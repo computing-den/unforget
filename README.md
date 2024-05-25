@@ -38,11 +38,55 @@ Use it directly in your browser or install:
 
 Here, all paths are relative to either the official server at [https://unforget.computing-den.com](https://unforget.computing-den.com) or your own server if you're self hosting.
 
-See [TODO](TODO) for example code in TypeScript, Python, C#, Java, and Go.
+## Examples
+
+In the [examples/](examples/) directory you will find example code for TypeScript and Python.
+
+To run the **Typescript** example:
+
+``` bash
+cd examples/
+
+# Signup
+npx tsx example.ts signup USERNAME PASSWORD
+
+# Login
+npx tsx example.ts login USERNAME PASSWORD
+
+# Post new note
+npx tsx example.ts post "Hello world!"
+
+# Get all notes
+npx tsx example.ts get
+
+# Get note by ID
+npx tsx example.ts get ID
+```
+
+To run the **Python** example:
+
+``` bash
+cd examples/
+
+# Signup
+python3 example.py signup USERNAME PASSWORD
+
+# Login
+python3 example.py login USERNAME PASSWORD
+
+# Post new note
+python3 example.py post "Hello world!"
+
+# Get all notes
+python3 example.py get
+
+# Get note by ID
+python3 example.py get ID
+```
 
 ## Note Types
 
-```
+```ts
 type Note = {
 
   // UUID version 4
@@ -99,7 +143,7 @@ Side note: the reason for using number (0 and 1) instead of boolean is to make i
 
 To sign up, send a POST request to ```/api/signup``` with a JSON payload of type ```SignupData```:
 
-```
+```ts
 type SignupData = {
   username: string;
   password_client_hash: string;
@@ -109,7 +153,7 @@ type SignupData = {
 
 To log in, send a POST request to ```/api/login``` with a JSON payload of type ```LoginData```:
 
-```
+```ts
 type LoginData = {
   username: string;
   password_client_hash: string;
@@ -118,7 +162,7 @@ type LoginData = {
 
 In both cases, if the credentials are wrong you will receive a 401 error. Otherwise, the server will respond with ```LoginResponse``` and code 200:
 
-```
+```ts
 type LoginResponse = {
   username: string;
   token: string;
@@ -128,11 +172,9 @@ type LoginResponse = {
 
 To log out, send a POST request to ```/api/login?token=TOKEN```
 
-In the following sections, all the requests to the server must include the ```token``` either as a parameter in the URL (e.g. ```/api/partial-sync?token=XXX```) or as a cookie named ```unforget_token```.
+In the following sections, all the requests to the server must include the ```token``` either as a query parameter in the URL (e.g. ```/api/partial-sync?token=XXX```) or as a cookie named ```unforget_token```.
 
-Notice that we never send the raw password to the server. Instead we calculate its hash as ```password_client_hash``` which is derived from the username, password, and a static random number. It is important to use the exact same algorithm for calculating the hash if you want to be able to use the official Unforget client as well as your own. The ```encryption_salt``` is a random number used to derive the key for encryption and decryption of notes. It is stored on the server and provided on login.
-
-See [TODO](TODO) to find out how to calculate the hash and pick the encryption salt in TypeScript, Python, C#, Java, and Go.
+Notice that we never send the raw password to the server. Instead we calculate its hash as ```password_client_hash``` which is derived from the username, password, and a static random number. It is important to use the exact same algorithm for calculating the hash if you want to be able to use the official Unforget client as well as your own. The ```encryption_salt``` is a random number used to derive the key for encryption and decryption of notes. It is stored on the server and provided on login. The [examples](#examples) show how to calculate the hash and generate the salt.
 
 ## Get Notes
 
@@ -140,13 +182,15 @@ Send a POST request to ```/api/get-notes?token=TOKEN``` to get all the notes. Op
 
 You will receive ```EncryptedNote[]```.
 
-## Add Notes
+## Post Notes
 
-Send a POST request to ```/api/add-notes?token=TOKEN``` with a JSON payload of type ```{notes: EncryptedNote[]}```.
+Send a POST request to ```/api/post-notes?token=TOKEN``` with a JSON payload of type ```{notes: EncryptedNote[]}```.
 
-## Sync
+If the note already exists and its ```modification_date``` is larger, it will replace the old one.
 
-For a long-running client, instead of using [Get Notes](#get-notes) and [Add Notes](#add-notes), we can use sync in the following manner.
+## Sync and Merge
+
+For a long-running client, instead of using [Get Notes](#get-notes) and [Post Notes](#post-notes), you can use sync in the following manner.
 
 The client and the server each maintain a queue of changes to send to each other as well as a sync number. The exchange of these changes is called a **delta sync**.
 
@@ -158,7 +202,7 @@ When the sync number is 0 (immediately after login), the server will send all th
 
 To perform a **delta sync**, send a POST request to ```/api/partial-sync?token=TOKEN``` with a JSON payload of type ```SyncData```:
 
-```
+```ts
 type SyncData = {
   notes: EncryptedNote[];
   syncNumber: number;
@@ -167,7 +211,7 @@ type SyncData = {
 
 If the server agrees with the ```syncNumber```, it will respond with ```PartialSyncResNormal``` which includes the changes stored on the server for that client since the last sync. Otherwise, the server will respond with ```PartialSyncResRequireFullSync``` requiring the client to initiate a queue sync.
 
-```
+```ts
 type PartialSyncResNormal = {
   type: 'ok';
   notes: EncryptedNote[];
@@ -181,7 +225,7 @@ type PartialSyncResRequireFullSync = {
 
 To perform a **queue sync**, send a POST request to ```/api/queue-sync?token=TOKEN``` with a JSON payload of type ```SyncHeadsData``` including the heads of all the notes known by the client and its sync number. You will then receive another ```SyncHeadsData``` including the heads of all the notes known by the server for that user along with the server's sync number for that client.
 
-```
+```ts
 type SyncHeadsData = {
   noteHeads: NoteHead[];
   syncNumber: number;
@@ -199,13 +243,13 @@ It is important that the client and the server agree on how the **merging** of t
 
 ## Encryption and Decryption
 
-The details of encryption and decryption are more easily explained in code. See [TODO](TODO) for example code in TypeScript, Python, C#, Java, and Go.
+The details of encryption and decryption are more easily explained in code. See the [Examples](#examples) section.
 
 ## Error handling
 
 All the API calls will return an object of type ```ServerError``` when encountering an error with a status code >= 400:
 
-```
+```ts
 type ServerError {
   message: string;
   code: number;
