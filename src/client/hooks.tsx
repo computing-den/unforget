@@ -19,25 +19,6 @@ export function useCallbackCancelEvent(cb: () => any, deps: React.DependencyList
   }, deps);
 }
 
-// export function useLocation(): Location {
-//   return useSyncExternalStore(subscribeToPopstate, () => window.location);
-// }
-
-// function subscribeToPopstate(cb: () => void): () => void {
-//   window.addEventListener('popstate', cb);
-//   return () => window.removeEventListener('popstate', cb);
-// }
-
-// export function useScrollToTop() {
-//   useLayoutEffect(() => {
-//     document.documentElement.scrollTo({
-//       top: 0,
-//       left: 0,
-//       behavior: 'instant',
-//     });
-//   }, []);
-// }
-
 export function useClickWithoutDrag(cb: React.MouseEventHandler): {
   onClick: React.MouseEventHandler;
   onMouseDown: React.MouseEventHandler;

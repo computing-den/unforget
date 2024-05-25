@@ -14,14 +14,6 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
 }
 
-// export function PageHeaderCompact() {
-//   return (
-//     <div id="page-header" className="compact">
-//       <h1 className="heading">Unforget</h1>
-//     </div>
-//   );
-// }
-
 type PageHeaderProps = {
   menu?: MenuItem[];
   actions?: React.ReactNode;
@@ -119,7 +111,7 @@ function PageHeaderContent(props: PageHeaderProps) {
     { label: 'Export', icon: icons.export, onClick: goToExport },
     { label: 'About', icon: icons.info, onClick: goToAbout },
     { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
-    { label: 'Check app updates', icon: icons.refreshCcw, onClick: forceCheckAppUpdate },
+    { label: 'Check app updates', icon: icons.upgrade, onClick: forceCheckAppUpdate },
     { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },
   ]);
 

@@ -137,29 +137,6 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
         }
       }
     }
-    // } else if (e.key === '.') {
-    //   if (e.ctrlKey || e.metaKey) {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //     cycleListStyle();
-    //   }
-    // } else if (e.key === 'p') {
-    //   if (e.ctrlKey || e.metaKey) {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //     props.onTogglePinned?.();
-    //   }
-    // } else if (e.key === 'Delete') {
-    //   if (e.ctrlKey || e.metaKey) {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //     props.onDelete?.();
-    //   }
-    // } else if (e.key === 'Escape') {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //   props.onConfirm?.();
-    // }
   }
 
   function selectCb() {
@@ -221,10 +198,3 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     />
   );
 });
-
-// export function createInsertMenu(getCtx: () => EditorContext): MenuItem[] {
-//   return [
-//     { label: 'Checkbox', icon: '/icons/checkbox-filled.svg', onClick: () => getCtx().toggleCheckboxStyle() },
-//     { label: 'Bullet point', icon: '/icons/bulletpoint.svg', onClick: () => getCtx().toggleBulletpointStyle() },
-//   ];
-// }

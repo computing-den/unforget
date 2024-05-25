@@ -11,10 +11,6 @@ import { ExportPage } from './ExportPage.jsx';
 import _ from 'lodash';
 
 export default function App() {
-  // const app = appStore.use();
-  // const location = util.useLocation();
-  // const url = new URL(location.href);
-
   const routes: Route[] = [
     {
       path: '/login',
