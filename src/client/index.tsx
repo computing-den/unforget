@@ -15,6 +15,12 @@ async function setup() {
   // Because the service worker itself will try to set up the storage too.
   await storage.getStorage();
 
+  // Initialize app store.
+  // Must do before registering service worker because we need to update
+  // the appStore in reaction to messages from the service worker.
+  await actions.initAppStore();
+  await actions.makeSureConsistentUserAndCookie();
+
   // Register the service worker.
   if ('serviceWorker' in navigator) {
     const reg = await navigator.serviceWorker.register('/serviceWorker.js');
@@ -36,10 +42,6 @@ async function setup() {
 
   // Tell the service worker there's a new window.
   await postToServiceWorker({ command: 'newClient' });
-
-  // Initialize app store.
-  await actions.initAppStore();
-  await actions.makeSureConsistentUserAndCookie();
 
   // Request sync status from service worker.
   await postToServiceWorker({ command: 'sendSyncStatus' });

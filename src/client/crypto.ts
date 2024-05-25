@@ -21,33 +21,27 @@ export function generateIV(): Uint8Array {
   return crypto.getRandomValues(new Uint8Array(12));
 }
 
-export async function bytesToBase64(bytes: ArrayBuffer): Promise<string> {
-  return await extractBase64FromDataUrl(await bytesToBase64DataUrl(bytes));
-}
-
-export async function bytesToBase64DataUrl(bytes: ArrayBuffer): Promise<string> {
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(new File([bytes], '', { type: 'application/octet-stream' }));
-  });
-}
-
-export async function dataUrlToBytes(dataUrl: string): Promise<ArrayBuffer> {
-  const res = await fetch(dataUrl);
-  return await res.arrayBuffer();
-}
-
-export async function extractBase64FromDataUrl(dataUrl: string): Promise<string> {
-  // NOTE: Apparently, data urls generated in node may have more commas.
-  const segments = dataUrl.split(',');
-  if (segments.length != 2) throw new Error('extractBase64FromDataUrl received unexpected input');
-  return segments[1];
+export async function bytesToBase64(buffer: ArrayBuffer): Promise<string> {
+  // Note: using FileReader.readAsDataURL() is about 30x slower.
+  let binaryString = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binaryString += String.fromCharCode(bytes[i]);
+  }
+  const res = btoa(binaryString);
+  return res;
 }
 
 export async function base64ToBytes(base64: string): Promise<ArrayBuffer> {
-  return dataUrlToBytes(`data:application/octet-stream;base64,${base64}`);
+  // Note: using await (await fetch(dataUrl)).arrayBuffer() is about 50x slower
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes.buffer;
 }
 
 export async function makeEncryptionKey(password: string, salt: string): Promise<CryptoKey> {
@@ -91,12 +85,12 @@ export async function decrypt(data: t.EncryptedData, key: CryptoKey): Promise<Ar
 }
 
 export async function encryptNotes(notes: t.Note[], key: CryptoKey): Promise<t.EncryptedNote[]> {
-  const start = Date.now();
+  const start = performance.now();
   const res: t.EncryptedNote[] = [];
   for (const note of notes) {
     res.push(await encryptNote(note, key));
   }
-  if (res.length) log(`encrypted ${res.length} notes in ${Date.now() - start}ms`);
+  if (res.length) log(`encrypted ${res.length} notes in ${performance.now() - start}ms`);
   return res;
 }
 
@@ -107,12 +101,12 @@ export async function encryptNote(note: t.Note, key: CryptoKey): Promise<t.Encry
 }
 
 export async function decryptNotes(notes: t.EncryptedNote[], key: CryptoKey): Promise<t.Note[]> {
-  const start = Date.now();
+  const start = performance.now();
   const res: t.Note[] = [];
   for (const note of notes) {
     res.push(await decryptNote(note, key));
   }
-  if (res.length) log(`decrypted ${res.length} notes in ${Date.now() - start}ms`);
+  if (res.length) log(`decrypted ${res.length} notes in ${performance.now() - start}ms`);
   return res;
 }
 
