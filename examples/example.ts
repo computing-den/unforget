@@ -85,11 +85,11 @@ async function main() {
       await login(username, password);
       break;
     }
-    case 'post': {
+    case 'create': {
       const text = process.argv[3];
       if (!text) usageAndExit();
 
-      await postNote(text);
+      await createNote(text);
       break;
     }
     case 'get': {
@@ -110,7 +110,7 @@ Usage: npx tsx example.ts COMMAND
 Available commands:
   singup USERNAME PASSWORD
   login USERNAME PASSWORD
-  post TEXT
+  create TEXT
   get [ID]
 `);
   process.exit(1);
@@ -133,7 +133,7 @@ async function login(username: string, password: string) {
   writeCredentials(credentials);
 }
 
-async function postNote(text: string) {
+async function createNote(text: string) {
   const note: Note = {
     id: webcrypto.randomUUID(),
     text,
@@ -150,8 +150,8 @@ async function postNote(text: string) {
   const key = await importKey(credentials);
 
   const encryptedNote = await encryptNote(note, key);
-  await post(`/api/add-notes`, { notes: [encryptedNote] }, credentials);
-  console.log(`Posted note with ID ${note.id}`);
+  await post(`/api/merge-notes`, { notes: [encryptedNote] }, credentials);
+  console.log(`Created note with ID ${note.id}`);
 }
 
 async function getNote(id?: string) {

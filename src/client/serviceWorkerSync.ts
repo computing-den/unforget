@@ -16,7 +16,7 @@ import _ from 'lodash';
 // const syncListeners: SyncListener[] = [];
 let syncing = false;
 let shouldSyncAgain = false;
-let fullSyncRequired = false;
+let queueSyncRequired = false;
 let interval: any;
 
 export function syncInInterval() {
@@ -54,30 +54,25 @@ export async function sync() {
   let mergeCount = 0;
   const start = Date.now();
   try {
-    // // Do a full sync when syncNumber is 0 (first sync).
-    // if (!fullSyncRequired && (await getSyncNumber()) === 0) {
-    //   fullSyncRequired = true;
-    // }
-
-    // Partial sync. Server will either send partial sync data or request a full sync.
-    if (!fullSyncRequired) {
-      const partialSyncReq: t.PartialSyncReq = await getPartialSyncData(user);
-      const partialSyncRes: t.PartialSyncRes = await api.post('/api/partial-sync', partialSyncReq);
+    // Delta sync. Server will either send delta sync data or request a queue sync.
+    if (!queueSyncRequired) {
+      const deltaSyncReq: t.DeltaSyncReq = await getDeltaSyncData(user);
+      const deltaSyncRes: t.DeltaSyncRes = await api.post('/api/delta-sync', deltaSyncReq);
       // Server already checks if sync numbers are the same. But just to be sure we do it here too.
-      if (partialSyncRes.type === 'ok' && partialSyncReq.syncNumber === partialSyncRes.syncNumber) {
-        mergeCount = await mergeSyncData(partialSyncReq, partialSyncRes, user);
+      if (deltaSyncRes.type === 'ok' && deltaSyncReq.syncNumber === deltaSyncRes.syncNumber) {
+        mergeCount = await mergeSyncData(deltaSyncReq, deltaSyncRes, user);
       } else {
-        fullSyncRequired = true;
+        queueSyncRequired = true;
       }
     }
 
-    // Full sync.
-    if (fullSyncRequired) {
+    // Queue sync.
+    if (queueSyncRequired) {
       const queueSyncReq: t.QueueSyncReq = await getQueueSyncData();
       const queueSyncRes: t.QueueSyncRes = await api.post('/api/queue-sync', queueSyncReq);
       await mergeSyncHeadsData(queueSyncReq, queueSyncRes);
       shouldSyncAgain = true;
-      fullSyncRequired = false;
+      queueSyncRequired = false;
     }
   } catch (err) {
     log.error(err);
@@ -121,7 +116,7 @@ export function isSyncing(): boolean {
   return syncing;
 }
 
-async function getPartialSyncData(user: t.ClientLocalUser): Promise<t.SyncData> {
+async function getDeltaSyncData(user: t.ClientLocalUser): Promise<t.SyncData> {
   const res = await storage.transaction(
     [storage.NOTES_STORE, storage.NOTES_QUEUE_STORE, storage.SETTINGS_STORE],
     'readonly',
@@ -258,8 +253,8 @@ async function mergeSyncHeadsData(reqSyncHeadsData: t.SyncHeadsData, resSyncHead
 
 export const syncDebounced = _.debounce(sync, 500, { leading: false, trailing: true, maxWait: 3000 });
 
-export function requireAFullSync() {
-  fullSyncRequired = true;
+export function requireQueueSync() {
+  queueSyncRequired = true;
 }
 
 // export function addSyncListener(listener: SyncListener) {

@@ -11,11 +11,11 @@ import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
 import { Notes } from './Notes.jsx';
-import log from './logger.js';
+// import log from './logger.js';
 
 type NotesPageProps = {};
 
-export function NotesPage(props: NotesPageProps) {
+export function NotesPage(_props: NotesPageProps) {
   const app = appStore.use();
   const [newNote, setNewNote] = useState<t.Note>();
   // const [newNoteText, setNewNoteText] = useState('');

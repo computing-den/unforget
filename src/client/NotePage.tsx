@@ -9,7 +9,7 @@ import { Editor, EditorContext } from './Editor.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
-import log from './logger.js';
+// import log from './logger.js';
 
 export function NotePage() {
   const app = appStore.use();

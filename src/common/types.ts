@@ -99,17 +99,17 @@ export type DBNoteHead = NoteHead & {
   token: string;
 };
 
-export type PartialSyncReq = SyncData;
+export type DeltaSyncReq = SyncData;
 
-export type PartialSyncResNormal = {
+export type DeltaSyncResNormal = {
   type: 'ok';
 } & SyncData;
 
-export type PartialSyncResRequireFullSync = {
-  type: 'require_full_sync';
+export type DeltaSyncResRequireQueueSync = {
+  type: 'require_queue_sync';
 };
 
-export type PartialSyncRes = PartialSyncResNormal | PartialSyncResRequireFullSync;
+export type DeltaSyncRes = DeltaSyncResNormal | DeltaSyncResRequireQueueSync;
 
 export type QueueSyncReq = SyncHeadsData;
 
@@ -180,7 +180,7 @@ export type HistoryState = {
 
 export type ClientToServiceWorkerMessage =
   | { command: 'update' }
-  | { command: 'sync'; full?: boolean; debounced?: boolean }
+  | { command: 'sync'; queue?: boolean; debounced?: boolean }
   | { command: 'tellOthersToRefreshPage' }
   | { command: 'tellOthersNotesInStorageChanged' }
   | { command: 'sendSyncStatus' }

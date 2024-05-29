@@ -4,11 +4,10 @@ import { useCallbackCancelEvent } from './hooks.js';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
 import { postToServiceWorker } from './clientToServiceWorkerApi.js';
-import * as cutil from '../common/util.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
 import * as icons from './icons.js';
-import log from './logger.js';
+// import log from './logger.js';
 
 export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
@@ -61,7 +60,7 @@ function PageHeaderContent(props: PageHeaderProps) {
   const toggleMenu = useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
 
   const fullSync = useCallback(() => {
-    postToServiceWorker({ command: 'sync', full: true });
+    postToServiceWorker({ command: 'sync', queue: true });
     actions.showMessage('Syncing ...');
   }, []);
 

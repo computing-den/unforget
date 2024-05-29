@@ -8,7 +8,7 @@ let db: Database.Database;
 
 export function initDB() {
   const dbPath = path.join('private/unforget.db');
-  const dbLog = (...args: any[]) => {
+  const dbLog = (..._args: any[]) => {
     // if (process.env.NODE_ENV === 'development') {
     //   console.log('sqlite: ', ...args);
     // }

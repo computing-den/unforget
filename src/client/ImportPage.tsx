@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type * as t from '../common/types.js';
 import { createNewNote } from '../common/util.js';
 import * as actions from './appStoreActions.jsx';
-import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
+import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
 import { Notes } from './Notes.jsx';
 import _ from 'lodash';
 import log from './logger.js';
@@ -51,7 +51,7 @@ export function ImportPage() {
   //   },
   // ];
 
-  function hashLinkClicked(hash: string) {
+  function hashLinkClicked(_hash: string) {
     triggerFileInput();
   }
 

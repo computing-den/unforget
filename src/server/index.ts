@@ -169,34 +169,34 @@ app.post('/api/log', (req, res) => {
   res.send({ ok: true });
 });
 
-app.post('/api/partial-sync', authenticate, (req, res) => {
+app.post('/api/delta-sync', authenticate, (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     log(res, req.body);
   }
   const client = res.locals.client!;
-  const partialSyncReq: t.PartialSyncReq = req.body;
+  const deltaSyncReq: t.DeltaSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
-  // Require full sync if the sync numbers differ.
-  if (syncNumber !== partialSyncReq.syncNumber) {
-    const queueSyncRes: t.PartialSyncRes = { type: 'require_full_sync' };
+  // Require queue sync if the sync numbers differ.
+  if (syncNumber !== deltaSyncReq.syncNumber) {
+    const queueSyncRes: t.DeltaSyncRes = { type: 'require_queue_sync' };
     res.send(queueSyncRes);
     return;
   }
 
   // When the sync number is 0, send all the notes, otherwise only the queued notes.
   const notes = syncNumber === 0 ? db.getNotes(client) : db.getQueuedNotes(client);
-  const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes, syncNumber };
+  const deltaSyncRes: t.DeltaSyncRes = { type: 'ok', notes, syncNumber };
 
-  db.mergeSyncData(client, partialSyncReq, partialSyncRes, true);
-  res.send(partialSyncRes);
+  db.mergeSyncData(client, deltaSyncReq, deltaSyncRes, true);
+  res.send(deltaSyncRes);
 });
 
-app.post('/api/full-sync', authenticate, (req, res, next) => {
+app.post('/api/queue-sync', authenticate, (_req, _res, next) => {
   next(new ServerError('App requires update', 400, 'app_requires_update'));
 });
 
-app.post('/api/queue-sync', authenticate, (req, res, next) => {
+app.post('/api/queue-sync', authenticate, (req, res, _next) => {
   const client = res.locals.client!;
   const queueSyncReq: t.QueueSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
@@ -220,7 +220,7 @@ app.post('/api/get-notes', authenticate, (req, res) => {
   res.set('Cache-Control', 'no-cache').send(notes);
 });
 
-app.post('/api/add-notes', authenticate, (req, res, next) => {
+app.post('/api/merge-notes', authenticate, (req, res, _next) => {
   if (process.env.NODE_ENV === 'development') {
     log(res, req.body);
   }
@@ -228,14 +228,14 @@ app.post('/api/add-notes', authenticate, (req, res, next) => {
   const { notes } = req.body as { notes: t.EncryptedNote[] };
 
   const syncNumber = 0;
-  const partialSyncReq: t.PartialSyncReq = { notes, syncNumber };
-  const partialSyncRes: t.PartialSyncRes = { type: 'ok', notes: [], syncNumber };
+  const deltaSyncReq: t.DeltaSyncReq = { notes, syncNumber };
+  const deltaSyncRes: t.DeltaSyncRes = { type: 'ok', notes: [], syncNumber };
 
-  db.mergeSyncData(client, partialSyncReq, partialSyncRes, false);
+  db.mergeSyncData(client, deltaSyncReq, deltaSyncRes, false);
   res.send({ ok: true });
 });
 
-app.post('/api/logout', (req, res, next) => {
+app.post('/api/logout', (_req, res, next) => {
   // if (process.env.NODE_ENV === 'development') {
   //   console.log(req.body);
   // }
@@ -246,7 +246,7 @@ app.post('/api/logout', (req, res, next) => {
   res.send({ ok: true });
 });
 
-app.get(['/', '/import', '/export', '/about', '/archive', '/n/:noteId', '/login', '/demo'], (req, res) => {
+app.get(['/', '/import', '/export', '/about', '/archive', '/n/:noteId', '/login', '/demo'], (_req, res) => {
   // const preload = _.map(icons, icon => `<link rel="preload" href="/icons/${icon}" as="image">`).join('\n');
   // const preload = '';
   res.send(`<!DOCTYPE html>
@@ -272,7 +272,7 @@ app.use((req, res, next) => {
   next(new ServerError(`Page not found: ${req.url}`, 404));
 });
 
-app.use(((error, req, res, next) => {
+app.use(((error, _req, res, _next) => {
   if (!(error instanceof ServerError)) {
     error = new ServerError(error.message, 500, 'generic');
   }
@@ -294,7 +294,7 @@ async function computeSHA256(data: Uint8Array): Promise<string> {
   return bytesToHexString(new Uint8Array(hashBuffer));
 }
 
-function authenticate(req: express.Request, res: express.Response, next: express.NextFunction) {
+function authenticate(_req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!res.locals.client) {
     next(new ServerError('Unauthorized', 401));
   } else {

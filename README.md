@@ -53,8 +53,8 @@ npx tsx example.ts signup USERNAME PASSWORD
 # Login
 npx tsx example.ts login USERNAME PASSWORD
 
-# Post new note
-npx tsx example.ts post "Hello world!"
+# Create new note
+npx tsx example.ts create "Hello world!"
 
 # Get all notes
 npx tsx example.ts get
@@ -74,8 +74,8 @@ python3 example.py signup USERNAME PASSWORD
 # Login
 python3 example.py login USERNAME PASSWORD
 
-# Post new note
-python3 example.py post "Hello world!"
+# Create new note
+python3 example.py create "Hello world!"
 
 # Get all notes
 python3 example.py get
@@ -172,7 +172,7 @@ type LoginResponse = {
 
 To log out, send a POST request to ```/api/login?token=TOKEN```
 
-In the following sections, all the requests to the server must include the ```token``` either as a query parameter in the URL (e.g. ```/api/partial-sync?token=XXX```) or as a cookie named ```unforget_token```.
+In the following sections, all the requests to the server must include the ```token``` either as a query parameter in the URL (e.g. ```/api/delta-sync?token=XXX```) or as a cookie named ```unforget_token```.
 
 Notice that we never send the raw password to the server. Instead we calculate its hash as ```password_client_hash``` which is derived from the username, password, and a static random number. It is important to use the exact same algorithm for calculating the hash if you want to be able to use the official Unforget client as well as your own. The ```encryption_salt``` is a random number used to derive the key for encryption and decryption of notes. It is stored on the server and provided on login. The [examples](#examples) show how to calculate the hash and generate the salt.
 
@@ -182,15 +182,17 @@ Send a POST request to ```/api/get-notes?token=TOKEN``` to get all the notes. Op
 
 You will receive ```EncryptedNote[]```.
 
-## Post Notes
+## Merge Notes
 
-Send a POST request to ```/api/post-notes?token=TOKEN``` with a JSON payload of type ```{notes: EncryptedNote[]}```.
+Send a POST request to ```/api/merge-notes?token=TOKEN``` with a JSON payload of type ```{notes: EncryptedNote[]}```.
 
-If the note already exists and its ```modification_date``` is larger, it will replace the old one.
+If the note doesn't already exist, it will be added.
+If its ```modification_date``` is larger than the existing note, it will replace the existing note.
+Otherwise, it will be thrown away.
 
 ## Sync and Merge
 
-For a long-running client, instead of using [Get Notes](#get-notes) and [Post Notes](#post-notes), you can use sync in the following manner.
+For a long-running client, instead of using [Get Notes](#get-notes) and [Merge Notes](#merge-notes), you can use sync in the following manner.
 
 The client and the server each maintain a queue of changes to send to each other as well as a sync number. The exchange of these changes is called a **delta sync**.
 
@@ -200,7 +202,7 @@ A **queue sync** is when each side sends its sync number along with a list of ID
 
 When the sync number is 0 (immediately after login), the server will send all the notes in the first delta sync.
 
-To perform a **delta sync**, send a POST request to ```/api/partial-sync?token=TOKEN``` with a JSON payload of type ```SyncData```:
+To perform a **delta sync**, send a POST request to ```/api/delta-sync?token=TOKEN``` with a JSON payload of type ```SyncData```:
 
 ```ts
 type SyncData = {
@@ -209,17 +211,17 @@ type SyncData = {
 }
 ```
 
-If the server agrees with the ```syncNumber```, it will respond with ```PartialSyncResNormal``` which includes the changes stored on the server for that client since the last sync. Otherwise, the server will respond with ```PartialSyncResRequireFullSync``` requiring the client to initiate a queue sync.
+If the server agrees with the ```syncNumber```, it will respond with ```DeltaSyncResNormal``` which includes the changes stored on the server for that client since the last sync. Otherwise, the server will respond with ```PartialSyncResRequireQueueSync``` requiring the client to initiate a queue sync.
 
 ```ts
-type PartialSyncResNormal = {
+type DeltaSyncResNormal = {
   type: 'ok';
   notes: EncryptedNote[];
   syncNumber: number;
 }
 
-type PartialSyncResRequireFullSync = {
-  type: 'require_full_sync';
+type DeltaSyncResRequireQueueSync = {
+  type: 'require_queue_sync';
 }
 ```
 

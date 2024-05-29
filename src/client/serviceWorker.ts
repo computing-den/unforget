@@ -3,7 +3,7 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import { sync, syncInInterval, requireAFullSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
+import { sync, syncInInterval, requireQueueSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
 import { postToClient, postToClients } from './serviceWorkerToClientApi.js';
 import type { ClientToServiceWorkerMessage } from '../common/types.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
@@ -129,7 +129,7 @@ async function handleClientMessage(client: Client, message: ClientToServiceWorke
       break;
     }
     case 'sync': {
-      if (message.full) requireAFullSync();
+      if (message.queue) requireQueueSync();
       (message.debounced ? syncDebounced : sync)();
       break;
     }

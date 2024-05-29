@@ -73,11 +73,11 @@ def main():
         username = sys.argv[2]
         password = sys.argv[3]
         login(username, password)
-    elif command == 'post':
+    elif command == 'create':
         if len(sys.argv) != 3:
             usage_and_exit()
         text = sys.argv[2]
-        post_note(text)
+        create_note(text)
     elif command == 'get':
         id = sys.argv[2] if len(sys.argv) == 3 else None
         get_note(id)
@@ -91,7 +91,7 @@ Usage: python3 script.py COMMAND
 Available commands:
   signup USERNAME PASSWORD
   login USERNAME PASSWORD
-  post TEXT
+  create TEXT
   get [ID]
 """)
     sys.exit(1)
@@ -124,7 +124,7 @@ def login(username, password):
     # Save credentials to file
     write_credentials(credentials)
 
-def post_note(text):
+def create_note(text):
     # Create a new note
     note = Note(
         str(uuid.uuid4()),
@@ -141,8 +141,8 @@ def post_note(text):
     # Encrypt the note
     encrypted_note = encrypt_note(note, key)
     # Send the encrypted note to the server
-    post('/api/add-notes', {'notes': [encrypted_note.__dict__]}, credentials)
-    print(f'Posted note with ID {note.id}')
+    post('/api/merge-notes', {'notes': [encrypted_note.__dict__]}, credentials)
+    print(f'Create note with ID {note.id}')
 
 def get_note(id):
     # Read credentials from file
