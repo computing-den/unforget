@@ -1,6 +1,5 @@
 declare var self: ServiceWorkerGlobalScope;
 
-import { setUserCookies } from './cookies.js';
 import type * as t from '../common/types.js';
 import { ServerError, isNoteNewerThan } from '../common/util.jsx';
 import log from './logger.js';
@@ -89,7 +88,9 @@ export async function sync() {
       // TypeError is thrown when device is offline or server is down or there's a Cors problem etc.
       // Should be ignored.
     } else if (error instanceof ServerError && error.code === 401) {
-      setUserCookies('');
+      // We cannot reset the cookie here because service worker doesn't have access to document
+      // and the Cookie Store API is not universally supported yet.
+      // setUserCookies('');
       await storage.clearUser();
       postToClients({ command: 'refreshPage' });
     } else if (error instanceof ServerError && error.type === 'app_requires_update') {

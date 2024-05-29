@@ -118,8 +118,9 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
     }
 
     case 'notesInStorageChangedExternally': {
+      log('index.tsx received notesInStorageChangedExternally');
       window.dispatchEvent(new CustomEvent('notesInStorageChangedExternally'));
-      actions.updateNotes();
+      // actions.updateNotes();
       break;
     }
 

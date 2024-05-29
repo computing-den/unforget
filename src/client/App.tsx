@@ -1,6 +1,7 @@
 import { Router, Route, useRouter } from './router.jsx';
-import React from 'react';
+import React, { useEffect } from 'react';
 import * as appStore from './appStore.js';
+import log from './logger.js';
 import LoginPage from './LoginPage.jsx';
 import AboutPage from './AboutPage.jsx';
 import DemoPage from './DemoPage.jsx';
@@ -80,15 +81,16 @@ function Auth(props: { children: React.ReactNode }) {
   const router = useRouter();
   const app = appStore.use();
 
-  if (!app.user) {
-    let params = '';
-    if (router.pathname !== '/') {
-      params = new URLSearchParams({ from: router.pathname }).toString();
+  useEffect(() => {
+    if (!app.user) {
+      let params = '';
+      if (router.pathname !== '/') {
+        params = new URLSearchParams({ from: router.pathname }).toString();
+      }
+      const url = '/login' + (params ? `?${params}` : '');
+      history.replaceState(null, '', url);
     }
-    const pathname = '/login' + (params ? `?${params}` : '');
-    history.replaceState(null, '', pathname);
-    return null;
-  }
+  }, [app.user, router]);
 
-  return props.children;
+  return app.user ? props.children : null;
 }

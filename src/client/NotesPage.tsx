@@ -6,6 +6,7 @@ import * as cutil from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
+import log from './logger.js';
 import { Editor, EditorContext } from './Editor.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
@@ -26,11 +27,12 @@ export function NotesPage(_props: NotesPageProps) {
   const editorRef = useRef<EditorContext | null>(null);
   useStoreAndRestoreScrollY();
 
-  // // Check for changes in storage and update the notes.
-  // useEffect(() => {
-  //   window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
-  //   return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
-  // }, []);
+  // Check for changes in storage and update the notes.
+  useEffect(() => {
+    // log('NotesPage received notesInStorageChangedExternally');
+    window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
+    return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
+  }, []);
 
   // Keyboard shortcuts.
   useEffect(() => {
@@ -286,7 +288,7 @@ export function NotesPage(_props: NotesPageProps) {
             />
           </div>
           {app.notes.length > 0 && <NotesFromApp hiddenNoteId={newNote?.id} />}
-          {!app.notes.length && (app.syncing || app.updatingNotes) && <h2 className="page-message">Loading...</h2>}
+          {!app.notes.length && (app.syncing || app.updatingNotes) && <h2 className="page-message">...</h2>}
           {/*!app.notes.length && !(app.syncing || app.updatingNotes) && <h2 className="page-message">No notes found</h2>*/}
           {!app.allNotePagesLoaded && (
             <button className="load-more primary button-row" onClick={loadMore}>
@@ -305,7 +307,7 @@ const NotesFromApp = memo(function NotesFromApp(props: { hiddenNoteId?: string }
 });
 
 export async function notesPageLoader(match: RouteMatch) {
-  // When transitioning to / or /archive, we only want to update the notes if necessary.
+  // Update app.showArchive when transitioning between / and /archive.
   appStore.update(app => {
     const showArchive = match.pathname === '/archive';
     if (showArchive !== app.showArchive) {
@@ -314,6 +316,7 @@ export async function notesPageLoader(match: RouteMatch) {
     }
   });
 
+  log('notesPageLoader calling updateNotes');
   // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
   await actions.updateNotes();
 }

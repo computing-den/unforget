@@ -134,11 +134,11 @@ async function handleClientMessage(client: Client, message: ClientToServiceWorke
       break;
     }
     case 'tellOthersToRefreshPage': {
-      postToClients({ command: 'refreshPage' }, { except: [client] });
+      postToClients({ command: 'refreshPage' }, { exceptClientIds: [client.id] });
       break;
     }
     case 'tellOthersNotesInStorageChanged': {
-      postToClients({ command: 'notesInStorageChangedExternally' }, { except: [client] });
+      postToClients({ command: 'notesInStorageChangedExternally' }, { exceptClientIds: [client.id] });
       break;
     }
     case 'sendSyncStatus': {

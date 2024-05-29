@@ -50,6 +50,7 @@ export async function setUpDemo() {
 
   const notes: t.Note[] = [createNewNote(welcome1)];
   for (const note of notes) await saveNote(note);
+  await updateNotes();
 }
 
 export async function updateNotes() {

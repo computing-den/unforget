@@ -8,11 +8,11 @@ export function postToClient(client: Client, message: ServiceWorkerToClientMessa
   client.postMessage(message);
 }
 
-export async function postToClients(message: ServiceWorkerToClientMessage, options?: { except?: Client[] }) {
+export async function postToClients(message: ServiceWorkerToClientMessage, options?: { exceptClientIds?: string[] }) {
   try {
     const clients = await self.clients.matchAll();
     for (const client of clients) {
-      if (!options?.except?.includes(client)) {
+      if (!options?.exceptClientIds?.includes(client.id)) {
         postToClient(client, message);
       }
     }

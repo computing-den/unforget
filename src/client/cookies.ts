@@ -1,3 +1,5 @@
+import log from './logger.js';
+
 export function getCookie(name: string): string | undefined {
   return document.cookie
     .split('; ')

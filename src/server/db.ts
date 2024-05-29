@@ -119,9 +119,6 @@ export function mergeSyncData(
   resSyncData: t.SyncData,
   shouldUpdateSyncNumber: boolean,
 ) {
-  // const isDebugNote = (note: t.EncryptedNote) => note.text?.includes('password protected notes');
-  // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
-
   const getDbNote = db.prepare<[{ username: string; id: string }]>(
     `SELECT * FROM notes WHERE username = :username AND id = :id`,
   );
@@ -143,10 +140,8 @@ export function mergeSyncData(
       const localNote = getDbNote.get({ username: client.username, id: receivedNote.id }) as
         | t.DBEncryptedNote
         | undefined;
-      // if (localNote && isDebugNote(localNote)) console.log('XXX2 localNote: ', localNote);
 
       if (cutil.isNoteNewerThan(receivedNote, localNote)) {
-        // if (localNote && isDebugNote(localNote)) console.log('XXX3 receivedNote is newer than localNote');
         const dbNote: t.DBEncryptedNote = { ...receivedNote, username: client.username };
         putDbNote.run(dbNote);
       }
@@ -188,9 +183,6 @@ export function mergeSyncHeadsData(
   reqSyncHeadsData: t.SyncHeadsData,
   resSyncHeadsData: t.SyncHeadsData,
 ) {
-  // const isDebugNote = (note: t.EncryptedNote) => note.text?.includes('password protected notes');
-  // console.log('XXX mergeSyncData, debug received note: ', reqSyncData.notes.find(isDebugNote));
-
   const deleteFromQueue = db.prepare<[{ token: string; id: string }]>(
     `DELETE FROM notes_queue WHERE token = :token AND id = :id`,
   );

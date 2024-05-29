@@ -1,5 +1,5 @@
 import { useRouter } from './router.jsx';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
 import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
@@ -26,11 +26,12 @@ function LoginPage(props: LoginPageProps) {
   const app = appStore.use();
   const search = useRouter().search;
 
-  if (app.user && app.user?.username !== 'demo') {
-    const from = new URLSearchParams(search).get('from');
-    history.replaceState(null, '', from || '/');
-    return null;
-  }
+  useEffect(() => {
+    if (app.user && app.user?.username !== 'demo') {
+      const from = new URLSearchParams(search).get('from');
+      history.replaceState(null, '', from || '/');
+    }
+  }, [app.user]);
 
   return (
     <PageLayout>
