@@ -169,6 +169,10 @@ app.post('/api/log', (req, res) => {
   res.send({ ok: true });
 });
 
+app.post('/api/partial-sync', (_req, _res, next) => {
+  next(new ServerError('App requires update', 400, 'app_requires_update'));
+});
+
 app.post('/api/delta-sync', authenticate, (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     log(res, req.body);
@@ -192,7 +196,7 @@ app.post('/api/delta-sync', authenticate, (req, res) => {
   res.send(deltaSyncRes);
 });
 
-app.post('/api/queue-sync', authenticate, (_req, _res, next) => {
+app.post('/api/full-sync', (_req, _res, next) => {
   next(new ServerError('App requires update', 400, 'app_requires_update'));
 });
 
