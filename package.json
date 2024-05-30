@@ -1,19 +1,35 @@
 {
   "name": "unforget",
   "version": "1.0.0",
-  "description": "",
+  "description": "A minimalist note-taking app",
   "type": "module",
   "scripts": {
     "clean": "barefront clean",
     "build": "barefront build",
     "start": "node --enable-source-maps dist/server/index.js",
     "dev": "barefront dev",
-    "deploy": "node deploy.mjs",
-    "convert": "node --enable-source-maps dist/scripts/convertFromGoogleKeep.js",
-    "import": "node --enable-source-maps dist/scripts/import.js"
+    "deploy": "node deploy.mjs"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Sean Shirazi <sean@computing-den.com>",
+  "keywords": [
+    "PWA",
+    "Progressive Web App",
+    "React",
+    "SaaS",
+    "note-taking",
+    "note",
+    "todo",
+    "minimalist",
+    "minimal",
+    "simple",
+    "E2EE",
+    "privacy",
+    "offline",
+    "encrypted"
+  ],
+  "license": "MIT",
+  "homepage": "https://unforget.computing-den.com",
+  "repository": "github:user/repo",
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
     "@types/body-parser": "^1.19.5",

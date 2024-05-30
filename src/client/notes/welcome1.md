@@ -5,7 +5,7 @@ Unforget is a minimalist note-taking app featuring:
 - [x] Import from Google Keep
 - [x] Offline first
 - [x] Priavcy first
-- [x] Open source
+- [x] Open source MIT License
 - [x] End-to-end encrypted sync
 - [x] Desktop, Mobile, Web
 - [x] Markdown support
@@ -19,6 +19,7 @@ Unforget is a minimalist note-taking app featuring:
 
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*
 
+*Contact us at sean@computing-den.com*
 
 # Easy Signup
 

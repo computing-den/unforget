@@ -5,7 +5,7 @@ Unforget is a minimalist note-taking app featuring:
 - [x] Import from Google Keep
 - [x] Offline first
 - [x] Priavcy first
-- [x] Open source
+- [x] Open source MIT License
 - [x] End-to-end encrypted sync
 - [x] Desktop, Mobile, Web
 - [x] Markdown support
@@ -36,10 +36,6 @@ Use it directly in your browser or install:
 | Android Browser | Menu → Add to Home Screen   |
 | Desktop Safari  | *cannot install*            |
 | Desktop Firefox | *cannot install*            |
-
-# Build and Self Host
-
-TODO
 
 # Easy Text Formatting with Markdown
 
@@ -98,6 +94,51 @@ Horizontal rule:
 
 
 ~~~
+
+# Build and Self Host
+
+To build Unforget for production, put a `.env` file in the project's root directory:
+
+```
+PORT=3000
+NODE_ENV=production
+DISABLE_CACHE=0
+LOG_TO_CONSOLE=0
+FORWARD_LOGS_TO_SERVER=0
+```
+
+and then run
+
+```
+cd unforget/
+npm run build
+npm run start
+
+```
+
+It is recommended to use [Nginx as a reverse proxy](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/) and set up SSL certificate using [Let's Encrypt](https://letsencrypt.org/).
+
+# Development
+
+To build and run Unforget in development mode, put a `.env` file in the project's root directory:
+
+```
+PORT=3000
+NODE_ENV=development
+DISABLE_CACHE=1
+LOG_TO_CONSOLE=1
+FORWARD_LOGS_TO_SERVER=0
+```
+
+and then run
+
+```
+cd unforget/
+npm run dev
+
+```
+
+This will build the project and watch for changes in the source files.
 
 # Public APIs - write your own client
 
@@ -325,19 +366,3 @@ type ServerError {
 ```
 
 If you receive an error with type ```app_requires_update``` that indicates that you are using an older version of the API that is no longer supported.
-
-# Development
-npm run dev
-
-# Production
-npm run clean
-npm run build
-npm run start
-
-# Deploy
-See deployment files in deploy/
-
-npm run clean
-npm run build
-npm run deploy example
-
