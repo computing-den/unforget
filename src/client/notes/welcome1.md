@@ -1,6 +1,6 @@
 # Welcome!
 
-Unforget is a minimalist note-taking app featuring:
+Unforget is a minimalist end-to-end encrypted note-taking app featuring:
 
 - [x] Import from Google Keep
 - [x] Offline first
