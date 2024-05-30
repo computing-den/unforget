@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './validateEnvVars.js';
 
 import express from 'express';
 import path from 'node:path';
@@ -107,6 +108,8 @@ app.post('/api/signup', async (req, res, next) => {
     if (/[\/\\<>&'"]/.test(signupData.username)) {
       throw new ServerError('invalid characters in username', 400);
     }
+
+    if (signupData.username === 'demo') throw new ServerError('Username already exists.', 400);
 
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(signupData.username) as
       | t.DBUser

@@ -1,25 +1,31 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { useRouter } from './router.jsx';
+import React, { useState, useEffect, useRef } from 'react';
 
 export type MenuItem = {
   isHeader?: boolean;
   hasTopSeparator?: boolean;
   label: string;
   icon: string;
+  to?: string;
   onClick?: () => any;
 };
 
 export type MenuProps = { menu: MenuItem[]; side: 'left' | 'right' | 'center'; onClose: () => any; trigger?: string };
 
 export function Menu(props: MenuProps) {
-  const menuItemClicked = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      props.onClose();
-      props.menu[Number((e.target as HTMLAnchorElement).dataset.menuIndex)].onClick?.();
-    },
-    [props.menu, props.onClose],
-  );
+  const router = useRouter();
+
+  function menuItemClicked(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    props.onClose();
+    const item = props.menu[Number((e.target as HTMLAnchorElement).dataset.menuIndex)];
+    if (item.onClick) {
+      item.onClick();
+    } else if (item.to && router.pathname !== item.to) {
+      history.pushState(null, '', item.to);
+    }
+  }
 
   useEffect(() => {
     function callback(e: MouseEvent) {
@@ -43,7 +49,7 @@ export function Menu(props: MenuProps) {
             </li>
           ) : (
             <li key={i} className={item.hasTopSeparator ? 'has-top-separator' : ''}>
-              <a href="#" onClick={menuItemClicked} className="reset" data-menu-index={i}>
+              <a href={item.to || '#'} onClick={menuItemClicked} className="reset" data-menu-index={i}>
                 {item.label}
                 <img src={item.icon} />
               </a>

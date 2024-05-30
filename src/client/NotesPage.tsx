@@ -316,9 +316,11 @@ export async function notesPageLoader(match: RouteMatch) {
     }
   });
 
-  log('notesPageLoader calling updateNotes');
-  // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
-  await actions.updateNotes();
+  if (appStore.get().user) {
+    log('notesPageLoader calling updateNotes');
+    // Not awaiting this causes glitches especially when going from / to /archive and back with scroll restoration.
+    await actions.updateNotes();
+  }
 }
 
 function reduceNotePagesImmediately() {

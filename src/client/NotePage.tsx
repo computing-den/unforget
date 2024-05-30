@@ -196,5 +196,7 @@ export function NotePage() {
 }
 
 export async function notePageLoader({ params }: RouteMatch): Promise<t.Note | undefined> {
-  return await storage.getNote(params.noteId as string);
+  if (appStore.get().user) {
+    return await storage.getNote(params.noteId as string);
+  }
 }

@@ -69,46 +69,29 @@ function PageHeaderContent(props: PageHeaderProps) {
     actions.showMessage('Checking for updates ...');
   }, []);
 
-  const goToAbout = useCallback(() => {
-    if (router.pathname !== '/about') history.pushState(null, '', '/about');
-  }, []);
-
   const router = useRouter();
 
-  const goToNotes = useCallbackCancelEvent(() => {
+  function goToNotes(e?: React.UIEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    setMenuOpen(false);
     if (router.pathname === '/') {
       window.scrollTo(0, 0);
     } else {
       history.pushState(null, '', '/');
     }
-  }, [router]);
-
-  const goToArchive = useCallback(() => {
-    if (router.pathname !== '/archive') history.pushState(null, '', '/archive');
-  }, [router]);
-
-  const goToLogin = useCallback(() => {
-    if (router.pathname !== '/login') history.pushState(null, '', '/login');
-  }, [router]);
-
-  const goToImport = useCallback(() => {
-    if (router.pathname !== '/import') history.pushState(null, '', '/import');
-  }, [router]);
-
-  const goToExport = useCallback(() => {
-    if (router.pathname !== '/export') history.pushState(null, '', '/export');
-  }, [router]);
+  }
 
   let menu: MenuItem[] | undefined;
   menu = _.compact([
     { label: _.upperFirst(app.user.username), icon: icons.user, isHeader: true },
-    app.user.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, onClick: goToLogin },
+    app.user.username === 'demo' && { label: 'Log in / Sign up', icon: icons.logIn, to: '/login' },
     ...(props.menu || []),
-    { label: 'Notes', icon: icons.notes, onClick: goToNotes },
-    { label: 'Archive', icon: icons.archiveEmpty, onClick: goToArchive },
-    { label: 'Import', icon: icons.import, onClick: goToImport },
-    { label: 'Export', icon: icons.export, onClick: goToExport },
-    { label: 'About', icon: icons.info, onClick: goToAbout },
+    { label: 'Notes', icon: icons.notes, onClick: goToNotes, to: '/' },
+    { label: 'Archive', icon: icons.archiveEmpty, to: '/archive' },
+    { label: 'Import', icon: icons.import, to: '/import' },
+    { label: 'Export', icon: icons.export, to: '/export' },
+    { label: 'About', icon: icons.info, to: '/about' },
     { label: 'Full sync', icon: icons.refreshCcw, onClick: fullSync, hasTopSeparator: true },
     { label: 'Check app updates', icon: icons.upgrade, onClick: forceCheckAppUpdate },
     { label: 'Log out', icon: icons.logOut, onClick: actions.logout, hasTopSeparator: true },

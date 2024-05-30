@@ -20,6 +20,10 @@ Unforget is a minimalist note-taking app featuring:
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*
 
 
+# Easy Signup
+
+[Sign up](https://unforget.computing-den.com/login) for free to back up your notes safely to the cloud fully encrypted and sync across devices.
+
 # Optional installation
 
 Use it directly in your browser or install:
@@ -33,6 +37,67 @@ Use it directly in your browser or install:
 | Desktop Safari  | *cannot install*            |
 | Desktop Firefox | *cannot install*            |
 
+# Build and Self Host
+
+TODO
+
+# Easy Text Formatting with Markdown
+
+The main differences with the [Github falvored markdown](https://github.github.com/gfm/) are:
+- If the first line of a note is followed by a blank line, it is a H1 header.
+- Anything after the first horizontal rule `---` in a note will be hidden and replaced with a "show more" button that will expand the note.
+
+~~~
+# H1 header
+## H2 header
+### H3 header
+#### H4 header
+##### H5 header
+###### H6 header
+
+*This is italic.*.
+
+**This is bold.**.
+
+***This is bold and italic.***
+
+~~This is strikethrough~~
+
+
+- This is a bullet point
+- Another bullet point
+  - Inner bullet point
+- [ ] This is a checkbox
+  And more text related to the checkbox.
+
+1. This is an ordered list item
+2. And another one
+
+[this is a link](https://unforget.computing-den.com)
+
+Inline `code` using back-ticks.
+
+Block of code:
+
+```javascript
+function plusOne(a) {
+  return a + 1;
+}
+```
+
+
+| Tables        | Are           | Cool  |
+| ------------- |:-------------:| -----:|
+| col 3 is      | right-aligned | $1600 |
+| col 2 is      | centered      |   $12 |
+| zebra stripes | are neat      |    $1 |
+
+Horizontal rule:
+
+---
+
+
+~~~
 
 # Public APIs - write your own client
 
