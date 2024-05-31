@@ -1,7 +1,7 @@
 {
   "name": "unforget",
   "version": "1.0.0",
-  "description": "A minimalist note-taking app",
+  "description": "A minimalist end-to-end encrypted note-taking app (without Electron.js)",
   "type": "module",
   "scripts": {
     "clean": "barefront clean",
@@ -28,7 +28,7 @@
     "encrypted"
   ],
   "license": "MIT",
-  "homepage": "https://unforget.computing-den.com",
+  "homepage": "https://unforget.computing-den.com/demo",
   "repository": "github:user/repo",
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
