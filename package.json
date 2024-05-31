@@ -32,7 +32,7 @@
   "repository": "github:user/repo",
   "engines": {
     "node": ">=18.19.0"
-  }
+  },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
     "@types/body-parser": "^1.19.5",
