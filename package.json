@@ -29,7 +29,7 @@
   ],
   "license": "MIT",
   "homepage": "https://unforget.computing-den.com/demo",
-  "repository": "github:user/repo",
+  "repository": "github:computing-den/unforget",
   "engines": {
     "node": ">=18.19.0"
   },
