@@ -300,6 +300,10 @@ If the note doesn't already exist, it will be added.
 If its ```modification_date``` is larger than the existing note, it will replace the existing note.
 Otherwise, it will be thrown away.
 
+## Delete Notes
+
+To delete a note set its `text: null` and `not_deleted: 0` and [merge](#merge-notes) it. This way, the stub will stay in the database and the fact that it was deleted will propogate to all the other clients.
+
 ## Sync and Merge
 
 For a long-running client, instead of using [Get Notes](#get-notes) and [Merge Notes](#merge-notes), you can use sync in the following manner.
