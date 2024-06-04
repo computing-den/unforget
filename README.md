@@ -4,7 +4,7 @@
 
 *Start now without registering at [unforget.computing-den.com](https://unforget.computing-den.com/demo).*
 
-Unforget is a minimalist end-to-end encrypted note-taking app (Without Electron.js) featuring:
+Unforget is a minimalist, offline-first, and end-to-end encrypted note-taking app (without Electron.js) featuring:
 
 - [x] Import from Google Keep
 - [x] Offline first

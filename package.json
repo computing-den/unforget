@@ -1,7 +1,8 @@
 {
   "name": "unforget",
+  "title": "Unforget",
   "version": "1.0.0",
-  "description": "A minimalist end-to-end encrypted note-taking app (without Electron.js)",
+  "description": "A minimalist, offline-first, and end-to-end encrypted note-taking app (without Electron.js)",
   "type": "module",
   "scripts": {
     "clean": "barefront clean",
