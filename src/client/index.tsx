@@ -21,24 +21,7 @@ async function setup() {
   await actions.initAppStore();
   await actions.makeSureConsistentUserAndCookie();
 
-  // Register the service worker.
-  if ('serviceWorker' in navigator) {
-    const reg = await navigator.serviceWorker.register('/serviceWorker.js');
-    log('window: service worker registration successful:', reg);
-    // log.error(`window: service worker registration failed: ${error}`);
-
-    navigator.serviceWorker.addEventListener('message', event => {
-      log(`window: received message from service worker`, event.data);
-      handleServiceWorkerMessage(event.data);
-    });
-
-    // log(`unregister result: `, await reg.unregister());
-    // return;
-  } else {
-    log.error('window: service workers are not supported.');
-    alert('Your browser does not support service workers. Please use another browser.');
-    return;
-  }
+  await registerServiceWorker();
 
   // Tell the service worker there's a new window.
   await postToServiceWorker({ command: 'newClient' });
@@ -93,6 +76,36 @@ async function setup() {
 
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    log.error('window: service workers are not supported.');
+    alert('Your browser does not support service workers. Please use another browser.');
+    return;
+  }
+
+  navigator.serviceWorker.addEventListener('message', event => {
+    log(`window: received message from service worker`, event.data);
+    handleServiceWorkerMessage(event.data);
+  });
+
+  await registerServiceWorkerHelper();
+  log('window: service worker registration successful');
+
+  // Sometimes the service worker just gets disabled on iphone. I don't know why.
+  // Here, we try to register every 5s. According to MDN, it'll automatically
+  // check if there's already a registration.
+  setInterval(registerServiceWorkerHelper, 5000);
+}
+
+async function registerServiceWorkerHelper() {
+  try {
+    await navigator.serviceWorker.register('/serviceWorker.js');
+  } catch (error) {
+    actions.showMessage('Failed to register service worker: ' + (error as Error).message, { type: 'error' });
+    log.error((error as Error).message);
+  }
 }
 
 async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessage) {

@@ -18,33 +18,51 @@ let saveNoteQueue: SaveNoteQueueItem[] = [];
 let saveNoteQueueActive: boolean = false;
 
 export async function getStorage(): Promise<IDBDatabase> {
-  _db ??= await new Promise<IDBDatabase>((resolve, reject) => {
-    log('setting up storage');
-    const dbOpenReq = indexedDB.open(DB_NAME, 53);
+  if (!_db) {
+    _db = await new Promise<IDBDatabase>((resolve, reject) => {
+      log('setting up storage');
+      const dbOpenReq = indexedDB.open(DB_NAME, 53);
 
-    dbOpenReq.onerror = () => {
-      reject(dbOpenReq.error);
-    };
+      dbOpenReq.onerror = () => {
+        _db = undefined;
+        reject(dbOpenReq.error);
+      };
 
-    dbOpenReq.onupgradeneeded = e => {
-      if (e.oldVersion < 52) {
-        // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
-        const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
-        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['order']);
-        dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
-        dbOpenReq.result.createObjectStore(SETTINGS_STORE);
-      }
-      if (e.oldVersion < 53) {
-        const notesStore = dbOpenReq.transaction!.objectStore(NOTES_STORE);
-        notesStore.deleteIndex(NOTES_STORE_ORDER_INDEX);
-        notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['not_archived', 'not_deleted', 'pinned', 'order']);
-      }
-    };
+      dbOpenReq.onupgradeneeded = e => {
+        if (e.oldVersion < 52) {
+          // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
+          const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
+          notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['order']);
+          dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
+          dbOpenReq.result.createObjectStore(SETTINGS_STORE);
+        }
+        if (e.oldVersion < 53) {
+          const notesStore = dbOpenReq.transaction!.objectStore(NOTES_STORE);
+          notesStore.deleteIndex(NOTES_STORE_ORDER_INDEX);
+          notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['not_archived', 'not_deleted', 'pinned', 'order']);
+        }
+      };
 
-    dbOpenReq.onsuccess = () => {
-      resolve(dbOpenReq.result);
+      dbOpenReq.onsuccess = () => {
+        resolve(dbOpenReq.result);
+      };
+    });
+
+    _db.onversionchange = () => {
+      _db?.close();
+      log('new version of database is ready. Closing the database ...');
     };
-  });
+    _db.onclose = () => {
+      _db = undefined;
+      log('database is closed');
+    };
+    _db.onabort = () => {
+      log('database is aborted');
+    };
+    _db.onerror = error => {
+      log.error(error);
+    };
+  }
 
   return _db;
 }
