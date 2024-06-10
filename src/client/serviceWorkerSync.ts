@@ -74,7 +74,7 @@ export async function sync() {
       queueSyncRequired = false;
     }
   } catch (err) {
-    log.error(err);
+    // log.error(err);
     error = err as Error;
   }
 
@@ -257,22 +257,3 @@ export const syncDebounced = _.debounce(sync, 500, { leading: false, trailing: t
 export function requireQueueSync() {
   queueSyncRequired = true;
 }
-
-// export function addSyncListener(listener: SyncListener) {
-//   syncListeners.push(listener);
-// }
-
-// export function removeSyncListener(listener: SyncListener) {
-//   const index = syncListeners.indexOf(listener);
-//   if (index != -1) syncListeners.splice(index, 1);
-// }
-
-// function callSyncListeners(args: SyncListenerArgs) {
-//   for (const listener of syncListeners) {
-//     try {
-//       listener(args);
-//     } catch (error2) {
-//       log.error(error2);
-//     }
-//   }
-// }

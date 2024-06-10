@@ -1,4 +1,11 @@
-const keys = ['PORT', 'NODE_ENV', 'DISABLE_CACHE', 'LOG_TO_CONSOLE', 'FORWARD_LOGS_TO_SERVER'] as const;
+const keys = [
+  'PORT',
+  'NODE_ENV',
+  'DISABLE_CACHE',
+  'LOG_TO_CONSOLE',
+  'FORWARD_LOGS_TO_SERVER',
+  'FORWARD_ERRORS_TO_SERVER',
+] as const;
 
 type KeyType = (typeof keys)[number];
 

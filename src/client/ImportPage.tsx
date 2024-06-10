@@ -105,7 +105,7 @@ async function importFromZipFile(zipFile: File) {
     const json = JSON.parse(entryText);
     let errorMessage: string | undefined;
     if ((errorMessage = validateGoogleKeepJson(json))) {
-      log.error('Found a note with unknown format: ', errorMessage, entryText);
+      log(entryText);
       throw new Error(`Found a note with unknown format: ${errorMessage}`);
     }
     if (json.isTrashed) continue;

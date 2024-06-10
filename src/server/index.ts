@@ -76,9 +76,7 @@ app.use((req, res, next) => {
 app.post('/api/login', async (req, res, next) => {
   try {
     let loginData = req.body as t.LoginData;
-    if (process.env.NODE_ENV === 'development') {
-      log(res, '/api/login', req.body);
-    }
+    logDebug(res, '/api/login', req.body);
     loginData = { ...loginData, username: loginData.username.toLowerCase() };
     const user = db.get().prepare(`SELECT * FROM users WHERE username = ?`).get(loginData.username) as
       | t.DBUser
@@ -177,9 +175,7 @@ app.post('/api/partial-sync', (_req, _res, next) => {
 });
 
 app.post('/api/delta-sync', authenticate, (req, res) => {
-  if (process.env.NODE_ENV === 'development') {
-    log(res, req.body);
-  }
+  logDebug(res, req.body);
   const client = res.locals.client!;
   const deltaSyncReq: t.DeltaSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
@@ -208,9 +204,7 @@ app.post('/api/queue-sync', authenticate, (req, res, _next) => {
   const queueSyncReq: t.QueueSyncReq = req.body;
   const syncNumber = db.getSyncNumber(client);
 
-  if (process.env.NODE_ENV === 'development') {
-    log(res, 'sync number from db: ', syncNumber);
-  }
+  logDebug(res, 'sync number from db: ', syncNumber);
 
   const queueSyncRes: t.QueueSyncRes = { noteHeads: db.getNoteHeads(client), syncNumber };
 
@@ -228,9 +222,7 @@ app.post('/api/get-notes', authenticate, (req, res) => {
 });
 
 app.post('/api/merge-notes', authenticate, (req, res, _next) => {
-  if (process.env.NODE_ENV === 'development') {
-    log(res, req.body);
-  }
+  logDebug(res, req.body);
   const client = res.locals.client!;
   const { notes } = req.body as { notes: t.EncryptedNote[] };
 
@@ -243,10 +235,6 @@ app.post('/api/merge-notes', authenticate, (req, res, _next) => {
 });
 
 app.post('/api/logout', (_req, res, next) => {
-  // if (process.env.NODE_ENV === 'development') {
-  //   console.log(req.body);
-  // }
-
   const token = res.locals.client?.token;
   if (!token) return next(new Error('Missing token'));
   db.logout(token);
@@ -317,6 +305,12 @@ function generateRandomCryptoString(): string {
 
 function log(res: express.Response, ...args: any[]) {
   console.log(getClientStr(res), ...args);
+}
+
+function logDebug(res: express.Response, ...args: any[]) {
+  if (process.env.NODE_ENV === 'development') {
+    log(res, ...args);
+  }
 }
 
 function logError(res: express.Response, ...args: any[]) {

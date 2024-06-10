@@ -11,7 +11,7 @@ function log(...args: any[]) {
 
 log.error = function error(...args: any[]) {
   console.error(...args);
-  if (Number(process.env.FORWARD_LOGS_TO_SERVER)) {
+  if (Number(process.env.FORWARD_ERRORS_TO_SERVER)) {
     api.post('/api/error', { message: stringify(...args) });
   }
 };
