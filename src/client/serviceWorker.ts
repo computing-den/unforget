@@ -10,7 +10,7 @@ import { CACHE_VERSION, ServerError } from '../common/util.js';
 import log from './logger.js';
 
 const CACHE_NAME = `unforget-${CACHE_VERSION}`;
-const APP_STATIC_RESOURCES = ['/', '/style.css', '/index.js', '/barefront.svg', '/manifest.json', '/icon-256x256.png'];
+const APP_STATIC_RESOURCES = ['/', '/style.css', '/index.js', '/manifest.json', '/icon-256x256.png'];
 
 self.addEventListener('install', event => {
   // The promise that skipWaiting() returns can be safely ignored.
