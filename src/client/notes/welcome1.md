@@ -4,7 +4,7 @@ Unforget is a minimalist, offline-first, and end-to-end encrypted note-taking ap
 
 - [x] Import from Google Keep
 - [x] Offline first
-- [x] Priavcy first
+- [x] Privacy first
 - [x] Progressive web app, *no Electron.js*
 - [x] Open source MIT License
 - [x] End-to-end encrypted sync
