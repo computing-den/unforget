@@ -63,12 +63,12 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
     const textarea = textareaRef.current!;
     const text = textarea.value;
     // If there's not lastSelection, assume end of text
-    const i = lastSelection ? textarea.selectionStart : text.length;
+    const i = textarea.selectionStart;
     const lineRange = md.getLineRangeAt(text, i);
     const line = md.getLine(text, lineRange);
     const listItem = md.parseListItem(line);
 
-    console.log('lastSelection', lastSelection);
+    // console.log('lastSelection', lastSelection);
 
     // unstyled -> checkbox -> bulletpoint ...
     if (listItem.checkbox) {
@@ -82,11 +82,12 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
       replaceListItemPrefix(listItem, md.addListItemCheckbox(listItem), lineRange);
     }
 
+    textarea.focus();
     // If there were no lastSelection, move cursor to the end.
-    if (!lastSelection) {
-      textarea.focus();
-      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-    }
+    // if (!lastSelection) {
+    //   textarea.focus();
+    //   textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    // }
   }
 
   function focus() {
