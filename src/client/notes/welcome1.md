@@ -43,7 +43,7 @@ Use it directly in your browser or install:
 
 ---
 
-The main differences with the [Github falvored markdown](https://github.github.com/gfm/) are:
+The main differences with the [Github flavored markdown](https://github.github.com/gfm/) are:
 - If the first line of a note is followed by a blank line, it is a H1 header.
 - Anything after the first horizontal rule `---` in a note will be hidden and replaced with a "show more" button that will expand the note.
 
