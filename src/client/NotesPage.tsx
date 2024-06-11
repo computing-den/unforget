@@ -279,7 +279,7 @@ export function NotesPage(_props: NotesPageProps) {
               ref={editorRef}
               id="new-note-editor"
               className="text-input"
-              placeholder="What's on you mind?"
+              placeholder="What's on your mind?"
               value={newNote?.text ?? ''}
               onChange={newNoteTextChanged}
               autoExpand

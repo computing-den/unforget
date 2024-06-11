@@ -183,7 +183,7 @@ export function NotePage() {
                 ref={editorRef}
                 id="note-editor"
                 className="text-input"
-                placeholder="What's on you mind?"
+                placeholder="What's on your mind?"
                 value={note.text ?? ''}
                 onChange={textChangeCb}
               />
