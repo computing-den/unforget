@@ -99,14 +99,14 @@ export const Note = memo(function Note(props: {
       const targetURL = new URL(link.href, document.baseURI);
       const isRelative = baseURL.origin === targetURL.origin;
 
-      if (baseURL.hash !== targetURL.hash) {
+      if (isRelative) {
         e.preventDefault();
         e.stopPropagation();
-        props.onHashLinkClick?.(targetURL.hash);
-      } else if (isRelative) {
-        e.preventDefault();
-        e.stopPropagation();
-        history.pushState(null, '', link.href);
+        if (baseURL.pathname === targetURL.pathname && baseURL.hash !== targetURL.hash) {
+          props.onHashLinkClick?.(targetURL.hash);
+        } else {
+          history.pushState(null, '', link.href);
+        }
       } else {
         e.stopPropagation();
       }
@@ -148,10 +148,22 @@ export const Note = memo(function Note(props: {
   const hast = toHast(mdast);
   // console.log(hast);
 
+  const baseURL = new URL(document.baseURI);
   visit(hast, 'element', function (node) {
+    // Enable input nodes.
     if (node.tagName === 'input') {
       node.properties['disabled'] = false;
     }
+
+    // Set external links' target to '_blank'.
+    if (node.tagName === 'a' && typeof node.properties['href'] === 'string') {
+      const targetURL = new URL(node.properties['href'], document.baseURI);
+      if (baseURL.origin !== targetURL.origin) {
+        node.properties['target'] = '_blank';
+      }
+    }
+
+    // Set start and end position of all elements.
     node.properties['data-pos-start'] = node.position?.start.offset;
     node.properties['data-pos-end'] = node?.position?.end.offset;
   });
