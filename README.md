@@ -36,10 +36,10 @@ Use it directly in your browser or install:
 |-----------------|-----------------------------|
 | Chrome          | Install icon in the URL bar |
 | Edge            | Install icon in the URL bar |
+| Firefox         | *cannot install*            |
+| Desktop Safari  | Share → Add to Dock         |
 | iOS Safari      | Share → Add to Home Screen  |
 | Android Browser | Menu → Add to Home Screen   |
-| Desktop Safari  | *cannot install*            |
-| Desktop Firefox | *cannot install*            |
 
 # Easy Text Formatting with Markdown
 
