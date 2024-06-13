@@ -10,17 +10,41 @@ type LoginPageProps = {};
 function LoginPage(props: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  // const [importDemoNotes, setImportDemoNotes] = useState(false);
+  const valid = Boolean(username && password);
+  let passwordStrength = 0;
+
+  if (password) {
+    if (password.length >= 10) passwordStrength++;
+    if (/[a-z]/.test(password)) passwordStrength++;
+    if (/[A-Z]/.test(password)) passwordStrength++;
+    if (/[0-9]/.test(password)) passwordStrength++;
+    if (/[^a-zA-Z0-9]/.test(password)) passwordStrength++;
+    if (/[^0-9]/.test(password) && password.length >= 16) passwordStrength = 5;
+  }
 
   async function loginCb() {
-    await actions.login({ username, password }, { importDemoNotes: false });
+    if (valid) {
+      await actions.login({ username, password }, { importDemoNotes: false });
+    } else {
+      actions.showMessage('Please enter username and password');
+    }
   }
   async function signupCb() {
-    await actions.signup({ username, password }, { importDemoNotes: true });
+    if (valid) {
+      if (passwordStrength < 5) {
+        const answer = window.confirm(
+          'A weak password enables a hacker to break the encryption of your data. Are you sure you want to continue?',
+        );
+        if (!answer) return;
+      }
+      await actions.signup({ username, password }, { importDemoNotes: true });
+    } else {
+      actions.showMessage('Please enter username and password');
+    }
   }
 
   function keyDownCb(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') loginCb();
+    if (e.key === 'Enter' && valid) loginCb();
   }
 
   const app = appStore.use();
@@ -52,7 +76,12 @@ function LoginPage(props: LoginPageProps) {
             />
           </div>
           <div className="form-element">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">
+              Password
+              {password && (
+                <span className={`strength strength-${passwordStrength}`}> strength: {passwordStrength} / 5</span>
+              )}
+            </label>
             <input
               className="text-input small"
               type="password"

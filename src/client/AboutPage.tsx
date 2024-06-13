@@ -6,7 +6,7 @@ import { Notes } from './Notes.jsx';
 import _ from 'lodash';
 import aboutMd from './notes/about.md';
 
-const technicalDetails = `\n\n---\n\n### Technical details\n\nCache version: ${CACHE_VERSION}`;
+const technicalDetails = `\n\n# Technical details\n\nCache version: ${CACHE_VERSION}`;
 const aboutNote = createNewNote(aboutMd + technicalDetails);
 
 function AboutPage() {

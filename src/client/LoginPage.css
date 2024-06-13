@@ -17,6 +17,11 @@
     input[type='checkbox'] {
       vertical-align: middle;
     }
+
+    .strength {
+      font-size: 0.9em;
+      margin-left: 0.5rem;
+    }
   }
 
   .buttons {

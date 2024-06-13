@@ -339,7 +339,7 @@ export async function notifyIfAppUpdated() {
   try {
     const updatingApp = await storage.getSetting('updatingApp');
     if (updatingApp) {
-      showMessage('App updated');
+      showMessage('App updated (see the About page for details)');
       await storage.setSetting(false, 'updatingApp');
     }
   } catch (error) {

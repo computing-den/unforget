@@ -12,20 +12,30 @@ import importMd from './notes/import.md';
 
 const importNote = createNewNote(importMd);
 
+type ImportType = '#keep' | '#standard-notes';
+
 export function ImportPage() {
   // const app = appStore.use();
 
   // const [file, setFile] = useState<File>();
   const [importing, setImporting] = useState(false);
+  const [importType, setImportType] = useState<ImportType>();
 
   async function importCb(e: React.ChangeEvent<HTMLInputElement>) {
     try {
       const newFile = e.target.files?.[0];
       // setFile(newFile);
       if (!newFile) return;
-
       setImporting(true);
-      await importFromZipFile(newFile);
+
+      if (importType === '#keep') {
+        await importKeep(newFile);
+      } else if (importType === '#standard-notes') {
+        await importStandardNotes(newFile);
+      } else {
+        throw new Error(`Unknown type ${importType}`);
+      }
+
       window.history.replaceState(null, '', '/');
     } catch (error) {
       actions.gotError(error as Error);
@@ -34,25 +44,9 @@ export function ImportPage() {
     }
   }
 
-  function triggerFileInput() {
+  function hashLinkClicked(hash: string) {
+    setImportType(hash as ImportType);
     (document.querySelector('input[type="file"]') as HTMLInputElement).click();
-  }
-
-  // const notes: t.Note[] = [
-  //   {
-  //     id: 'google-keep',
-  //     text: importGoogleKeepNoteText,
-  //     creation_date: '2024-04-17T15:32:18.337Z',
-  //     modification_date: '2024-04-17T15:32:18.337Z',
-  //     not_deleted: 1,
-  //     not_archived: 1,
-  //     pinned: 0,
-  //     order: 1,
-  //   },
-  // ];
-
-  function hashLinkClicked(_hash: string) {
-    triggerFileInput();
   }
 
   return (
@@ -93,7 +87,7 @@ export function ImportPage() {
   );
 }
 
-async function importFromZipFile(zipFile: File) {
+async function importKeep(zipFile: File) {
   const { entries } = await unzip(zipFile);
 
   const regexp = /^Takeout\/Keep\/[^\/]+\.json$/;
@@ -128,6 +122,41 @@ async function importFromZipFile(zipFile: File) {
       not_deleted: 1,
       not_archived: json.isArchived ? 0 : 1,
       pinned: json.isPinned ? 1 : 0,
+    });
+  }
+
+  if (notes.length) {
+    await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
+  } else {
+    actions.showMessage('No notes were found');
+  }
+}
+
+async function importStandardNotes(zipFile: File) {
+  const { entries } = await unzip(zipFile);
+
+  const regexp = /^([^\/]+)\.txt$/;
+
+  const notes: t.Note[] = [];
+  const startMs = Date.now();
+
+  for (const [i, entry] of Object.values(entries).entries()) {
+    const match = entry.name.match(regexp);
+    if (!match) continue;
+
+    const entryText = await entry.text();
+    const title = match[1];
+    const text = title + '\n\n' + entryText;
+
+    notes.push({
+      id: uuid(),
+      text,
+      creation_date: new Date(startMs - i).toISOString(),
+      modification_date: new Date(startMs - i).toISOString(),
+      order: startMs - i,
+      not_deleted: 1,
+      not_archived: 1,
+      pinned: 0,
     });
   }
 
