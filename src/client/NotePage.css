@@ -1,5 +1,6 @@
 .note-page {
   margin-bottom: 0;
+
   .note-container {
     flex: 1;
     display: flex;
@@ -9,6 +10,14 @@
     .editor {
       flex: 1;
       padding: 1rem;
+    }
+    .footer {
+      padding: 0.5rem 1rem;
+      font-size: 0.6em;
+      opacity: 0.6;
+      display: flex;
+      justify-content: space-between;
+      white-space: nowrap;
     }
   }
 }

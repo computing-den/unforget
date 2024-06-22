@@ -1,7 +1,7 @@
 import { useRouter, RouteMatch } from './router.jsx';
 import React, { useCallback, useState, useEffect, useRef } from 'react';
 import type * as t from '../common/types.js';
-import { isNoteNewerThan } from '../common/util.js';
+import { isNoteNewerThan, formatDateTime } from '../common/util.js';
 import * as storage from './storage.js';
 import * as appStore from './appStore.js';
 import * as actions from './appStoreActions.jsx';
@@ -187,6 +187,12 @@ export function NotePage() {
                 value={note.text ?? ''}
                 onChange={textChangeCb}
               />
+              <div className="footer">
+                <span>Created on {formatDateTime(new Date(note.creation_date))}</span>
+                {note.creation_date !== note.modification_date && (
+                  <span>Updated on {formatDateTime(new Date(note.modification_date))}</span>
+                )}
+              </div>
             </div>
           )}
         </div>

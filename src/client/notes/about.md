@@ -12,6 +12,12 @@ Contact us at sean@computing-den.com
 
 # Release Notes
 
+### 22 June 2024
+- Import Apple Notes
+- Include labels as tags when importing Google Keep
+- Show creation and modification dates of notes
+- Fixed a rare syncing issue
+
 ### 13 June 2024
 - Import from Standard Notes
 - Warn when picking a weak password

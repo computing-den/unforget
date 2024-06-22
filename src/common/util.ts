@@ -1,7 +1,7 @@
 import type * as t from './types.js';
 import { v4 as uuid } from 'uuid';
 
-export const CACHE_VERSION = 181;
+export const CACHE_VERSION = 182;
 
 export function assert(condition: any, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -141,4 +141,19 @@ export function createNewNote(text: string): t.Note {
     not_archived: 1,
     pinned: 0,
   };
+}
+
+// Custom format: Friday 2 Jun 2024 at 10:30
+export function formatDateTime(date: Date) {
+  // const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // const dayName = days[date.getDay()];
+  const day = date.getDate();
+  const monthName = months[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${day} ${monthName} ${year} - ${hours}:${minutes}`;
 }

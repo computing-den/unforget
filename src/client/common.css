@@ -8,6 +8,7 @@
   --box-border-radius: 5px;
   --page-header-z-index: 200;
   --page-content-margin-top: calc(var(--page-header-height) + 2rem);
+  --page-content-margin-bottom: 2rem;
   --page-max-width: 800px;
   --menu-z-index: 100;
   --sticky-z-index: 50;
@@ -32,17 +33,8 @@ body {
 
 html {
   line-height: var(--line-height);
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif, Apple Color Emoji,
+    Segoe UI Emoji, Segoe UI Symbol;
 }
 
 button,
@@ -219,7 +211,7 @@ button {
 
 .page {
   flex: 1;
-  margin: var(--page-content-margin-top) auto;
+  margin: var(--page-content-margin-top) auto var(--page-content-margin-bottom) auto;
   max-width: var(--page-max-width);
   width: 100%;
   position: relative;
