@@ -16,7 +16,7 @@
 2. Request a copy of your data
 3. Select only iCloud Notes for export
 4. Complete request
-   *a zip file will ready to download in a couple of days*
+   *it'll be ready for download in a couple of days*
 5. [Click here](#apple) to import notes from the zip file
    - [ ] include folder names as tags
 
