@@ -19,8 +19,10 @@ let queueSyncRequired = false;
 let interval: any;
 
 export function syncInInterval() {
-  sync();
-  interval ??= setInterval(sync, 5000);
+  if (!interval) {
+    interval = setInterval(sync, 5000);
+    sync();
+  }
 }
 
 export async function sync() {

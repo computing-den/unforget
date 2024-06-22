@@ -55,8 +55,7 @@ async function installServiceWorker() {
 }
 
 // NOTE: The activate event is triggered only once after the install event.
-// That's why we don't run syncInInterval() here. Instead we wait for a
-// client to connect and inform us first.
+// So, we must run syncInInterval() here as well as when a client connects.
 async function activateServiceWorker() {
   log('service worker: activating...');
 
@@ -80,6 +79,7 @@ async function activateServiceWorker() {
 
   log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
+  syncInInterval();
 }
 
 async function handleFetch(event: FetchEvent): Promise<Response> {
