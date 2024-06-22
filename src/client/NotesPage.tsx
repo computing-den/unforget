@@ -303,8 +303,20 @@ export function NotesPage(_props: NotesPageProps) {
 
 const NotesFromApp = memo(function NotesFromApp(props: { hiddenNoteId?: string }) {
   const app = appStore.use();
-  return <Notes notes={app.notes} hiddenNoteId={props.hiddenNoteId} hideContentAfterBreak />;
+  return (
+    <Notes
+      notes={app.notes}
+      hiddenNoteId={props.hiddenNoteId}
+      onNoteChange={actions.saveNoteAndQuickUpdateNotes}
+      onNoteClick={goToNote}
+      hideContentAfterBreak
+    />
+  );
 });
+
+function goToNote(note: t.Note) {
+  history.pushState(null, '', `/n/${note.id}`);
+}
 
 export async function notesPageLoader(match: RouteMatch) {
   // Update app.showArchive when transitioning between / and /archive.

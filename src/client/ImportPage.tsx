@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type * as t from '../common/types.js';
-import { createNewNote } from '../common/util.js';
+import { createNewNote, assert } from '../common/util.js';
 import * as actions from './appStoreActions.jsx';
 import { PageLayout, PageHeader, PageBody } from './PageLayout.jsx';
 import { Notes } from './Notes.jsx';
@@ -10,16 +10,23 @@ import { unzip } from 'unzipit';
 import { v4 as uuid } from 'uuid';
 import importMd from './notes/import.md';
 
-const importNote = createNewNote(importMd);
+const initialImportNote = createNewNote(importMd);
 
-type ImportType = '#keep' | '#standard-notes';
+const importers = {
+  '#keep': importKeep,
+  '#apple': importApple,
+  '#standard': importStandard,
+};
+
+type ImportKeys = keyof typeof importers;
 
 export function ImportPage() {
   // const app = appStore.use();
 
   // const [file, setFile] = useState<File>();
   const [importing, setImporting] = useState(false);
-  const [importType, setImportType] = useState<ImportType>();
+  const [importType, setImportType] = useState<ImportKeys>();
+  const [note, setNote] = useState(initialImportNote);
 
   async function importCb(e: React.ChangeEvent<HTMLInputElement>) {
     try {
@@ -27,13 +34,13 @@ export function ImportPage() {
       // setFile(newFile);
       if (!newFile) return;
       setImporting(true);
+      assert(importType, 'Unknown import type');
+      const notes = await importers[importType](newFile, note);
 
-      if (importType === '#keep') {
-        await importKeep(newFile);
-      } else if (importType === '#standard-notes') {
-        await importStandardNotes(newFile);
+      if (notes.length) {
+        await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
       } else {
-        throw new Error(`Unknown type ${importType}`);
+        actions.showMessage('No notes were found');
       }
 
       window.history.replaceState(null, '', '/');
@@ -45,7 +52,7 @@ export function ImportPage() {
   }
 
   function hashLinkClicked(hash: string) {
-    setImportType(hash as ImportType);
+    setImportType(hash as ImportKeys);
     (document.querySelector('input[type="file"]') as HTMLInputElement).click();
   }
 
@@ -54,7 +61,7 @@ export function ImportPage() {
       <PageHeader title="/ import" />
       <PageBody>
         <div className="page">
-          {!importing && <Notes notes={[importNote]} readonly onHashLinkClick={hashLinkClicked} />}
+          {!importing && <Notes notes={[note]} onHashLinkClick={hashLinkClicked} onNoteChange={setNote} />}
           {!importing && (
             <input type="file" name="file" accept="application/zip" onChange={importCb} style={{ display: 'none' }} />
           )}
@@ -87,7 +94,9 @@ export function ImportPage() {
   );
 }
 
-async function importKeep(zipFile: File) {
+async function importKeep(zipFile: File, note: t.Note): Promise<t.Note[]> {
+  const optIncludeTags = hasOption(note.text!, 'include labels as tags');
+
   const { entries } = await unzip(zipFile);
 
   const regexp = /^Takeout\/Keep\/[^\/]+\.json$/;
@@ -110,6 +119,7 @@ async function importKeep(zipFile: File) {
       (json.listContent || [])
         .map((item: any) => (item.isChecked ? `- [x] ${item.text || ''}` : `- [ ] ${item.text || ''}`))
         .join('\n'),
+      optIncludeTags && json.labels?.map((x: any) => '#' + x.name).join(' '),
     ];
     const text = segments.filter(Boolean).join('\n\n');
 
@@ -125,18 +135,63 @@ async function importKeep(zipFile: File) {
     });
   }
 
-  if (notes.length) {
-    await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
-  } else {
-    actions.showMessage('No notes were found');
-  }
+  return notes;
 }
 
-async function importStandardNotes(zipFile: File) {
+function validateGoogleKeepJson(json: any): string | undefined {
+  if (!('createdTimestampUsec' in json)) return 'Missing createdTimestampUsec';
+  if (!('userEditedTimestampUsec' in json)) return 'Missing userEditedTimestampUsec';
+
+  // NOTE: some notes have neither listContent nor textContent. So be more lenient.
+  // if (!('isTrashed' in json)) return 'Missing isTrashed';
+  // if (!('isPinned' in json)) return 'Missing isPinned';
+  // if (!('isArchived' in json)) return 'Missing isArchived';
+  // if (!('listContent' in json) && !('textContent' in json)) return 'Missing listContent and textContent';
+  // if (!('title' in json) && !('title' in json)) return 'Missing title';
+}
+
+async function importApple(zipFile: File, note: t.Note): Promise<t.Note[]> {
+  const optIncludeTags = hasOption(note.text!, 'include folder names as tags');
+
   const { entries } = await unzip(zipFile);
+  const regexp = /^.*-(\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ)\.txt$/;
+  const notes: t.Note[] = [];
 
+  for (const entry of Object.values(entries)) {
+    const parts = entry.name.split('/');
+    if (parts.includes('Recently Deleted')) continue;
+
+    const match = parts.at(-1)?.match(regexp);
+    if (!match) continue;
+
+    const date = new Date(match[1]);
+
+    let text = await entry.text();
+    if (optIncludeTags) {
+      const tags = parts
+        .slice(1, -2)
+        .map(x => '#' + x.replace(' ', '-'))
+        .join(' ');
+      text += '\n\n' + tags;
+    }
+
+    notes.push({
+      id: uuid(),
+      text,
+      creation_date: date.toISOString(),
+      modification_date: date.toISOString(),
+      order: date.valueOf(),
+      not_deleted: 1,
+      not_archived: 1,
+      pinned: 0,
+    });
+  }
+  return notes;
+}
+
+async function importStandard(zipFile: File): Promise<t.Note[]> {
+  const { entries } = await unzip(zipFile);
   const regexp = /^([^\/]+)\.txt$/;
-
   const notes: t.Note[] = [];
   const startMs = Date.now();
 
@@ -160,21 +215,12 @@ async function importStandardNotes(zipFile: File) {
     });
   }
 
-  if (notes.length) {
-    await actions.saveNotes(notes, { message: `Imported ${notes.length} notes`, immediateSync: true });
-  } else {
-    actions.showMessage('No notes were found');
-  }
+  return notes;
 }
 
-function validateGoogleKeepJson(json: any): string | undefined {
-  if (!('createdTimestampUsec' in json)) return 'Missing createdTimestampUsec';
-  if (!('userEditedTimestampUsec' in json)) return 'Missing userEditedTimestampUsec';
-
-  // NOTE: some notes have neither listContent nor textContent. So be more lenient.
-  // if (!('isTrashed' in json)) return 'Missing isTrashed';
-  // if (!('isPinned' in json)) return 'Missing isPinned';
-  // if (!('isArchived' in json)) return 'Missing isArchived';
-  // if (!('listContent' in json) && !('textContent' in json)) return 'Missing listContent and textContent';
-  // if (!('title' in json) && !('title' in json)) return 'Missing title';
+function hasOption(text: string, label: string): boolean {
+  const regexp = new RegExp('^\\s*- \\[(.)\\] ' + label + '$', 'm');
+  const match = text.match(regexp);
+  assert(match, `option "${label}" doesn't exist.`);
+  return match[1] === 'x';
 }

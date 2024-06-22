@@ -14,8 +14,8 @@ Unforget is a minimalist, offline-first, and end-to-end encrypted note-taking ap
 - [x] Optional one-click installation
 - [x] Public APIs, create your own client
 - [x] Import Google Keep
+- [x] Import Apple Notes
 - [x] Import Standard Notes
-- [ ] Import Apple Notes, *coming soon*
 
 
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*

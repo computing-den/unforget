@@ -2,7 +2,7 @@ import React, { memo, useState } from 'react';
 import type * as t from '../common/types.js';
 import { assert } from '../common/util.js';
 import * as md from '../common/mdFns.js';
-import * as actions from './appStoreActions.jsx';
+// import * as actions from './appStoreActions.jsx';
 import { useClickWithoutDrag } from './hooks.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
@@ -19,6 +19,8 @@ export function Notes(props: {
   notes: t.Note[];
   readonly?: boolean;
   onHashLinkClick?: (hash: string) => any;
+  onNoteChange?: (note: t.Note) => any;
+  onNoteClick?: (note: t.Note) => any;
   hiddenNoteId?: string;
   hideContentAfterBreak?: boolean;
 }) {
@@ -31,6 +33,8 @@ export function Notes(props: {
           note={note}
           readonly={props.readonly}
           onHashLinkClick={props.onHashLinkClick}
+          onNoteChange={props.onNoteChange}
+          onNoteClick={props.onNoteClick}
           hideContentAfterBreak={props.hideContentAfterBreak}
         />
       ))}
@@ -42,6 +46,8 @@ export const Note = memo(function Note(props: {
   note: t.Note;
   readonly?: boolean;
   onHashLinkClick?: (hash: string) => any;
+  onNoteChange?: (note: t.Note) => any;
+  onNoteClick?: (note: t.Note) => any;
   hideContentAfterBreak?: boolean;
 }) {
   // Do not modify the text here because we want the position of each element in mdast and hast to match
@@ -93,7 +99,7 @@ export const Note = memo(function Note(props: {
 
       const newText = md.insertText(text!, newLi, { start, end: start + match[0].length });
       const newNote: t.Note = { ...props.note, text: newText, modification_date: new Date().toISOString() };
-      actions.saveNoteAndQuickUpdateNotes(newNote);
+      props.onNoteChange?.(newNote);
     } else if (link) {
       const baseURL = new URL(document.baseURI);
       const targetURL = new URL(link.href, document.baseURI);
@@ -110,8 +116,8 @@ export const Note = memo(function Note(props: {
       } else {
         e.stopPropagation();
       }
-    } else if (!props.readonly) {
-      history.pushState(null, '', `/n/${props.note.id}`);
+    } else {
+      props.onNoteClick?.(props.note);
     }
   }
 
@@ -152,7 +158,7 @@ export const Note = memo(function Note(props: {
   visit(hast, 'element', function (node) {
     // Enable input nodes.
     if (node.tagName === 'input') {
-      node.properties['disabled'] = false;
+      node.properties['disabled'] = Boolean(props.readonly);
     }
 
     // Set external links' target to '_blank'.
@@ -173,7 +179,7 @@ export const Note = memo(function Note(props: {
   return (
     <div
       id={props.note.id}
-      className={`note ${!props.readonly && 'clickable'}`}
+      className={`note ${props.onNoteClick && 'clickable'}`}
       onMouseDown={onMouseDown}
       onClick={onClick}
     >

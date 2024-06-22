@@ -18,8 +18,8 @@ Unforget is a minimalist, offline-first, and end-to-end encrypted note-taking ap
 - [x] Optional one-click installation
 - [x] Public APIs, create your own client
 - [x] Import Google Keep
+- [x] Import Apple Notes
 - [x] Import Standard Notes
-- [ ] Import Apple Notes, *coming soon*
 
 
 *Unforget is made by [Computing Den](https://computing-den.com), a software company specializing in web technologies.*
@@ -49,7 +49,7 @@ Use it directly in your browser or install:
 
 # Organization and Workflow
 
-The notes are organized **chronologically**, with pinned notes displayed at the top.
+Notes are organized **chronologically**, with pinned notes displayed at the top.
 
 This organization has proven very effective despite its simplicity. The **search is very fast** (and done offline), allowing you to quickly narrow down notes by entering a few phrases. Additionally, you can search for non-alphabetic characters, enabling the use of **tags** such as #idea, #project, #work, #book, etc.
 
@@ -314,7 +314,7 @@ Notice that we never send the raw password to the server. Instead we calculate i
 
 ## Get Notes
 
-Send a POST request to ```/api/get-notes?token=TOKEN``` to get all the notes. Optionally you can provide a JSON payload of type ```{ids: string[]}``` to get specific notes.
+Send a POST request to ```/api/get-notes?token=TOKEN``` to get all notes. Optionally you can provide a JSON payload of type ```{ids: string[]}``` to get specific notes.
 
 You will receive ```EncryptedNote[]```.
 
@@ -340,7 +340,7 @@ The sync number is 0 at login and is incremented by each side only after all the
 
 A **queue sync** is when each side sends its sync number along with a list of IDs and modification dates of all the notes that it knows about. After a queue sync, both sides will know which changes the other side lacks and therefore can update their own queue and sync number.
 
-When the sync number is 0 (immediately after login), the server will send all the notes in the first delta sync.
+When the sync number is 0 (immediately after login), the server will send all notes in the first delta sync.
 
 To perform a **delta sync**, send a POST request to ```/api/delta-sync?token=TOKEN``` with a JSON payload of type ```SyncData```:
 
