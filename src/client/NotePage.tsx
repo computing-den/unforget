@@ -78,7 +78,7 @@ export function NotePage() {
         } else {
           handle(goHome);
         }
-      } else if (e.key === 'Delete' && ctrlOrMeta) {
+      } else if (e.key === 'Delete' && e.shiftKey && ctrlOrMeta) {
         handle(deleteCb);
       } else if (e.key === '.' && ctrlOrMeta) {
         handle(cycleListStyleCb);
@@ -155,7 +155,7 @@ export function NotePage() {
   }, []);
 
   const pageActions = note && [
-    <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete (Ctrl+Delete or Cmd+Delete)" />,
+    <PageAction icon={icons.trashWhite} onClick={deleteCb} title="Delete (Ctrl+Shift+Delete or Cmd+Shift+Delete)" />,
     <PageAction
       icon={note.not_archived ? icons.archiveEmptyWhite : icons.archiveFilledWhite}
       onClick={toggleArchiveCb}

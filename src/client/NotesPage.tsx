@@ -48,7 +48,7 @@ export function NotesPage(_props: NotesPageProps) {
         handle(confirmNewNoteCb);
       } else if (e.key === 'Escape') {
         handle(confirmNewNoteCb);
-      } else if (e.key === 'Delete' && ctrlOrMeta) {
+      } else if (e.key === 'Delete' && e.shiftKey && ctrlOrMeta) {
         handle(cancelNewNoteCb);
       } else if (e.key === '.' && ctrlOrMeta) {
         handle(cycleListStyleCb);
@@ -221,7 +221,11 @@ export function NotesPage(_props: NotesPageProps) {
   const pageActions: React.ReactNode[] = [];
   if (editing) {
     pageActions.push(
-      <PageAction icon={icons.trashWhite} onClick={cancelNewNoteCb} title="Delete (Ctrl+Delete or Cmd+Delete)" />,
+      <PageAction
+        icon={icons.trashWhite}
+        onClick={cancelNewNoteCb}
+        title="Delete (Ctrl+Shift+Delete or Cmd+Shift+Delete)"
+      />,
       <PageAction
         icon={newNote?.pinned ? icons.pinFilledWhite : icons.pinEmptyWhite}
         onClick={togglePinned}
