@@ -274,7 +274,7 @@ async function mergeSyncHeadsData(reqSyncHeadsData: t.SyncHeadsData, resSyncHead
   });
 }
 
-export const syncDebounced = _.debounce(sync, 500, { leading: false, trailing: true, maxWait: 3000 });
+export const syncDebounced = _.debounce(sync, 1000, { leading: false, trailing: true, maxWait: 10 * 1000 });
 
 export function requireQueueSync() {
   queueSyncRequired = true;
