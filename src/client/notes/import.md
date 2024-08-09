@@ -26,6 +26,12 @@
 2. Select your notes and press Export to download the zip file
 3. [Click here](#standard) to import notes from the zip file
 
+# Unforget
+
+1. From the menu, pick export and download the JSON file
+2. [Click here](#unforget) to import notes from the JSON file
+
+
 # CLI and Public APIs
 
 Please check out the [GitHub page](https://github.com/computing-den/unforget?tab=readme-ov-file#public-apis---write-your-own-client) for the instructions.

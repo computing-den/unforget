@@ -16,6 +16,7 @@ const importers = {
   '#keep': importKeep,
   '#apple': importApple,
   '#standard': importStandard,
+  '#unforget': importUnforget,
 };
 
 type ImportKeys = keyof typeof importers;
@@ -63,7 +64,13 @@ export function ImportPage() {
         <div className="page">
           {!importing && <Notes notes={[note]} onHashLinkClick={hashLinkClicked} onNoteChange={setNote} />}
           {!importing && (
-            <input type="file" name="file" accept="application/zip" onChange={importCb} style={{ display: 'none' }} />
+            <input
+              type="file"
+              name="file"
+              accept="application/zip, application/json"
+              onChange={importCb}
+              style={{ display: 'none' }}
+            />
           )}
           {importing && <h2 className="page-message">Please wait ...</h2>}
           {/*
@@ -92,6 +99,10 @@ export function ImportPage() {
       </PageBody>
     </PageLayout>
   );
+}
+
+async function importUnforget(jsonFile: File): Promise<t.Note[]> {
+  return JSON.parse(await jsonFile.text());
 }
 
 async function importKeep(zipFile: File, note: t.Note): Promise<t.Note[]> {
