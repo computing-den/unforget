@@ -127,19 +127,13 @@ export function NotesPage(_props: NotesPageProps) {
   }
 
   async function cancelNewNoteCb() {
-    if (newNote) {
-      // It's possible that before we confirmed or cancelled the new note,
-      // it was changed from another session. In that case, we don't want
-      // to delete the note.
-      const noteInStorage = await storage.getNote(newNote.id);
-      if (!noteInStorage || !cutil.isNoteNewerThan(noteInStorage, newNote)) {
-        deleteNewNote();
-      }
+    if (!newNote || confirm('Are you sure you want to delete this note?')) {
+      deleteNewNote();
+      setNewNote(undefined);
+      setEditing(false);
+      actions.updateNotes();
+      (document.activeElement as HTMLElement | undefined)?.blur();
     }
-    setNewNote(undefined);
-    setEditing(false);
-    actions.updateNotes();
-    (document.activeElement as HTMLElement | undefined)?.blur();
   }
 
   // async function askUserToCancelNewNoteCb() {
