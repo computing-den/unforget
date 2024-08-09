@@ -214,7 +214,6 @@ export function setUpManualScrollRestoration() {
 }
 
 export function storeScrollY() {
-  console.log('storeScrollY');
   const state: HistoryState = { ...window.history.state, scrollY: window.scrollY };
   origReplaceState.call(window.history, state, ''); // Won't dispatch any events.
 }

@@ -3,8 +3,8 @@
 declare var self: ServiceWorkerGlobalScope;
 
 import * as storage from './storage.js';
-import { sync, syncInInterval, requireQueueSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
-import { postToClient, postToClients } from './serviceWorkerToClientApi.js';
+// import { sync, syncInInterval, requireQueueSync, syncDebounced, isSyncing } from './serviceWorkerSync.js';
+import { postToClients } from './serviceWorkerToClientApi.js';
 import type { ClientToServiceWorkerMessage } from '../common/types.js';
 import { CACHE_VERSION, ServerError } from '../common/util.js';
 import log from './logger.js';
@@ -55,7 +55,6 @@ async function installServiceWorker() {
 }
 
 // NOTE: The activate event is triggered only once after the install event.
-// So, we must run syncInInterval() here as well as when a client connects.
 async function activateServiceWorker() {
   log('service worker: activating...');
 
@@ -79,7 +78,6 @@ async function activateServiceWorker() {
 
   log('service worker: informing clients of serviceWorkerActivated with cacheVersion', CACHE_VERSION);
   postToClients({ command: 'serviceWorkerActivated', cacheVersion: CACHE_VERSION });
-  syncInInterval();
 }
 
 async function handleFetch(event: FetchEvent): Promise<Response> {
@@ -123,33 +121,17 @@ async function handleFetch(event: FetchEvent): Promise<Response> {
 }
 
 async function handleClientMessage(client: Client, message: ClientToServiceWorkerMessage) {
-  switch (message.command) {
-    case 'update': {
-      await self.registration.update();
-      break;
-    }
-    case 'sync': {
-      if (message.queue) requireQueueSync();
-      (message.debounced ? syncDebounced : sync)();
-      break;
-    }
-    case 'tellOthersToRefreshPage': {
-      postToClients({ command: 'refreshPage' }, { exceptClientIds: [client.id] });
-      break;
-    }
-    case 'tellOthersNotesInStorageChanged': {
-      postToClients({ command: 'notesInStorageChangedExternally' }, { exceptClientIds: [client.id] });
-      break;
-    }
-    case 'sendSyncStatus': {
-      postToClient(client, { command: 'syncStatus', syncing: isSyncing() });
-      break;
-    }
-    case 'newClient': {
-      syncInInterval();
-      break;
-    }
-    default:
-      log('Unknown message: ', message);
-  }
+  // NOTE: Nothing to handle any more.
+  // switch (message.command) {
+  //   // case 'update': {
+  //   //   await self.registration.update();
+  //   //   break;
+  //   // }
+  //   // case 'newClient': {
+  //   //   // syncInInterval();
+  //   //   break;
+  //   // }
+  //   default:
+  //     log('Unknown message: ', message);
+  // }
 }

@@ -9,8 +9,18 @@ import * as appStore from './appStore.jsx';
 import * as actions from './appStoreActions.jsx';
 import { CACHE_VERSION } from '../common/util.js';
 import log from './logger.js';
+import { sync, syncInInterval, addSyncEventListener, type SyncEvent } from './sync.js';
+import * as b from './cross-context-broadcast.js';
+import { v4 as uuid } from 'uuid';
 
 async function setup() {
+  // Set up unique context id.
+  window.unforgetContextId = uuid();
+
+  // Set up broadcast.
+  b.init();
+  b.addListener(handleBroadcastMessage);
+
   // Set up storage before registering the service worker.
   // Because the service worker itself will try to set up the storage too.
   await storage.getStorage();
@@ -23,11 +33,11 @@ async function setup() {
 
   await registerServiceWorker();
 
-  // Tell the service worker there's a new window.
-  await postToServiceWorker({ command: 'newClient' });
+  // // Tell the service worker there's a new window.
+  // await postToServiceWorker({ command: 'newClient' });
 
   // Request sync status from service worker.
-  await postToServiceWorker({ command: 'sendSyncStatus' });
+  // await postToServiceWorker({ command: 'sendSyncStatus' });
 
   // Sync online status.
   function onlineChanged() {
@@ -38,12 +48,16 @@ async function setup() {
   window.addEventListener('online', onlineChanged);
   window.addEventListener('offline', onlineChanged);
 
+  // Listen to sync events.
+  addSyncEventListener(handleSyncEvent);
+
   // Sync online status periodically.
   setInterval(onlineChanged, 5000);
 
   // Sync when online.
   window.addEventListener('online', () => {
-    postToServiceWorker({ command: 'sync' });
+    sync();
+    // postToServiceWorker({ command: 'sync' });
   });
 
   // Check for app updates when page becomes visible.
@@ -74,6 +88,9 @@ async function setup() {
   // Patch history required for our router.
   patchHistory();
 
+  // Sync in interval
+  syncInInterval();
+
   const root = createRoot(document.getElementById('app')!);
   root.render(<App />);
 }
@@ -90,22 +107,18 @@ async function registerServiceWorker() {
     handleServiceWorkerMessage(event.data);
   });
 
-  await registerServiceWorkerHelper();
-  log('window: service worker registration successful');
-
-  // Sometimes the service worker just gets disabled on iphone. I don't know why.
-  // Here, we try to register every 5s. According to MDN, it'll automatically
-  // check if there's already a registration.
-  setInterval(registerServiceWorkerHelper, 5000);
-}
-
-async function registerServiceWorkerHelper() {
   try {
     await navigator.serviceWorker.register('/serviceWorker.js');
+    log('window: service worker registration successful');
   } catch (error) {
     actions.showMessage('Failed to register service worker: ' + (error as Error).message, { type: 'error' });
     log.error((error as Error).message);
   }
+
+  // // Sometimes the service worker just gets disabled on iphone. I don't know why.
+  // // Here, we try to register every 5s. According to MDN, it'll automatically
+  // // check if there's already a registration.
+  // setInterval(registerServiceWorkerHelper, 5000);
 }
 
 async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessage) {
@@ -118,25 +131,6 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
 
       break;
     }
-    case 'syncStatus': {
-      appStore.update(app => {
-        app.syncing = message.syncing;
-      });
-
-      break;
-    }
-    case 'refreshPage': {
-      window.location.reload();
-      break;
-    }
-
-    case 'notesInStorageChangedExternally': {
-      log('index.tsx received notesInStorageChangedExternally');
-      window.dispatchEvent(new CustomEvent('notesInStorageChangedExternally'));
-      // actions.updateNotes();
-      break;
-    }
-
     case 'error': {
       actions.showMessage(message.error, { type: 'error' });
       break;
@@ -144,6 +138,43 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
 
     default:
       console.log('Unknown message', message);
+  }
+}
+
+function handleSyncEvent(event: SyncEvent) {
+  switch (event.type) {
+    case 'error': {
+      actions.showMessage(event.error.message, { type: 'error' });
+      break;
+    }
+    case 'mergedNotes': {
+      b.broadcast({ type: 'notesInStorageChanged' });
+      break;
+    }
+    case 'syncStatus': {
+      appStore.update(app => {
+        app.syncing = event.syncing;
+      });
+      break;
+    }
+    case 'unauthorized': {
+      b.broadcast({ type: 'refreshPage' });
+      window.location.reload();
+      break;
+    }
+  }
+}
+
+function handleBroadcastMessage(message: t.BroadcastChannelMessage) {
+  switch (message.type) {
+    case 'notesInStorageChanged': {
+      break; // Will listen to and handle this in specific pages.
+    }
+
+    case 'refreshPage': {
+      window.location.reload();
+      break;
+    }
   }
 }
 

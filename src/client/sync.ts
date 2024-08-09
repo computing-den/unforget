@@ -5,18 +5,35 @@ import { ServerError, isNoteNewerThan } from '../common/util.jsx';
 import log from './logger.js';
 import * as storage from './storage.js';
 import * as api from './api.js';
-import { postToClients } from './serviceWorkerToClientApi.js';
+// import { postToClients } from './serviceWorkerToClientApi.js';
 import { encryptNotes, decryptNotes } from './crypto.js';
 import _ from 'lodash';
 
-// export type SyncListenerArgs = { done: false } | { done: true; error?: Error; mergeCount: number };
-// export type SyncListener = (args: SyncListenerArgs) => any;
+export type SyncEvent =
+  | { type: 'syncStatus'; syncing: boolean }
+  | { type: 'unauthorized' }
+  | { type: 'error'; error: Error }
+  | { type: 'mergedNotes' };
+export type SyncListener = (event: SyncEvent) => any;
 
-// const syncListeners: SyncListener[] = [];
+const syncListeners: SyncListener[] = [];
 let syncing = false;
 let shouldSyncAgain = false;
 let queueSyncRequired = false;
 let interval: any;
+
+function callSyncListeners(event: SyncEvent) {
+  for (const listener of syncListeners) listener(event);
+}
+
+export function addSyncEventListener(listener: SyncListener) {
+  syncListeners.push(listener);
+}
+
+export function removeSyncEventListener(listener: SyncListener) {
+  const i = syncListeners.indexOf(listener);
+  if (i !== -1) syncListeners.splice(i, 1);
+}
 
 export function syncInInterval() {
   if (!interval) {
@@ -48,8 +65,8 @@ export async function sync() {
   shouldSyncAgain = false;
   syncing = true;
 
-  postToClients({ command: 'syncStatus', syncing: true });
-  // callSyncListeners({ done: false });
+  // postToClients({ type: 'syncStatus', syncing: true });
+  callSyncListeners({ type: 'syncStatus', syncing: true });
 
   let error: Error | undefined;
   let mergeCount = 0;
@@ -93,25 +110,28 @@ export async function sync() {
       // We cannot reset the cookie here because service worker doesn't have access to document
       // and the Cookie Store API is not universally supported yet.
       // setUserCookies('');
-      await storage.clearUser();
-      postToClients({ command: 'refreshPage' });
+      callSyncListeners({ type: 'unauthorized' });
+      // await storage.clearUser();
+      // postToClients({ type: 'refreshPage' });
     } else if (error instanceof ServerError && error.type === 'app_requires_update') {
       await self.registration.update();
     } else {
-      postToClients({ command: 'error', error: error.message });
+      callSyncListeners({ type: 'error', error });
+      // postToClients({ type: 'error', error: error.message });
     }
   }
 
   // Tell clients about changes.
   if (mergeCount > 0) {
-    postToClients({ command: 'notesInStorageChangedExternally' });
+    // callSyncListeners({ type: 'notesInStorageChangedExternally' });
+    callSyncListeners({ type: 'mergedNotes' });
   }
 
   // Schedule another sync or tell client that sync is done.
   if (shouldSyncAgain) {
     setTimeout(sync, 0);
   } else {
-    postToClients({ command: 'syncStatus', syncing: false });
+    callSyncListeners({ type: 'syncStatus', syncing: false });
   }
 }
 

@@ -178,18 +178,22 @@ export type HistoryState = {
   // fromNotesPage?: boolean;
 };
 
-export type ClientToServiceWorkerMessage =
-  | { command: 'update' }
-  | { command: 'sync'; queue?: boolean; debounced?: boolean }
-  | { command: 'tellOthersToRefreshPage' }
-  | { command: 'tellOthersNotesInStorageChanged' }
-  | { command: 'sendSyncStatus' }
-  | { command: 'newClient' };
+export type ClientToServiceWorkerMessage = void;
+// | { command: 'update' }
+// | { command: 'sync'; queue?: boolean; debounced?: boolean }
+// | { command: 'tellOthersToRefreshPage' }
+// | { command: 'tellOthersNotesInStorageChanged' }
+// | { command: 'sendSyncStatus' }
+// | { command: 'newClient' };
 
 export type ServiceWorkerToClientMessage =
   | { command: 'serviceWorkerActivated'; cacheVersion: number }
-  | { command: 'syncStatus'; syncing: boolean }
-  | { command: 'notesInStorageChangedExternally' }
-  | { command: 'refreshPage' }
+  // | { command: 'syncStatus'; syncing: boolean }
+  // | { command: 'notesInStorageChangedExternally' }
+  // | { command: 'refreshPage' }
   | { command: 'error'; error: string };
 // | { command: 'resetUser' };
+
+export type BroadcastChannelMessage =
+  | { type: 'notesInStorageChanged'; unforgetContextId: string }
+  | { type: 'refreshPage'; unforgetContextId: string };

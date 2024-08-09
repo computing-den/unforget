@@ -12,6 +12,8 @@ import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
 import { Notes } from './Notes.jsx';
+import * as b from './cross-context-broadcast.js';
+import { addSyncEventListener, removeSyncEventListener, type SyncEvent } from './sync.js';
 // import log from './logger.js';
 
 type NotesPageProps = {};
@@ -27,11 +29,26 @@ export function NotesPage(_props: NotesPageProps) {
   const editorRef = useRef<EditorContext | null>(null);
   useStoreAndRestoreScrollY();
 
-  // Check for changes in storage and update the notes.
+  // Check for changes in storage initiated externally or internally and update the notes.
   useEffect(() => {
-    // log('NotesPage received notesInStorageChangedExternally');
-    window.addEventListener('notesInStorageChangedExternally', actions.updateNotes);
-    return () => window.removeEventListener('notesInStorageChangedExternally', actions.updateNotes);
+    function handleBroadcastMessage(message: t.BroadcastChannelMessage) {
+      if (message.type === 'notesInStorageChanged') {
+        actions.updateNotes();
+      }
+    }
+
+    function handleSyncEvent(e: SyncEvent) {
+      if (e.type === 'mergedNotes') {
+        actions.updateNotes();
+      }
+    }
+
+    b.addListener(handleBroadcastMessage); // External changes.
+    addSyncEventListener(handleSyncEvent); // Internal changes.
+    return () => {
+      removeSyncEventListener(handleSyncEvent);
+      b.removeListener(handleBroadcastMessage);
+    };
   }, []);
 
   // Keyboard shortcuts.

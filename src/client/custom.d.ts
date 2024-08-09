@@ -14,3 +14,7 @@ declare module '*.md' {
 //   const content: React.FunctionComponent<React.SVGAttributes<SVGElement>>;
 //   export default content;
 // }
+
+interface Window {
+  unforgetContextId: string;
+}

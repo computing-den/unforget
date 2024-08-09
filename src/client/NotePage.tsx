@@ -9,6 +9,8 @@ import { Editor, EditorContext } from './Editor.jsx';
 import { PageLayout, PageHeader, PageBody, PageAction } from './PageLayout.jsx';
 import _ from 'lodash';
 import * as icons from './icons.js';
+import * as b from './cross-context-broadcast.js';
+import { addSyncEventListener, removeSyncEventListener, type SyncEvent } from './sync.js';
 // import log from './logger.js';
 
 export function NotePage() {
@@ -21,17 +23,6 @@ export function NotePage() {
   // Inspired by https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix
   useEffect(() => {
     function setTop() {
-      // console.log('setTop');
-      // log(
-      //   'window.pageYOffset',
-      //   window.pageYOffset,
-      //   'window.scrollY',
-      //   window.scrollY,
-      //   'window.innerHeight',
-      //   window.innerHeight,
-      //   'document.body.offsetHeight',
-      //   document.body.offsetHeight,
-      // );
       const h = document.getElementById('page-header-inner-wrapper')!;
       let top = Math.max(0, window.scrollY - 2); // -2 instead of 0, otherwise a little gap appears.
       if (window.innerHeight === document.body.offsetHeight) {
@@ -49,15 +40,31 @@ export function NotePage() {
     return () => cancelAnimationFrame(req);
   }, []);
 
-  // Check for changes in storage possibly replace it.
+  // Check for changes in storage initiated externally or internally and possibly replace note.
   useEffect(() => {
-    async function callback() {
+    async function checkStorageAndUpdateNote() {
       const newNote = await storage.getNote(match!.params.noteId as string);
       if (newNote && isNoteNewerThan(newNote, note)) setNote(newNote);
     }
 
-    window.addEventListener('notesInStorageChangedExternally', callback);
-    return () => window.removeEventListener('notesInStorageChangedExternally', callback);
+    function handleBroadcastMessage(message: t.BroadcastChannelMessage) {
+      if (message.type === 'notesInStorageChanged') {
+        checkStorageAndUpdateNote();
+      }
+    }
+
+    function handleSyncEvent(e: SyncEvent) {
+      if (e.type === 'mergedNotes') {
+        checkStorageAndUpdateNote();
+      }
+    }
+
+    b.addListener(handleBroadcastMessage); // External changes.
+    addSyncEventListener(handleSyncEvent); // Internal changes.
+    return () => {
+      removeSyncEventListener(handleSyncEvent);
+      b.removeListener(handleBroadcastMessage);
+    };
   }, [note, match!.params.noteId]);
 
   // Keyboard shortcuts.

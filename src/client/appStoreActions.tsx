@@ -10,6 +10,8 @@ import * as api from './api.js';
 import { bytesToHexString, createNewNote } from '../common/util.jsx';
 import _ from 'lodash';
 import welcome1 from './notes/welcome1.md';
+import { sync, syncDebounced } from './sync.js';
+import * as b from './cross-context-broadcast.js';
 
 export async function initAppStore() {
   // let showArchive = false;
@@ -163,12 +165,12 @@ export async function logout() {
     await storage.clearAll();
     await initAppStore();
 
-    // Tell other tabs/windows that we just logged out.
-    postToServiceWorker({ command: 'tellOthersToRefreshPage' });
-
     // Send token as param instead of relying on cookies because by the time the request is sent,
     // the cookie has already been cleared.
     api.post('/api/logout', null, { token: user.token }).catch(log.error);
+
+    // Broadcast to all contexts that we just logged out.
+    b.broadcast({ type: 'refreshPage' });
   } catch (error) {
     gotError(error as Error);
   }
@@ -215,8 +217,13 @@ export async function saveNotes(notes: t.Note[], opts?: { message?: string; imme
     // appStore.update(app => {
     //   app.notesUpdateRequestTimestamp = Date.now();
     // });
-    postToServiceWorker({ command: 'sync', debounced: !opts?.immediateSync });
-    postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
+    if (opts?.immediateSync) {
+      sync();
+    } else {
+      syncDebounced();
+    }
+    b.broadcast({ type: 'notesInStorageChanged' });
+    // postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
   } catch (error) {
     gotError(error as Error);
   }
@@ -237,8 +244,9 @@ export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
       const i = app.notes.findIndex(x => x.id === note.id);
       if (i !== -1) app.notes[i] = note;
     });
-    postToServiceWorker({ command: 'sync' });
-    postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
+    sync();
+    b.broadcast({ type: 'notesInStorageChanged' });
+    // postToServiceWorker({ command: 'tellOthersNotesInStorageChanged' });
   } catch (error) {
     gotError(error as Error);
   }
@@ -288,8 +296,9 @@ async function loggedIn(
   appStore.update(app => {
     app.user = user;
   });
-  postToServiceWorker({ command: 'sync' });
-  postToServiceWorker({ command: 'tellOthersToRefreshPage' });
+  sync();
+  b.broadcast({ type: 'refreshPage' });
+  // postToServiceWorker({ command: 'tellOthersToRefreshPage' });
 }
 
 export async function checkAppUpdate() {
@@ -315,7 +324,8 @@ export async function forceCheckAppUpdate() {
 }
 
 async function checkAppUpdateHelper() {
-  postToServiceWorker({ command: 'update' });
+  const registration = await navigator.serviceWorker.ready;
+  await registration.update();
   await storage.setSetting(new Date().toISOString(), 'lastAppUpdateCheck');
 }
 

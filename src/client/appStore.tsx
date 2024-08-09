@@ -1,4 +1,4 @@
-import { produce, type Draft } from 'immer';
+import { produce } from 'immer';
 import { useSyncExternalStore } from 'react';
 import type * as t from '../common/types.js';
 

@@ -7,6 +7,7 @@ import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
 import * as icons from './icons.js';
+import { sync, requireQueueSync } from './sync.js';
 // import log from './logger.js';
 
 export function PageLayout(props: { children: React.ReactNode }) {
@@ -60,7 +61,8 @@ function PageHeaderContent(props: PageHeaderProps) {
   const toggleMenu = useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
 
   const fullSync = useCallback(() => {
-    postToServiceWorker({ command: 'sync', queue: true });
+    requireQueueSync();
+    sync();
     actions.showMessage('Syncing ...');
   }, []);
 
