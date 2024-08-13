@@ -14,6 +14,11 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
 }
 
+export type PageHeaderSecondRowProps = {
+  title: string;
+  actions: React.ReactNode;
+};
+
 type PageHeaderProps = {
   menu?: MenuItem[];
   actions?: React.ReactNode;
@@ -21,6 +26,7 @@ type PageHeaderProps = {
   hasSticky?: boolean;
   hasSearch?: boolean;
   compact?: boolean;
+  secondRow?: PageHeaderSecondRowProps;
 };
 
 export function PageHeader(props: PageHeaderProps) {
@@ -29,7 +35,8 @@ export function PageHeader(props: PageHeaderProps) {
   return (
     <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''} ${props.compact ? 'compact' : ''}`}>
       <div id="page-header-inner-wrapper">
-        {props.compact ? <PageHeaderContentCompact /> : <PageHeaderContent {...props} />}
+        {props.compact ? <PageHeaderContentCompact /> : <PageHeaderFirstRowContent {...props} />}
+        {props.secondRow && <PageHeaderSecondRowContent {...props.secondRow} />}
         {app.message && (
           <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
             <div className="msg-bar-inner-container">
@@ -53,9 +60,9 @@ function PageHeaderContentCompact() {
   return <h1 className="heading">Unforget</h1>;
 }
 
-function PageHeaderContent(props: PageHeaderProps) {
+function PageHeaderFirstRowContent(props: PageHeaderProps) {
   const app = appStore.use();
-  if (!app.user) throw new Error('PageHeaderContent requires user');
+  if (!app.user) throw new Error('PageHeaderFirstRowContent requires user');
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = useCallbackCancelEvent(() => setMenuOpen(x => !x), []);
@@ -100,7 +107,7 @@ function PageHeaderContent(props: PageHeaderProps) {
   ]);
 
   return (
-    <div className="content">
+    <div className="first-row-content">
       {!_.isEmpty(menu) && (
         <div className="menu-button-container">
           <div className="menu-button">
@@ -128,6 +135,15 @@ function PageHeaderContent(props: PageHeaderProps) {
         {app.user?.username !== 'demo' && app.queueCount > 0 && <div className="queue-count">({app.queueCount})</div>}
         {/*app.online && <div className="online-indicator" />*/}
       </div>
+      <div className="actions">{props.actions}</div>
+    </div>
+  );
+}
+
+function PageHeaderSecondRowContent(props: PageHeaderSecondRowProps) {
+  return (
+    <div className="second-row-content">
+      <h1 className="heading">{props.title}</h1>
       <div className="actions">{props.actions}</div>
     </div>
   );

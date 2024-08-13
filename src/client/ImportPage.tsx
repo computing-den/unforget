@@ -219,7 +219,7 @@ async function importStandard(zipFile: File): Promise<t.Note[]> {
       text,
       creation_date: new Date(startMs - i).toISOString(),
       modification_date: new Date(startMs - i).toISOString(),
-      order: startMs - i,
+      order: startMs - i * 1000,
       not_deleted: 1,
       not_archived: 1,
       pinned: 0,

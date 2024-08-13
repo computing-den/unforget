@@ -1,36 +1,41 @@
 #page-header {
   z-index: var(--page-header-z-index);
-  height: var(--page-header-height);
   background: var(--page-header-background);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
 
-  &.compact #page-header-inner-wrapper h1 {
-    font-size: 1rem;
-    letter-spacing: 0px;
-    font-family: monospace;
-    color: white;
+  &.compact #page-header-inner-wrapper {
+    height: var(--page-header-height);
+    background: var(--page-header-background);
+    box-shadow: 0px 4px 14px 1px #00000022;
+
+    & h1 {
+      font-size: 1rem;
+      letter-spacing: 0px;
+      font-family: monospace;
+      color: white;
+    }
   }
 
-  &.has-search #page-header-inner-wrapper .content .title {
+  &.has-search #page-header-inner-wrapper .first-row-content .title {
     @media (max-width: 500px) {
       display: none;
     }
   }
 
   #page-header-inner-wrapper {
-    height: var(--page-header-height);
     position: absolute;
+    /* The value -1 is used to prevent a small gap from appearing especially on IOS Safari. */
+    /* padding-top is then set in js. See NotePage.tsx. */
+    /* top: -1px; */
     left: 0;
     right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: var(--page-header-background);
-    box-shadow: 0px 4px 14px 1px #00000022;
 
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -108,18 +113,21 @@
       }
     }
 
-    .content {
-      margin: 0.25rem auto;
+    .first-row-content {
+      height: var(--page-header-height);
+      margin: 0 auto;
       max-width: var(--page-max-width);
       width: 100%;
       position: relative;
       display: flex;
       align-items: center;
+      background: var(--page-header-background);
+      box-shadow: 0px 4px 14px 1px #00000022;
 
       .menu-button-container {
-        margin-left: 1rem;
         display: flex;
         align-items: center;
+        margin-left: 1rem;
 
         .menu-button {
           position: relative;
@@ -174,59 +182,94 @@
       }
 
       .actions {
-        flex: 1 0 0;
-        height: 100%;
-        margin-left: 1rem;
         margin-right: 1rem;
+      }
+    }
+
+    .second-row-content {
+      height: var(--page-header-second-row-height);
+      margin: 0 auto;
+      max-width: var(--page-max-width);
+      width: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      border-top: 0.5px solid #fff;
+      background: var(--page-header-second-row-background);
+      box-shadow: 0px 4px 14px 1px #00000022;
+
+      & h1.heading {
+        margin: 0;
+        margin-left: 1rem;
+        white-space: nowrap;
+        font-size: 0.8rem;
+        letter-spacing: 0px;
+        font-family: monospace;
+        color: white;
+      }
+
+      .actions {
+        margin-right: 1rem;
+
+        /* .action img { */
+        /*   width: 20px; */
+        /*   height: 20px; */
+        /* } */
+      }
+    }
+
+    .actions {
+      flex: 1 0 0;
+      height: 100%;
+      margin-left: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      .action + .action {
+        margin-left: 1.5rem;
+
+        @media (max-width: 800px) {
+          margin-left: 1rem;
+        }
+      }
+
+      & input.search + .action.close-search {
+        margin-left: 0.5rem;
+      }
+
+      & input.search {
+        border-radius: 0;
+        border: 0;
+        border-bottom: 0;
+        /* flex: 1; */
+        width: 100%;
+        max-width: 300px;
+        /* width: 500px; */
+        /* margin: 0 auto; */
+        /* border: 1px solid #aadfef; */
+        /* border-radius: 5px; */
+        outline: none;
+        padding: 0.25rem 0.5rem;
+      }
+
+      .action {
+        position: relative;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
 
-        .action + .action {
-          margin-left: 1.5rem;
-
-          @media (max-width: 800px) {
-            margin-left: 1rem;
-          }
-        }
-
-        & input.search + .action.close-search {
-          margin-left: 0.5rem;
-        }
-
-        & input.search {
-          border-radius: 0;
-          border: 0;
-          border-bottom: 0;
-          /* flex: 1; */
-          width: 100%;
-          max-width: 300px;
-          /* width: 500px; */
-          /* margin: 0 auto; */
-          /* border: 1px solid #aadfef; */
-          /* border-radius: 5px; */
-          outline: none;
-          padding: 0.25rem 0.5rem;
-        }
-
-        .action {
-          position: relative;
+        & > a {
+          color: white;
+          height: 100%;
           display: flex;
           align-items: center;
 
-          & > a {
-            color: white;
-            height: 100%;
-            display: flex;
-            align-items: center;
+          @media (max-width: 800px) {
+            font-size: 0.9em;
+          }
 
-            @media (max-width: 800px) {
-              font-size: 0.9em;
-            }
-
-            &.bold {
-              font-weight: bold;
-            }
+          &.bold {
+            font-weight: bold;
           }
         }
       }

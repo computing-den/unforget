@@ -29,8 +29,8 @@ export async function getStorage(): Promise<IDBDatabase> {
       };
 
       dbOpenReq.onupgradeneeded = e => {
+        // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
         if (e.oldVersion < 52) {
-          // By comparing e.oldVersion with e.newVersion, we can perform only the actions needed for the upgrade.
           const notesStore = dbOpenReq.result.createObjectStore(NOTES_STORE, { keyPath: 'id' });
           notesStore.createIndex(NOTES_STORE_ORDER_INDEX, ['order']);
           dbOpenReq.result.createObjectStore(NOTES_QUEUE_STORE, { keyPath: 'id' });
@@ -141,10 +141,177 @@ async function saveNoteQueueItems(items: SaveNoteQueueItem[]) {
   await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', tx => {
     for (const item of items) {
       tx.objectStore(NOTES_STORE).put(item.note);
-      const noteHead: t.NoteHead = { id: item.note.id, modification_date: item.note.modification_date };
-      tx.objectStore(NOTES_QUEUE_STORE).put(noteHead);
+      tx.objectStore(NOTES_QUEUE_STORE).put(createNoteHeadFromNote(item.note));
     }
   });
+}
+
+function createNoteHeadFromNote(note: t.Note): t.NoteHead {
+  return { id: note.id, modification_date: note.modification_date };
+}
+
+export async function moveNotesUp(ids: string[]) {
+  const start = performance.now();
+  await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', async tx => {
+    const notesStore = tx.objectStore(NOTES_STORE);
+    const notesQueueStore = tx.objectStore(NOTES_QUEUE_STORE);
+    const orderIndex = notesStore.index(NOTES_STORE_ORDER_INDEX);
+
+    const sparseNotes = await Promise.all(ids.map(id => waitForDBRequest<t.Note | undefined>(notesStore.get(id))));
+    const notes = _.orderBy(_.compact(sparseNotes), 'order', 'desc');
+
+    for (const note of notes) {
+      // Get the newer note
+      const lowerKey = [note.not_archived, note.not_deleted, note.pinned, note.order];
+      const upperKey = [note.not_archived, note.not_deleted, note.pinned, Infinity];
+      const newerNoteCursorReq = orderIndex.openCursor(IDBKeyRange.bound(lowerKey, upperKey, true, true));
+      const newerNoteCursorRes = await waitForDBRequest(newerNoteCursorReq);
+      const newerNote: t.Note = newerNoteCursorRes?.value;
+
+      // Skip if not found.
+      if (!newerNote) continue;
+
+      // // The newerNote may not actually be newer if it differs in not_archived, not_deleted, or pinned.
+      // if (newerNote.order <= note.order) continue;
+
+      // Don't jump over a note in the selection. In other words, the relative order of selection
+      // stays the same.
+      if (notes.find(n => n.id === newerNote.id)) continue;
+
+      // Swap the orders and set modification time.
+      [note.order, newerNote.order] = [newerNote.order, note.order];
+      note.modification_date = newerNote.modification_date = new Date().toISOString();
+
+      // Save both
+      await Promise.all([
+        waitForDBRequest(notesStore.put(note)),
+        waitForDBRequest(notesStore.put(newerNote)),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(note))),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(newerNote))),
+      ]);
+    }
+  });
+  log(`moveNotesUp done in ${performance.now() - start}ms`);
+}
+
+export async function moveNotesDown(ids: string[]) {
+  const start = performance.now();
+  await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', async tx => {
+    const notesStore = tx.objectStore(NOTES_STORE);
+    const notesQueueStore = tx.objectStore(NOTES_QUEUE_STORE);
+    const orderIndex = notesStore.index(NOTES_STORE_ORDER_INDEX);
+
+    const sparseNotes = await Promise.all(ids.map(id => waitForDBRequest<t.Note | undefined>(notesStore.get(id))));
+    const notes = _.orderBy(_.compact(sparseNotes), 'order', 'asc');
+
+    // Going in reverse order (oldest to newest notes).
+    for (const note of notes) {
+      // Get the older note.
+      const lowerKey = [note.not_archived, note.not_deleted, note.pinned, 0];
+      const upperKey = [note.not_archived, note.not_deleted, note.pinned, note.order];
+      const olderNoteCursorReq = orderIndex.openCursor(IDBKeyRange.bound(lowerKey, upperKey, true, true), 'prev');
+      const olderNoteCursorRes = await waitForDBRequest(olderNoteCursorReq);
+      const olderNote: t.Note = olderNoteCursorRes?.value;
+
+      // Skip if not found.
+      if (!olderNote) continue;
+
+      // Don't jump over a note in the selection. In other words, the relative order of selection
+      // stays the same.
+      if (notes.find(n => n.id === olderNote.id)) continue;
+
+      // // The olderNote may not actually be older if it differs in not_archived, not_deleted, or pinned.
+      // if (olderNote.order >= note.order) continue;
+
+      // Swap the orders and set modification time.
+      [note.order, olderNote.order] = [olderNote.order, note.order];
+      note.modification_date = olderNote.modification_date = new Date().toISOString();
+
+      // Save both
+      await Promise.all([
+        waitForDBRequest(notesStore.put(note)),
+        waitForDBRequest(notesStore.put(olderNote)),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(note))),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(olderNote))),
+      ]);
+    }
+  });
+  log(`moveNotesDown done in ${performance.now() - start}ms`);
+}
+
+export async function moveNotesToTop(ids: string[]) {
+  const start = performance.now();
+  await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', async tx => {
+    const notesStore = tx.objectStore(NOTES_STORE);
+    const notesQueueStore = tx.objectStore(NOTES_QUEUE_STORE);
+    const orderIndex = notesStore.index(NOTES_STORE_ORDER_INDEX);
+
+    const sparseNotes = await Promise.all(ids.map(id => waitForDBRequest<t.Note | undefined>(notesStore.get(id))));
+    const notes = _.orderBy(_.compact(sparseNotes), 'order', 'asc');
+
+    // Going in reverse order (oldest to newest notes).
+    // Must do this one at a time because we can't get the absolute max/min order (unless we create a new index) and
+    // some of the notes may differ in not_archived, not_deleted, and pinned.
+    for (const note of notes) {
+      // Get the newest note
+      const lowerKey = [note.not_archived, note.not_deleted, note.pinned, 0];
+      const upperKey = [note.not_archived, note.not_deleted, note.pinned, Infinity];
+      const newestNoteCursorReq = orderIndex.openCursor(IDBKeyRange.bound(lowerKey, upperKey), 'prev');
+      const newestNoteCursorRes = await waitForDBRequest(newestNoteCursorReq);
+      const newestNote: t.Note = newestNoteCursorRes?.value;
+
+      // Skip if not found.
+      if (!newestNote) continue;
+
+      // set the order and modification time.
+      note.order = newestNote.order + 1000;
+      note.modification_date = new Date().toISOString();
+
+      // Save
+      await Promise.all([
+        waitForDBRequest(notesStore.put(note)),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(note))),
+      ]);
+    }
+  });
+  log(`moveNotesToTop done in ${performance.now() - start}ms`);
+}
+
+export async function moveNotesToBottom(ids: string[]) {
+  const start = performance.now();
+  await transaction([NOTES_STORE, NOTES_QUEUE_STORE], 'readwrite', async tx => {
+    const notesStore = tx.objectStore(NOTES_STORE);
+    const notesQueueStore = tx.objectStore(NOTES_QUEUE_STORE);
+    const orderIndex = notesStore.index(NOTES_STORE_ORDER_INDEX);
+
+    const sparseNotes = await Promise.all(ids.map(id => waitForDBRequest<t.Note | undefined>(notesStore.get(id))));
+    const notes = _.orderBy(_.compact(sparseNotes), 'order', 'desc');
+
+    // Must do this one at a time because we can't get the absolute max/min order (unless we create a new index) and
+    // some of the notes may differ in not_archived, not_deleted, and pinned.
+    for (const note of notes) {
+      // Get the oldest note
+      const lowerKey = [note.not_archived, note.not_deleted, note.pinned, 0];
+      const upperKey = [note.not_archived, note.not_deleted, note.pinned, Infinity];
+      const oldestNoteCursorReq = orderIndex.openCursor(IDBKeyRange.bound(lowerKey, upperKey));
+      const oldestNoteCursorRes = await waitForDBRequest(oldestNoteCursorReq);
+      const oldestNote: t.Note = oldestNoteCursorRes?.value;
+
+      // Skip if not found.
+      if (!oldestNote) continue;
+
+      // set the order and modification time.
+      note.order = oldestNote.order - 1000;
+      note.modification_date = new Date().toISOString();
+
+      // Save
+      await Promise.all([
+        waitForDBRequest(notesStore.put(note)),
+        waitForDBRequest(notesQueueStore.put(createNoteHeadFromNote(note))),
+      ]);
+    }
+  });
+  log(`moveNotesToBottom done in ${performance.now() - start}ms`);
 }
 
 export function isSavingNote(): boolean {
@@ -179,12 +346,12 @@ export async function getNotes(opts?: {
   await transaction([NOTES_STORE], 'readonly', async tx => {
     return new Promise<void>((resolve, reject) => {
       const orderIndex = tx.objectStore(NOTES_STORE).index(NOTES_STORE_ORDER_INDEX);
-      const orderCursorReq = orderIndex.openCursor(null, 'prev');
-      orderCursorReq.onerror = () => {
-        reject(orderCursorReq.error);
+      const cursorReq = orderIndex.openCursor(null, 'prev');
+      cursorReq.onerror = () => {
+        reject(cursorReq.error);
       };
-      orderCursorReq.onsuccess = () => {
-        const cursor = orderCursorReq.result;
+      cursorReq.onsuccess = () => {
+        const cursor = cursorReq.result;
         if (!cursor) {
           // Reached the end, we're done.
           done = true;
@@ -243,13 +410,16 @@ export async function getNotes(opts?: {
   return { notes, done };
 }
 
+export async function getNotesById(ids: string[]): Promise<(t.Note | undefined)[]> {
+  const reqs = await transaction(NOTES_STORE, 'readonly', tx => {
+    const notesStore = tx.objectStore(NOTES_STORE);
+    return ids.map(id => notesStore.get(id)) as IDBRequest<t.Note | undefined>[];
+  });
+  return reqs.map(req => req.result);
+}
+
 export async function getNote(id: string): Promise<t.Note | undefined> {
-  const req = await transaction(
-    NOTES_STORE,
-    'readonly',
-    tx => tx.objectStore(NOTES_STORE).get(id) as IDBRequest<t.Note | undefined>,
-  );
-  return req.result;
+  return (await getNotesById([id]))[0];
 }
 
 export async function clearAll() {

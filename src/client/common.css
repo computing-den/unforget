@@ -1,13 +1,16 @@
 :root {
   --app-background: #ddf7ff;
   --page-header-height: 2rem;
+  --page-header-second-row-height: 2rem;
   --page-header-background: #448199;
+  --page-header-second-row-background: #366f85;
   --menu-header-background: #d6f5ff;
   --box-border-color: #94becd;
   --input-border-color: #aadfef;
   --box-border-radius: 5px;
   --page-header-z-index: 200;
-  --page-content-margin-top: calc(var(--page-header-height) + 2rem);
+  --margin-after-page-header: 2rem;
+  --page-content-margin-top: calc(var(--page-header-height) + var(--margin-after-page-header));
   --page-content-margin-bottom: 2rem;
   --page-max-width: 800px;
   --menu-z-index: 100;

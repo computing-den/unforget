@@ -252,6 +252,83 @@ export async function saveNoteAndQuickUpdateNotes(note: t.Note) {
   }
 }
 
+export function toggleNoteSelection(note: t.Note) {
+  appStore.update(app => {
+    if (!app.noteSelection) app.noteSelection = [];
+
+    const i = app.noteSelection.indexOf(note.id);
+    if (i !== -1) {
+      app.noteSelection.splice(i, 1);
+    } else {
+      app.noteSelection.push(note.id);
+    }
+
+    if (app.noteSelection.length === 0) {
+      app.noteSelection = undefined;
+    }
+  });
+}
+
+export async function archiveNoteSelection() {
+  const app = appStore.get();
+  if (app.noteSelection?.length) {
+    const notes = _.compact(await storage.getNotesById(app.noteSelection));
+    const newNotes = notes.map(note => ({
+      ...note,
+      modification_date: new Date().toISOString(),
+      not_archived: 0,
+    }));
+    await saveNotes(newNotes, { message: `Archived ${newNotes.length} note(s)`, immediateSync: true });
+    appStore.update(app => {
+      app.noteSelection = undefined;
+    });
+    await updateNotes();
+  }
+}
+
+export async function unarchiveNoteSelection() {
+  const app = appStore.get();
+  if (app.noteSelection?.length) {
+    const notes = _.compact(await storage.getNotesById(app.noteSelection));
+    const newNotes = notes.map(note => ({
+      ...note,
+      modification_date: new Date().toISOString(),
+      not_archived: 1,
+    }));
+    await saveNotes(newNotes, { message: `Unarchived ${newNotes.length} note(s)`, immediateSync: true });
+    appStore.update(app => {
+      app.noteSelection = undefined;
+    });
+    await updateNotes();
+  }
+}
+
+export async function moveNoteSelectionUp() {
+  await moveNoteSelection(storage.moveNotesUp);
+}
+
+export async function moveNoteSelectionDown() {
+  await moveNoteSelection(storage.moveNotesDown);
+}
+
+export async function moveNoteSelectionToTop() {
+  await moveNoteSelection(storage.moveNotesToTop);
+}
+
+export async function moveNoteSelectionToBottom() {
+  await moveNoteSelection(storage.moveNotesToBottom);
+}
+
+async function moveNoteSelection(moveFn: (ids: string[]) => Promise<void>) {
+  const app = appStore.get();
+  if (app.noteSelection) {
+    await moveFn(app.noteSelection);
+    syncDebounced();
+    b.broadcast({ type: 'notesInStorageChanged' });
+    await updateNotes();
+  }
+}
+
 async function makeClientLocalUserFromServer(
   credentials: t.UsernamePassword,
   loginResponse: t.LoginResponse,

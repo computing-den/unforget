@@ -9,6 +9,28 @@
     border-right: 0;
   }
 
+  /* Show selection circles if a selectable note is hovered. */
+  &.selectable .note:hover {
+    @media (min-width: 800px) {
+      .select {
+        visibility: visible;
+      }
+      & img.pin {
+        visibility: hidden;
+      }
+    }
+  }
+
+  /* Show selection circles if selection mode is on. */
+  &.has-selection .note {
+    .select {
+      visibility: visible;
+    }
+    & img.pin {
+      visibility: hidden;
+    }
+  }
+
   .note {
     padding: 0.2rem 1rem; /* The vertical padding accounts for the line-height of paragraphs and headings */
     transition: 0.2s background ease-in-out;
@@ -29,8 +51,78 @@
       }
     }
 
+    &.selected {
+      .select {
+        visibility: visible;
+      }
+      & img.pin {
+        visibility: hidden;
+      }
+    }
+
+    &.pinned {
+      /* border-left: 3px solid var(--box-border-color); */
+      /* &:first-child { */
+      /*   border-radius: var(--box-border-radius) var(--box-border-radius) 0 0; */
+      /* } */
+      /* &:last-child { */
+      /*   border-radius: 0 0 var(--box-border-radius) var(--box-border-radius); */
+      /* } */
+    }
+
     & + .note {
       border-top: 1px solid var(--box-border-color);
+    }
+
+    & .select {
+      --select-padding: 6.885px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      /* width: calc(30px + var(--select-padding) * 2); */
+      /* height: calc(30px + var(--select-padding) * 2); */
+      padding: var(--select-padding);
+      visibility: hidden;
+
+      &:hover,
+      &:focus,
+      &:focus-visible,
+      &:active {
+        outline: none;
+        border: none;
+        background: none;
+
+        .circle {
+          box-shadow: 0px 0px 10px 0px #0000002e;
+          transition: 0.1s all ease-in-out;
+        }
+      }
+
+      &.selected .circle {
+        border: 1px solid #888;
+        box-shadow: none;
+      }
+
+      &:not(.selected) .circle img {
+        display: none;
+      }
+
+      .circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid #ccc;
+        position: relative;
+        /* box-shadow: 0 0 3px 0px #ccc inset; */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        & img {
+          margin-top: 3px;
+        }
+      }
     }
 
     & img.pin {

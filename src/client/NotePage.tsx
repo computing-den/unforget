@@ -19,12 +19,14 @@ export function NotePage() {
   const [note, setNote] = useState(loaderData!.read() as t.Note | undefined);
   const editorRef = useRef<EditorContext | null>(null);
 
-  // Here's a shit show to fix safari hiding the fixed toolbar when we focus on the text editor.
+  // Here's a dirty hack to fix Safari hiding the fixed toolbar when we focus on the text editor.
+  // Why is this still a thing? why? just why?
   // Inspired by https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix
   useEffect(() => {
     function setTop() {
       const h = document.getElementById('page-header-inner-wrapper')!;
-      let top = Math.max(0, window.scrollY - 2); // -2 instead of 0, otherwise a little gap appears.
+      // -2 is used to prevent a small gap from appearing especially on IOS Safari.
+      let top = Math.max(0, window.scrollY - 2);
       if (window.innerHeight === document.body.offsetHeight) {
         top = 0;
       }

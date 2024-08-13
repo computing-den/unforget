@@ -6,6 +6,7 @@ export { default as archiveFilledWhite } from '../../public/icons/archive-filled
 // export { default as bulletpointWhite } from '../../public/icons/bulletpoint-white.svg';
 export { default as cycleListWhite } from '../../public/icons/cycle-list-white.svg';
 // export { default as checkboxList } from '../../public/icons/checkbox-list.svg';
+export { default as check } from '../../public/icons/check.svg';
 export { default as checkWhite } from '../../public/icons/check-white.svg';
 export { default as hidePinnedWhite } from '../../public/icons/hide-pinned-white.svg';
 export { default as hidePinnedWhite2 } from '../../public/icons/hide-pinned-white-2.svg';
@@ -28,3 +29,10 @@ export { default as xWhite } from '../../public/icons/x-white.svg';
 export { default as googleKeep } from '../../public/icons/google-keep.svg';
 export { default as export } from '../../public/icons/export.svg';
 export { default as import } from '../../public/icons/import.svg';
+export { default as chevronUpWhite } from '../../public/icons/chevron-up-white.svg';
+export { default as chevronUpDoubleWhite } from '../../public/icons/chevron-up-double-white.svg';
+export { default as chevronDownWhite } from '../../public/icons/chevron-down-white.svg';
+export { default as chevronDownDoubleWhite } from '../../public/icons/chevron-down-double-white.svg';
+// export { default as selectCircleWhite } from '../../public/icons/select-circle-white.svg';
+export { default as circleSelectWhite } from '../../public/icons/circle-select-white.svg';
+export { default as circleDeselectWhite } from '../../public/icons/circle-deselect-white.svg';

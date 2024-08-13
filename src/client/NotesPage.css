@@ -2,12 +2,27 @@
   .new-note-container {
     display: flex;
     flex-direction: column;
+    transition: 0.15s transform ease-out;
+
+    &.below-second-row {
+      transform: translate3d(
+        0,
+        calc((var(--margin-after-page-header) * 2 - var(--page-header-second-row-height)) / 2),
+        0
+      );
+    }
 
     &.sticky {
       position: sticky;
       top: var(--page-header-height);
       z-index: var(--sticky-z-index);
       overflow: visible;
+
+      &.below-second-row {
+        transform: none;
+        top: calc(var(--page-header-height) + var(--page-header-second-row-height));
+        transition: none;
+      }
 
       .editor {
         /* more padding to clear the top where messages are shown. */
@@ -47,7 +62,7 @@
   }
 
   .notes {
-    margin-top: 2rem;
+    margin-top: var(--margin-after-page-header);
   }
 
   & button.load-more {

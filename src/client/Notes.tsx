@@ -21,12 +21,15 @@ export function Notes(props: {
   onHashLinkClick?: (hash: string) => any;
   onNoteChange?: (note: t.Note) => any;
   onNoteClick?: (note: t.Note) => any;
+  onToggleNoteSelection?: (note: t.Note) => any;
   hiddenNoteId?: string;
   hideContentAfterBreak?: boolean;
+  noteSelection?: string[];
+  selectable?: boolean;
 }) {
   const notes = props.notes.filter(n => n.id !== props.hiddenNoteId);
   return (
-    <div className="notes">
+    <div className={`notes ${props.noteSelection ? 'has-selection' : ''} ${props.selectable ? 'selectable' : ''}`}>
       {notes.map(note => (
         <Note
           key={note.id}
@@ -35,7 +38,9 @@ export function Notes(props: {
           onHashLinkClick={props.onHashLinkClick}
           onNoteChange={props.onNoteChange}
           onNoteClick={props.onNoteClick}
+          onToggleNoteSelection={props.onToggleNoteSelection}
           hideContentAfterBreak={props.hideContentAfterBreak}
+          selected={props.noteSelection?.includes(note.id)}
         />
       ))}
     </div>
@@ -48,7 +53,9 @@ export const Note = memo(function Note(props: {
   onHashLinkClick?: (hash: string) => any;
   onNoteChange?: (note: t.Note) => any;
   onNoteClick?: (note: t.Note) => any;
+  onToggleNoteSelection?: (note: t.Note) => any;
   hideContentAfterBreak?: boolean;
+  selected?: boolean;
 }) {
   // Do not modify the text here because we want the position of each element in mdast and hast to match
   // exactly the original text.
@@ -123,6 +130,12 @@ export const Note = memo(function Note(props: {
 
   const { onClick, onMouseDown } = useClickWithoutDrag(clickCb);
 
+  function selectCb(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    props.onToggleNoteSelection?.(props.note);
+  }
+
   // function inputClickCb(e: React.MouseEvent) {
   //   e.preventDefault();
   //   e.stopPropagation();
@@ -179,7 +192,9 @@ export const Note = memo(function Note(props: {
   return (
     <div
       id={props.note.id}
-      className={`note ${props.onNoteClick && 'clickable'}`}
+      className={`note ${props.onNoteClick ? 'clickable' : ''} ${props.selected ? 'selected' : ''} ${
+        props.note.pinned ? 'pinned' : ''
+      }`}
       onMouseDown={onMouseDown}
       onClick={onClick}
     >
@@ -198,6 +213,11 @@ export const Note = memo(function Note(props: {
           </a>
         </p>
       )}
+      <div className={`select ${props.selected ? 'selected' : ''}`} tabIndex={0} onClick={selectCb}>
+        <div className="circle">
+          <img src={icons.check} />
+        </div>
+      </div>
     </div>
   );
 });
