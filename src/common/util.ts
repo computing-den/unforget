@@ -1,7 +1,7 @@
 import type * as t from './types.js';
 import { v4 as uuid } from 'uuid';
 
-export const CACHE_VERSION = 183;
+export const CACHE_VERSION = 184;
 
 export function assert(condition: any, message: string): asserts condition {
   if (!condition) throw new Error(message);

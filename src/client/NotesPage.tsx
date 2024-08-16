@@ -440,11 +440,12 @@ function goToNote(note: t.Note) {
 }
 
 export async function notesPageLoader(match: RouteMatch) {
-  // Update app.showArchive when transitioning between / and /archive.
+  // Update app.showArchive and noteSelection when transitioning between / and /archive.
   appStore.update(app => {
     const showArchive = match.pathname === '/archive';
     if (showArchive !== app.showArchive) {
       app.showArchive = showArchive;
+      app.noteSelection = undefined;
       // app.notesUpdateRequestTimestamp = Date.now();
     }
   });
