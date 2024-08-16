@@ -75,8 +75,6 @@ export function NotesPage(_props: NotesPageProps) {
         handle(cycleListStyleCb);
       } else if (e.key === 'p' && ctrlOrMeta) {
         handle(togglePinned);
-      } else if (e.key === 's' && !ctrlOrMeta) {
-        handle(toggleNoteSelectionMode);
       } else if (e.key === 'ArrowUp' && e.shiftKey && ctrlOrMeta) {
         handle(actions.moveNoteSelectionToTop);
       } else if (e.key === 'ArrowDown' && e.shiftKey && ctrlOrMeta) {
@@ -87,7 +85,10 @@ export function NotesPage(_props: NotesPageProps) {
         handle(actions.moveNoteSelectionDown);
       }
 
+      // Ignore the following shortcuts if input or textarea is focused
+      // or if ctrl or meta key is pressed
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? '')) return;
+      if (ctrlOrMeta) return;
 
       if (e.key === '/') {
         if (app.search) {
@@ -103,6 +104,8 @@ export function NotesPage(_props: NotesPageProps) {
         } else {
           handle(startNewNoteCb);
         }
+      } else if (e.key === 's') {
+        handle(toggleNoteSelectionMode);
       } else if (e.key === 'A' && app.showArchive) {
         handle(unarchiveNoteSelection);
       } else if (e.key === 'a' && !app.showArchive) {
@@ -341,8 +344,8 @@ export function NotesPage(_props: NotesPageProps) {
         app.noteSelection.length === 0
           ? 'Select notes'
           : app.noteSelection.length === 1
-          ? '1 selected'
-          : `${app.noteSelection.length} selected`,
+            ? '1 selected'
+            : `${app.noteSelection.length} selected`,
       actions: [
         allArchived ? (
           <PageAction

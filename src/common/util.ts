@@ -1,7 +1,7 @@
 import type * as t from './types.js';
 import { v4 as uuid } from 'uuid';
 
-export const CACHE_VERSION = 184;
+export const CACHE_VERSION = 185;
 
 export function assert(condition: any, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -116,7 +116,11 @@ export function hexStringToBytes(str: string): Uint8Array {
 }
 
 export class ServerError extends Error {
-  constructor(message: string, public code: number, public type: t.ServerErrorType = 'generic') {
+  constructor(
+    message: string,
+    public code: number,
+    public type: t.ServerErrorType = 'generic',
+  ) {
     super(message);
   }
 

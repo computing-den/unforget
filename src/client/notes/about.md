@@ -12,6 +12,9 @@ Contact us at sean@computing-den.com
 
 # Release Notes
 
+### 17 August 2024
+- Bug fixes: shortcut conflicts
+
 ### 16 August 2024
 - Select and move notes
 - Import Unforget's own exported JSON

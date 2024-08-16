@@ -141,7 +141,7 @@ async function handleServiceWorkerMessage(message: t.ServiceWorkerToClientMessag
   }
 }
 
-function handleSyncEvent(event: SyncEvent) {
+async function handleSyncEvent(event: SyncEvent) {
   switch (event.type) {
     case 'error': {
       actions.showMessage(event.error.message, { type: 'error' });
@@ -158,6 +158,7 @@ function handleSyncEvent(event: SyncEvent) {
       break;
     }
     case 'unauthorized': {
+      await actions.resetUser();
       b.broadcast({ type: 'refreshPage' });
       window.location.reload();
       break;
