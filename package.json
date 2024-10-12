@@ -5,11 +5,19 @@
   "description": "A minimalist, offline-first, and end-to-end encrypted note-taking app (without Electron.js)",
   "type": "module",
   "scripts": {
+    "start": "node --enable-source-maps dist/server/index.js",
     "clean": "barefront clean",
     "build": "barefront build",
-    "start": "node --enable-source-maps dist/server/index.js",
     "dev": "barefront dev",
-    "deploy": "node deploy.mjs"
+    "init-server": "barefront init-server",
+    "clean-server": "barefront clean-server",
+    "deploy": "barefront deploy"
+  },
+  "exports": {
+    "./*": "./dist/*"
+  },
+  "barefront": {
+    "library": false
   },
   "author": "Sean Shirazi <sean@computing-den.com>",
   "keywords": [
@@ -44,7 +52,7 @@
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^9.0.8",
-    "barefront": "^1.0.2",
+    "barefront": "^2.2.0",
     "esbuild": "^0.20.1",
     "typescript": "^5.2.2"
   },
