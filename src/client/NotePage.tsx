@@ -22,25 +22,25 @@ export function NotePage() {
   // Here's a dirty hack to fix Safari hiding the fixed toolbar when we focus on the text editor.
   // Why is this still a thing? why? just why?
   // Inspired by https://www.codemzy.com/blog/sticky-fixed-header-ios-keyboard-fix
-  useEffect(() => {
-    function setTop() {
-      const h = document.getElementById('page-header-inner-wrapper')!;
-      // -2 is used to prevent a small gap from appearing especially on IOS Safari.
-      let top = Math.max(0, window.scrollY - 2);
-      if (window.innerHeight === document.body.offsetHeight) {
-        top = 0;
-      }
-      h.style.paddingTop = `${top}px`;
+  // useEffect(() => {
+  //   function setTop() {
+  //     const h = document.getElementById('page-header-inner-wrapper')!;
+  //     // -2 is used to prevent a small gap from appearing especially on IOS Safari.
+  //     let top = Math.max(0, window.scrollY - 2);
+  //     if (window.innerHeight === document.body.offsetHeight) {
+  //       top = 0;
+  //     }
+  //     h.style.paddingTop = `${top}px`;
 
-      // Could also fix it by scrolling to top, but then the cursor might go behind the soft keyboard.
-      // window.scrollTo(0, 0);
+  //     // Could also fix it by scrolling to top, but then the cursor might go behind the soft keyboard.
+  //     // window.scrollTo(0, 0);
 
-      req = requestAnimationFrame(setTop);
-    }
+  //     req = requestAnimationFrame(setTop);
+  //   }
 
-    let req = requestAnimationFrame(setTop);
-    return () => cancelAnimationFrame(req);
-  }, []);
+  //   let req = requestAnimationFrame(setTop);
+  //   return () => cancelAnimationFrame(req);
+  // }, []);
 
   // Check for changes in storage initiated externally or internally and possibly replace note.
   useEffect(() => {
@@ -190,7 +190,6 @@ export function NotePage() {
             <div className="note-container">
               <Editor
                 ref={editorRef}
-                id="note-editor"
                 className="text-input"
                 placeholder="What's on your mind?"
                 value={note.text ?? ''}

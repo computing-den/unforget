@@ -406,7 +406,6 @@ export function NotesPage(_props: NotesPageProps) {
           >
             <Editor
               ref={editorRef}
-              id="new-note-editor"
               className="text-input"
               placeholder="What's on your mind?"
               value={newNote?.text ?? ''}
