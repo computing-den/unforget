@@ -11,12 +11,12 @@
 
   /* Show selection circles if a selectable note is hovered. */
   &.selectable .note:hover {
-    @media (min-width: 800px) {
+    @media (pointer: fine) {
       .select {
         visibility: visible;
       }
       & img.pin {
-        visibility: hidden;
+        /* visibility: hidden; */
       }
     }
   }
@@ -27,8 +27,16 @@
       visibility: visible;
     }
     & img.pin {
-      visibility: hidden;
+      /* visibility: hidden; */
     }
+  }
+
+  /* Resize and move the pin when the selection circle is shown */
+  &.selectable .note:hover img.pin,
+  &.has-selection .note img.pin {
+    top: -1px;
+    right: -2px;
+    width: 15px;
   }
 
   .note {
@@ -55,9 +63,9 @@
       .select {
         visibility: visible;
       }
-      & img.pin {
-        visibility: hidden;
-      }
+      /* & img.pin { */
+      /*   visibility: hidden; */
+      /* } */
     }
 
     &.pinned {
@@ -131,6 +139,7 @@
       right: 2px;
       width: 20px;
       opacity: 0.5;
+      transition: all 0.2s ease-in-out;
     }
 
     & .empty {
