@@ -12,6 +12,14 @@ Contact us at sean@computing-den.com
 
 # Release Notes
 
+### 02 August 2025
+- Show selection during search
+- Escape always cancels search first and then selection
+- Fixed issue with the header jumping down on IOS
+- Show the pin icon on pinned notes during selection
+- Auto format pasted text (convert to list/checkbox, fix indentation, etc.)
+- More bug fixes
+
 ### 17 August 2024
 - Bug fixes: shortcut conflicts
 
