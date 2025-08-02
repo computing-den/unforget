@@ -164,6 +164,7 @@ and then run
 
 ```
 cd unforget/
+npm install
 npm run dev
 
 ```
