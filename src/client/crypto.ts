@@ -13,11 +13,11 @@ export async function calcClientPasswordHash({ username, password }: t.UsernameP
   return bytesToHexString(new Uint8Array(hashBuf));
 }
 
-export function generateEncryptionSalt(): Uint8Array {
+export function generateEncryptionSalt(): Uint8Array<ArrayBuffer> {
   return crypto.getRandomValues(new Uint8Array(16));
 }
 
-export function generateIV(): Uint8Array {
+export function generateIV(): Uint8Array<ArrayBuffer> {
   return crypto.getRandomValues(new Uint8Array(12));
 }
 

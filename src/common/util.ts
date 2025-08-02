@@ -100,15 +100,16 @@ export function calcNewSelection(
   return origSelection + added;
 }
 
-export function bytesToHexString(bytes: Uint8Array): string {
+export function bytesToHexString(bytes: Uint8Array<ArrayBuffer>): string {
   return Array.from(bytes)
     .map(byte => byte.toString(16).padStart(2, '0'))
     .join('');
 }
 
-export function hexStringToBytes(str: string): Uint8Array {
+export function hexStringToBytes(str: string): BufferSource {
   if (str.length % 2) throw new Error('hexStringToBytes invalid string');
-  const bytes = new Uint8Array(str.length / 2);
+  const buffer = new ArrayBuffer(str.length / 2);
+  const bytes = new Uint8Array(buffer);
   for (let i = 0; i < str.length; i += 2) {
     bytes[i / 2] = parseInt(str.substring(i, i + 2), 16);
   }
