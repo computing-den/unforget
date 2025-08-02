@@ -66,6 +66,8 @@ export function NotesPage(_props: NotesPageProps) {
       } else if (e.key === 'Escape' && !ctrlOrMeta) {
         if (editorOpen) {
           handle(confirmNewNoteCb);
+        } else if (app.search !== undefined) {
+          handle(toggleNoteSearchCb);
         } else if (app.noteSelection) {
           handle(toggleNoteSelectionMode);
         }
@@ -91,7 +93,7 @@ export function NotesPage(_props: NotesPageProps) {
       if (ctrlOrMeta) return;
 
       if (e.key === '/') {
-        if (app.search) {
+        if (app.search !== undefined) {
           handle(() => document.getElementById('search-input')?.focus());
         } else {
           handle(toggleNoteSearchCb);
@@ -235,7 +237,13 @@ export function NotesPage(_props: NotesPageProps) {
 
   function toggleNoteSearchCb() {
     appStore.update(app => {
-      app.search = app.search === undefined ? '' : undefined;
+      if (app.search === undefined) {
+        app.search = '';
+        app.noteSelection ??= [];
+      } else {
+        app.search = undefined;
+        if (!app.noteSelection?.length) app.noteSelection = undefined;
+      }
     });
     actions.updateNotes();
   }
@@ -247,13 +255,13 @@ export function NotesPage(_props: NotesPageProps) {
     actions.updateNotesDebounced();
   }
 
-  function searchKeyDownCb(e: React.KeyboardEvent) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleNoteSearchCb();
-    }
-  }
+  // function searchKeyDownCb(e: React.KeyboardEvent) {
+  //   if (e.key === 'Escape') {
+  //     e.preventDefault();
+  //     e.stopPropagation();
+  //     toggleNoteSearchCb();
+  //   }
+  // }
 
   function cycleListStyleCb() {
     editorRef.current!.cycleListStyle();
@@ -317,7 +325,7 @@ export function NotesPage(_props: NotesPageProps) {
         className="search action"
         value={app.search}
         onChange={searchChangeCb}
-        onKeyDown={searchKeyDownCb}
+        // onKeyDown={searchKeyDownCb}
         autoFocus
       />,
       <PageAction
