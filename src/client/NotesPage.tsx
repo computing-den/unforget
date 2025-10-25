@@ -393,7 +393,6 @@ export function NotesPage(_props: NotesPageProps) {
       <PageHeader
         actions={pageActions}
         title={app.showArchive ? '/ archive' : undefined}
-        hasSticky={stickyEditor && editorOpen}
         hasSearch={app.search !== undefined}
         secondRow={secondRow}
       />

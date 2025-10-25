@@ -210,6 +210,7 @@ export const Editor = forwardRef(function Editor(props: EditorProps, ref: React.
 
     const pasteLines = pasteData.split(/\r?\n/g);
     const pasteListItems = pasteLines.map(md.parseListItem);
+    pasteListItems[0].content = listItem.content + pasteListItems[0].content;
 
     // const linePrefix = md.stringifyListItemPrefix(listItem);
 

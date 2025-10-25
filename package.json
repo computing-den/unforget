@@ -52,7 +52,7 @@
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^9.0.8",
-    "barefront": "^2.9.0",
+    "barefront": "2.14.0",
     "esbuild": "^0.25.8",
     "typescript": "^5.9.2"
   },

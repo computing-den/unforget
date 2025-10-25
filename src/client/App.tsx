@@ -9,6 +9,7 @@ import { NotesPage, notesPageLoader } from './NotesPage.jsx';
 import { NotePage, notePageLoader } from './NotePage.jsx';
 import { ImportPage } from './ImportPage.jsx';
 import { ExportPage } from './ExportPage.jsx';
+import Notifications from './Notifications.jsx';
 import _ from 'lodash';
 
 export default function App() {
@@ -70,7 +71,12 @@ export default function App() {
     },
   ];
 
-  return <Router routes={routes} fallback={<Fallback />} />;
+  return (
+    <>
+      <Router routes={routes} fallback={<Fallback />} />
+      <Notifications />
+    </>
+  );
 }
 
 function Fallback() {

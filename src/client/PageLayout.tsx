@@ -3,12 +3,10 @@ import React, { useCallback, useState } from 'react';
 import { useCallbackCancelEvent } from './hooks.js';
 import * as actions from './appStoreActions.jsx';
 import { Menu, MenuItem } from './Menu.jsx';
-import { postToServiceWorker } from './clientToServiceWorkerApi.js';
 import * as appStore from './appStore.js';
 import _ from 'lodash';
 import * as icons from './icons.js';
 import { sync, requireQueueSync } from './sync.js';
-// import log from './logger.js';
 
 export function PageLayout(props: { children: React.ReactNode }) {
   return <>{props.children}</>;
@@ -23,34 +21,17 @@ type PageHeaderProps = {
   menu?: MenuItem[];
   actions?: React.ReactNode;
   title?: string;
-  hasSticky?: boolean;
   hasSearch?: boolean;
   compact?: boolean;
   secondRow?: PageHeaderSecondRowProps;
 };
 
 export function PageHeader(props: PageHeaderProps) {
-  const app = appStore.use();
-
   return (
     <div id="page-header" className={`${props.hasSearch ? 'has-search' : ''} ${props.compact ? 'compact' : ''}`}>
       <div id="page-header-inner-wrapper">
         {props.compact ? <PageHeaderContentCompact /> : <PageHeaderFirstRowContent {...props} />}
         {props.secondRow && <PageHeaderSecondRowContent {...props.secondRow} />}
-        {app.message && (
-          <div className={`msg-bar ${app.message.type} ${props.hasSticky ? 'has-sticky' : ''}`}>
-            <div className="msg-bar-inner-container">
-              <p>{app.message.text.substring(0, 100)}</p>
-            </div>
-          </div>
-        )}
-        {app.requirePageRefresh && (
-          <div className="update-app-container">
-            <button className="primary" onClick={actions.updateApp}>
-              Click to update app
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

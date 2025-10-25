@@ -12,6 +12,10 @@ Contact us at sean@computing-den.com
 
 # Release Notes
 
+### 25 October 2025
+- Moved notifications to the bottom of the page
+- Fixed a bug where pasting text would overwrite current line
+
 ### 02 August 2025
 - Show selection during search
 - Escape always cancels search first and then selection
