@@ -176,9 +176,15 @@ export const Note = memo(function Note(props: {
 
     // Set external links' target to '_blank'.
     if (node.tagName === 'a' && typeof node.properties['href'] === 'string') {
-      const targetURL = new URL(node.properties['href'], document.baseURI);
-      if (baseURL.origin !== targetURL.origin) {
-        node.properties['target'] = '_blank';
+      try {
+        const targetURL = new URL(node.properties['href'], document.baseURI);
+
+        if (baseURL.origin !== targetURL.origin) {
+          node.properties['target'] = '_blank';
+        }
+      } catch (error) {
+        console.error('Invalid link: ', node.properties['href'], error);
+        node.properties['href'] = 'javascript:void(0)';
       }
     }
 

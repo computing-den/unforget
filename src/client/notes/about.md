@@ -12,6 +12,9 @@ Contact us at sean@computing-den.com
 
 # Release Notes
 
+### 22 June 2026
+- Fixed a bug where rendering a malformed URLs would crash the app
+
 ### 25 October 2025
 - Moved notifications to the bottom of the page
 - Fixed a bug where pasting text would overwrite current line
